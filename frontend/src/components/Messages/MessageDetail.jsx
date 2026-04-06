@@ -1,4 +1,4 @@
-// src/components/Messages/MessageDetail.jsx
+// src/components/Messages/MessageDetail.jsx - с отображением геолокации
 import React, { useState, useEffect } from 'react';
 import {
     Dialog,
@@ -17,22 +17,20 @@ import {
     ImageList,
     ImageListItem,
     Paper,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemSecondaryAction,
     Accordion,
     AccordionSummary,
     AccordionDetails,
     Alert,
+    Link,
 } from '@mui/material';
 import {
     Close as CloseIcon,
     ExpandMore,
     Assignment,
-    CheckCircle,
-    Pending,
     Add,
+    LocationOn,
+    Map,
+    OpenInNew,
 } from '@mui/icons-material';
 import { messages, tasks, reports } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
@@ -47,25 +45,23 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
     const [reportList, setReportList] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const { isAdmin, isOperator, isExecutor } = useAuth();
+    const { isAdmin, isOperator } = useAuth();
 
     useEffect(() => {
         if (message) {
             setStatus(message.status);
             setPriority(message.priority);
             setAssignedTo(message.assigned_to_id || '');
-            fetchTasksForMessage();  // Загружаем задачи только для этого сообщения
-            fetchReportsForMessage(); // Загружаем отчеты только для этого сообщения
+            fetchTasksForMessage();
+            fetchReportsForMessage();
         }
     }, [message]);
 
     const fetchTasksForMessage = async () => {
         if (!message) return;
         try {
-            // Получаем ВСЕ задачи и фильтруем по message_id
             const response = await tasks.getAll();
             const allTasks = response.data || [];
-            // Фильтруем задачи, принадлежащие текущему сообщению
             const filteredTasks = allTasks.filter(task => task.message_id === message.id);
             setTaskList(filteredTasks);
         } catch (error) {
@@ -116,7 +112,7 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
             });
             setTaskTitle('');
             setTaskDescription('');
-            fetchTasksForMessage(); // Обновляем список задач
+            fetchTasksForMessage();
             setError('');
         } catch (error) {
             console.error('Ошибка создания задачи:', error);
@@ -129,10 +125,19 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
     const handleUpdateTaskStatus = async (taskId, newStatus) => {
         try {
             await tasks.update(taskId, { status: newStatus });
-            fetchTasksForMessage(); // Обновляем список задач
+            fetchTasksForMessage();
         } catch (error) {
             console.error('Ошибка обновления статуса задачи:', error);
         }
+    };
+
+    // Генерация ссылок на карты
+    const generateMapLinks = (lat, lon) => {
+        return {
+            yandex: `https://yandex.ru/maps/?pt=${lon},${lat}&z=17&l=map`,
+            google: `https://www.google.com/maps?q=${lat},${lon}`,
+            openstreet: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}&zoom=17`
+        };
     };
 
     const formatDate = (dateString) => {
@@ -167,6 +172,9 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
     };
 
     if (!message) return null;
+
+    const hasLocation = message.latitude && message.longitude;
+    const mapLinks = hasLocation ? generateMapLinks(message.latitude, message.longitude) : null;
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -203,6 +211,40 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
                     <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
                         {message.text || 'Нет текста'}
                     </Typography>
+                    
+                    {/* Геолокация */}
+                    {hasLocation && (
+                        <>
+                            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>
+                                📍 Геолокация
+                            </Typography>
+                            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: '#f5f5f5' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                    <LocationOn color="primary" />
+                                    <Typography variant="body2">
+                                        Координаты: {message.latitude.toFixed(6)}, {message.longitude.toFixed(6)}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                                    <Link href={mapLinks.yandex} target="_blank" rel="noopener noreferrer">
+                                        <Button size="small" startIcon={<Map />}>
+                                            Яндекс.Карты
+                                        </Button>
+                                    </Link>
+                                    <Link href={mapLinks.google} target="_blank" rel="noopener noreferrer">
+                                        <Button size="small" startIcon={<OpenInNew />}>
+                                            Google Maps
+                                        </Button>
+                                    </Link>
+                                    <Link href={mapLinks.openstreet} target="_blank" rel="noopener noreferrer">
+                                        <Button size="small" startIcon={<OpenInNew />}>
+                                            OpenStreetMap
+                                        </Button>
+                                    </Link>
+                                </Box>
+                            </Paper>
+                        </>
+                    )}
                     
                     {message.photos && message.photos.length > 0 && (
                         <>
@@ -271,28 +313,28 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
                             </TextField>
                         </Grid>
                         {(isAdmin || isOperator) && (
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        select
-                                        fullWidth
-                                        label="Назначить"
-                                        value={assignedTo}
-                                        onChange={(e) => setAssignedTo(e.target.value)}
-                                        size="small"
-                                    >
-                                        <MenuItem value="">Не назначено</MenuItem>
-                                        {users?.filter(u => u.role === 'executor' && u.is_active).map((user) => (
-                                            <MenuItem key={user.id} value={user.id}>
-                                                {user.full_name} ({user.username})
-                                            </MenuItem>
-                                        ))}
-                                    </TextField>
-                                </Grid>
-                            )}
+                            <Grid item xs={12} sm={4}>
+                                <TextField
+                                    select
+                                    fullWidth
+                                    label="Назначить"
+                                    value={assignedTo}
+                                    onChange={(e) => setAssignedTo(e.target.value)}
+                                    size="small"
+                                >
+                                    <MenuItem value="">Не назначено</MenuItem>
+                                    {users?.filter(u => u.role === 'executor' && u.is_active).map((user) => (
+                                        <MenuItem key={user.id} value={user.id}>
+                                            {user.full_name} ({user.username})
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            </Grid>
+                        )}
                     </Grid>
                 </Box>
                 
-                {/* Создание задачи (только для этого сообщения) */}
+                {/* Создание задачи */}
                 {(isAdmin || isOperator) && (
                     <>
                         <Divider sx={{ my: 2 }} />
@@ -330,7 +372,7 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
                     </>
                 )}
                 
-                {/* Список задач (только для этого сообщения) */}
+                {/* Список задач */}
                 {taskList.length > 0 && (
                     <>
                         <Divider sx={{ my: 2 }} />
@@ -360,7 +402,7 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
                                         <Typography variant="caption" color="text.secondary" display="block">
                                             Создана: {formatDate(task.created_at)}
                                         </Typography>
-                                        {(isAdmin || isOperator || isExecutor) && task.status !== 'completed' && (
+                                        {(isAdmin || isOperator) && task.status !== 'completed' && (
                                             <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
                                                 <Button
                                                     size="small"
@@ -386,7 +428,7 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
                     </>
                 )}
                 
-                {/* Список отчетов (только для этого сообщения) */}
+                {/* Список отчетов */}
                 {reportList.length > 0 && (
                     <>
                         <Divider sx={{ my: 2 }} />

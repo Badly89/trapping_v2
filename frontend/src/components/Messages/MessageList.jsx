@@ -1,6 +1,8 @@
 // src/components/Messages/MessageList.jsx
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { LocationOn } from '@mui/icons-material';
+import { Tooltip } from '@mui/material';
 import {
     Paper,
     Table,
@@ -238,8 +240,8 @@ const MessageList = () => {
                                 size="small"
                             >
                                 <MenuItem value="">Все</MenuItem>
-                                <MenuItem value="true">Есть</MenuItem>
-                                <MenuItem value="false">Нет</MenuItem>
+                                <MenuItem value="true">Есть геолокация</MenuItem>
+                                <MenuItem value="false">Нет геолокации</MenuItem>
                             </TextField>
                         </Grid>
                     </Grid>
@@ -266,7 +268,7 @@ const MessageList = () => {
                             <TableCell sx={{ fontWeight: 'bold' }}>Статус</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Приоритет</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Фото</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Гео</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Геолокация</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Дата</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }} align="center">Действия</TableCell>
                         </TableRow>
@@ -321,8 +323,21 @@ const MessageList = () => {
                                     <TableCell align="center">
                                         {msg.photos?.length || 0}
                                     </TableCell>
+                                   
                                     <TableCell align="center">
-                                        {msg.latitude && msg.longitude ? '📍' : '—'}
+                                        {msg.latitude && msg.longitude ? (
+                                            <Tooltip title={`${msg.latitude}, ${msg.longitude}`}>
+                                                <Chip 
+                                                    icon={<LocationOn />} 
+                                                    label="Есть" 
+                                                    size="small" 
+                                                    color="primary" 
+                                                    variant="outlined"
+                                                />
+                                            </Tooltip>
+                                        ) : (
+                                            <Chip label="Нет" size="small" variant="outlined" />
+                                        )}
                                     </TableCell>
                                     <TableCell>
                                         {formatDate(msg.created_at)}
