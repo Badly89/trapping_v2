@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 from typing import List, Optional
+
 from datetime import datetime, timedelta
 # Импорты сервисов и утилит
 from services import UserService, MessageService, TaskService, ReportService
@@ -477,6 +478,7 @@ def update_task(
 
 # ========== Reports ==========
 @app.post("/api/reports", response_model=dict)
+@app.post("/api/reports")
 async def create_report(
     text: str = Form(...),
     message_id: int = Form(...),
@@ -485,6 +487,11 @@ async def create_report(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    """Создание отчета по выполненной работе"""
+    import shutil
+    from datetime import datetime
+    
+    # Сохранение фото
     photo_urls = []
     for file in files:
         timestamp = int(datetime.utcnow().timestamp())
@@ -501,20 +508,15 @@ async def create_report(
         photos=photo_urls
     )
     db.add(report)
-    
-    message = db.query(Message).filter(Message.id == message_id).first()
-    if message:
-        message.status = MessageStatus.PROCESSING
-        message.updated_at = datetime.utcnow()
-    
-    if task_id:
-        task = db.query(Task).filter(Task.id == task_id).first()
-        if task:
-            task.status = TaskStatus.IN_PROGRESS
-            task.updated_at = datetime.utcnow()
-    
     db.commit()
-    return {"status": "success", "report_id": report.id, "photos": photo_urls}
+    db.refresh(report)
+    
+    return {
+        "status": "success", 
+        "report_id": report.id, 
+        "photos": photo_urls,
+        "created_at": report.created_at
+    }
 
 @app.get("/api/reports/{message_id}", response_model=List[ReportResponse])
 def get_reports(
@@ -523,18 +525,7 @@ def get_reports(
     db: Session = Depends(get_db)
 ):
     reports = db.query(Report).filter(Report.message_id == message_id).order_by(Report.created_at.desc()).all()
-    return [
-        ReportResponse(
-            id=r.id,
-            message_id=r.message_id,
-            task_id=r.task_id,
-            user_id=r.user_id,
-            text=r.text,
-            photos=r.photos,
-            status=r.status,
-            created_at=r.created_at
-        ) for r in reports
-    ]
+    return reports
 
 # ========== Statistics ==========
 @app.get("/api/statistics")

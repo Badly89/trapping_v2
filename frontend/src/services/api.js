@@ -73,13 +73,6 @@ export const tasks = {
     update: (id, data) => api.patch(`/tasks/${id}`, data),
 };
 
-// Отчеты
-export const reports = {
-    getByMessage: (messageId) => api.get(`/reports/${messageId}`),
-    create: (formData) => api.post('/reports', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-    }),
-};
 
 // src/services/api.js - добавьте перехват ошибок
 api.interceptors.response.use(
@@ -99,5 +92,13 @@ api.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
+// src/services/api.js - убедитесь, что есть метод create
+export const reports = {
+    getByMessage: (messageId) => api.get(`/reports/${messageId}`),
+    create: (formData) => api.post('/reports', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+};
 
 export default api;
