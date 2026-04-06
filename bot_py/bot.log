@@ -1,0 +1,372 @@
+2026-04-06 13:54:02,311 - __main__ - INFO - ✅ Команды бота зарегистрированы
+2026-04-06 13:54:02,371 - __main__ - INFO - ✅ Webhook удалён
+2026-04-06 13:54:02,371 - __main__ - INFO - ✅ Бот запущен и ожидает сообщения...
+2026-04-06 13:54:02,487 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 13:54:02,488 - dispatcher - INFO - Зарегистрировано 12 обработчиков событий
+2026-04-06 13:54:15,472 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 13:54:27,563 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 13:54:31,266 - __main__ - INFO - 📍 Получена геолокация: 63.20280075073242, 75.45182800292969
+2026-04-06 13:54:31,302 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 13
+2026-04-06 13:54:31,448 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 13:55:09,022 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 13:55:18,584 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 14
+2026-04-06 13:55:18,702 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 13:55:39,261 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 13:55:46,339 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 15
+2026-04-06 13:55:46,481 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 13:59:00,034 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7feca3de3350>
+2026-04-06 13:59:02,128 - __main__ - INFO - ✅ Команды бота зарегистрированы
+2026-04-06 13:59:02,186 - __main__ - INFO - ✅ Webhook удалён
+2026-04-06 13:59:02,186 - __main__ - INFO - ✅ Бот запущен и ожидает сообщения...
+2026-04-06 13:59:02,306 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 13:59:02,307 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 13:59:13,450 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 13:59:16,036 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 13:59:20,067 - __main__ - INFO - 📨 Получено сообщение от 13994310
+2026-04-06 13:59:20,067 - __main__ - INFO - 📝 Текст: Нет
+2026-04-06 13:59:20,068 - __main__ - INFO - 📎 Найдено вложений: 2
+2026-04-06 13:59:20,068 - __main__ - INFO - 📎 Вложение: type='image' payload=PhotoAttachmentPayload(photo_id=11552790854, token='Q6OwA0U4Q6f8qGTfjKLRwelPV/rnYSpmUW+Hvq0tH1oZWsQ+szVNrwKAKE0e739OH3faQIUalZh9Q8dfzxHIAhOLfiZ44CYC+1eQM8uYvWM=', url='https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8i0eLDW9-lZecYw4xvZo3GnbiWYfhP9XHJrTEmTrEH9A') bot=<maxapi.bot.Bot object at 0x7f65d9187990>
+2026-04-06 13:59:20,068 - __main__ - INFO -    Тип: image
+2026-04-06 13:59:20,068 - __main__ - INFO -    file_id: None
+2026-04-06 13:59:20,068 - __main__ - INFO - 📎 Вложение: type='image' payload=PhotoAttachmentPayload(photo_id=11552745542, token='MSUv8gMP1usPN/g6QQ0qH2Nq8WXxN8fUo8hnoJy/1rBfH49qPpcO2pOWd3bQmHeMcAyI4AssvY2wBWAtxAoRSuzvNbriLQqud4R3mdBtXNA=', url='https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8FYiliOUj8nJUpRQYeGXel3biWYfhP9XHJrTEmTrEH9A') bot=<maxapi.bot.Bot object at 0x7f65d9187990>
+2026-04-06 13:59:20,068 - __main__ - INFO -    Тип: image
+2026-04-06 13:59:20,068 - __main__ - INFO -    file_id: None
+2026-04-06 13:59:20,196 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:01:43,922 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f65d91ea390>
+2026-04-06 14:03:40,127 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:03:40,240 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:03:40,241 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:03:47,319 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:04:02,355 - __main__ - INFO - 📨 Сообщение от 13994310: текст='Проверка нового бота'
+2026-04-06 14:04:02,356 - __main__ - INFO - 📎 Вложений: 3
+2026-04-06 14:04:02,356 - __main__ - INFO -    Тип вложения: image
+2026-04-06 14:04:02,356 - __main__ - INFO -    file_id: None
+2026-04-06 14:04:02,356 - __main__ - INFO -    Тип вложения: image
+2026-04-06 14:04:02,356 - __main__ - INFO -    file_id: None
+2026-04-06 14:04:02,356 - __main__ - INFO -    Тип вложения: image
+2026-04-06 14:04:02,356 - __main__ - INFO -    file_id: None
+2026-04-06 14:04:02,356 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=False
+2026-04-06 14:04:02,377 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 16
+2026-04-06 14:04:02,508 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:04:20,847 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f86871e4810>
+2026-04-06 14:04:21,820 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:04:21,934 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:04:21,935 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:04:26,045 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:04:32,450 - __main__ - INFO - 📨 Сообщение от 13994310: текст='ааа'
+2026-04-06 14:04:32,451 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:04:32,451 - __main__ - INFO -    Тип вложения: image
+2026-04-06 14:04:32,451 - __main__ - INFO -    file_id: None
+2026-04-06 14:04:32,451 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=False
+2026-04-06 14:04:32,478 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 17
+2026-04-06 14:04:32,585 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:05:20,444 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:05:28,234 - __main__ - INFO - 📨 Сообщение от 13994310: текст='вавыаыва'
+2026-04-06 14:05:28,234 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:05:28,234 - __main__ - INFO -    Тип вложения: image
+2026-04-06 14:05:28,234 - __main__ - INFO -    file_id: None
+2026-04-06 14:05:28,234 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=False
+2026-04-06 14:05:28,268 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 18
+2026-04-06 14:05:28,386 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:09:02,308 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f9c763e4650>
+2026-04-06 14:09:03,972 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:09:04,084 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:09:04,085 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:09:07,460 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:09:12,967 - __main__ - INFO - 📨 Сообщение от 13994310: текст=''
+2026-04-06 14:09:12,967 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:09:12,967 - __main__ - INFO - 📎 Вложение #0:
+2026-04-06 14:09:12,968 - __main__ - INFO -    Тип: image
+2026-04-06 14:09:12,968 - __main__ - INFO -    bot: <maxapi.bot.Bot object at 0x7fa1fea91c10>
+2026-04-06 14:09:12,968 - __main__ - INFO -    model_computed_fields: {}
+2026-04-06 14:09:12,969 - __main__ - INFO -    model_config: {'use_enum_values': True}
+2026-04-06 14:09:12,969 - __main__ - INFO -    model_fields: {'type': FieldInfo(annotation=Literal[<AttachmentType.IMAGE: 'image'>], required=True), 'payload': FieldInfo(annotation=Union[AttachmentUpload, PhotoAttachmentPayload, OtherAttachmentPayload, ButtonsPayload, ContactAttachmentPayload, StickerAttachmentPayload, NoneType], required=False, default=None), 'bot': FieldInfo(annotation=Union[Any, NoneType], required=False, default=None, exclude=True)}
+2026-04-06 14:09:12,969 - __main__ - INFO -    model_fields_set: {'payload', 'bot', 'type'}
+2026-04-06 14:09:12,969 - __main__ - INFO -    payload: photo_id=11610403142 token='LmsYNb5YfnkXB3wJ1X3t/LVZGNInGccxQ5tfL+WyzWeCbYvNMuPLTwasnI9k/XlpXQEul8Y4Epilr7aKdHqS/jU/L/W3OkwW8hCfIGk6imi0dmri0quCBLGVO37d8ij3' url='https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8WKL6dc7P4DdLgYcto8KkvHbiWYfhP9XHJrTEmTrEH9A'
+2026-04-06 14:09:12,969 - __main__ - INFO -    type: image
+2026-04-06 14:09:12,969 - __main__ - INFO -    📷 Найден file_id: None
+2026-04-06 14:09:13,138 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:11:35,300 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:11:48,670 - __main__ - INFO - 📨 Сообщение от 13994310: текст=''
+2026-04-06 14:11:48,670 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:11:48,670 - __main__ - INFO - 📎 Вложение #0:
+2026-04-06 14:11:48,670 - __main__ - INFO -    Тип: image
+2026-04-06 14:11:48,670 - __main__ - INFO -    bot: <maxapi.bot.Bot object at 0x7fa1fea91c10>
+2026-04-06 14:11:48,671 - __main__ - INFO -    model_computed_fields: {}
+2026-04-06 14:11:48,671 - __main__ - INFO -    model_config: {'use_enum_values': True}
+2026-04-06 14:11:48,671 - __main__ - INFO -    model_fields: {'type': FieldInfo(annotation=Literal[<AttachmentType.IMAGE: 'image'>], required=True), 'payload': FieldInfo(annotation=Union[AttachmentUpload, PhotoAttachmentPayload, OtherAttachmentPayload, ButtonsPayload, ContactAttachmentPayload, StickerAttachmentPayload, NoneType], required=False, default=None), 'bot': FieldInfo(annotation=Union[Any, NoneType], required=False, default=None, exclude=True)}
+2026-04-06 14:11:48,671 - __main__ - INFO -    model_fields_set: {'payload', 'bot', 'type'}
+2026-04-06 14:11:48,671 - __main__ - INFO -    payload: photo_id=11610815046 token='4aO/MHPcE1gKmwZC6mYo6q2jD/tIrVrWcNcVgOOlUYTEhkvOcVAbMn6KOR4v58TMzfqA59O1jX9SOqVRrVamfSsfB3cGc+vepfWhW6SRdCoVfYb86UjnI05E1qRXJbsR' url='https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8WKL6dc7P4DdLgYcto8KkvHbiWYfhP9XHJrTEmTrEH9A'
+2026-04-06 14:11:48,671 - __main__ - INFO -    type: image
+2026-04-06 14:11:48,671 - __main__ - INFO -    📷 Найден file_id: None
+2026-04-06 14:11:48,793 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:11:57,162 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7fa1fe9dc590>
+2026-04-06 14:11:59,440 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:11:59,552 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:11:59,553 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:12:05,369 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:12:07,847 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:12:15,015 - __main__ - INFO - 📨 Сообщение от 13994310: текст='fdfdsfdfsf'
+2026-04-06 14:12:15,015 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:12:15,016 - __main__ - INFO - 📎 Вложение #0: {"type": "image", "payload": {"photo_id": 11610880838, "token": "Fesvz+F0n0IRGxDTmXyiRCnu518xBHWfRGzBVRjRdCDud1eEr6I/P9k5NY8fiZ3GShVOYbVR2Bs9F9exB3jWtUW+dXXi4kTZeZr6Csp8pXlo9lfWPq9AOCNg5RI8m+Yo", "url": "https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8fg6qzSZ2Z06Xbqo62N2As3biWYfhP9XHJrTEmTrEH9A"}}
+2026-04-06 14:12:15,016 - __main__ - INFO -    📷 file_id: None
+2026-04-06 14:12:15,016 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=False
+2026-04-06 14:12:15,033 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 19
+2026-04-06 14:12:15,184 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:14:57,237 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7fcdb1ae8650>
+2026-04-06 14:16:47,831 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:16:47,945 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:16:47,945 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:16:53,562 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:16:55,569 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:17:02,038 - __main__ - INFO - 📨 Сообщение от 13994310: текст=''
+2026-04-06 14:17:02,038 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:17:02,039 - __main__ - INFO - 📎 Вложение #0: {"type": "image", "payload": {"photo_id": 11611646022, "token": "RmgjI5WcALvx90a+tUeek85vYvE5/CmNbwiiWKygk7Nk970yjn/rBuk6ZYsjHdpPIfYLOlqdPaBrzk9KCQhXQdW3c8d1UDhkntkdyP61P4vxVaEaWclnhbeLxfCrqeW0", "url": "https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8fg6qzSZ2Z06Xbqo62N2As3biWYfhP9XHJrTEmTrEH9A"}}
+2026-04-06 14:17:02,039 - __main__ - INFO -    📷 file_id: None
+2026-04-06 14:17:02,153 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:17:41,881 - __main__ - INFO - 📨 Сообщение от 13994310: текст='gghjghjhjhjghjgjhghghjnbbbnbnvnbvbnvbn
+jkhjkhjkhkh'
+2026-04-06 14:17:41,881 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:17:41,881 - __main__ - INFO - 📎 Вложение #0: {"type": "image", "payload": {"photo_id": 11611757382, "token": "6KGOHqGdZNzP30ThO6wRB24eAedKF/HJb/IJGVJn5fIrreAM9tFzpe+O2pqzSxLLdrmplzQqwuo1UcpFfz2KrpQNKZ12C92U4I04MT3AlxGyrgwRkbHt0k/UMYX6ytiq", "url": "https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8fg6qzSZ2Z06Xbqo62N2As3biWYfhP9XHJrTEmTrEH9A"}}
+2026-04-06 14:17:41,881 - __main__ - INFO -    📷 file_id: None
+2026-04-06 14:17:41,881 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=False
+2026-04-06 14:17:41,952 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 20
+2026-04-06 14:17:42,089 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:19:12,106 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.DIALOG_CLEARED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:19:17,702 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.BOT_STOPPED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:19:19,143 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:19:30,500 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:19:38,742 - __main__ - INFO - 📨 Сообщение от 13994310: текст='ddfdsfdsff'
+2026-04-06 14:19:38,742 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:19:38,743 - __main__ - INFO - 📎 Вложение #0: {"type": "image", "payload": {"photo_id": 11612077638, "token": "0qeO4d71rjaQ/RzXKI9XcqPdYjVE3XQh0mGh5mSRLMlojaXTjFLJZ4QAFId9V6d16KTO+deHLMdK5pIyubhHqljxdMB27kc4g4GQ4394tgGwW5Dsd03M1xUrAMT5bs8c", "url": "https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8fg6qzSZ2Z06Xbqo62N2As3biWYfhP9XHJrTEmTrEH9A"}}
+2026-04-06 14:19:38,743 - __main__ - INFO -    📷 file_id: None
+2026-04-06 14:19:38,743 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=False
+2026-04-06 14:19:38,759 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 21
+2026-04-06 14:19:38,884 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:28:09,535 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f16939ec710>
+2026-04-06 14:36:58,813 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:36:58,935 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:36:58,936 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:37:03,768 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.BOT_STOPPED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:37:06,325 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:37:08,001 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:37:14,454 - __main__ - INFO - 📨 Сообщение от 13994310: текст=''
+2026-04-06 14:37:14,454 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:37:14,454 - __main__ - INFO - 📎 Вложение #0: {"type": "image", "payload": {"photo_id": 11614942022, "token": "eavtDjIO2Pwt4l+zj0NxdjQa8Gm7N6C9EW2cCilkWetG/K67D6/DFAEMv7fSSSDAe2I1V0YBh4IpaR/VhJ29cZhxZMy2uVeeWtgecK97asuezkBezsZkXP7Y89D2T8Wz", "url": "https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8WKL6dc7P4DdLgYcto8KkvHbiWYfhP9XHJrTEmTrEH9A"}}
+2026-04-06 14:37:14,454 - __main__ - INFO -    📷 file_id: None
+2026-04-06 14:37:14,563 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:39:36,916 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f2efa2f00d0>
+2026-04-06 14:39:56,808 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:39:56,916 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:39:56,917 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:42:05,582 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7fad4cef81d0>
+2026-04-06 14:42:06,557 - __main__ - INFO - ✅ Команды бота зарегистрированы
+2026-04-06 14:42:06,614 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:42:06,729 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:42:06,730 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:42:14,512 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:42:17,135 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:42:28,058 - __main__ - INFO - 📨 Сообщение от 13994310: текст='повторная проверка'
+2026-04-06 14:42:28,058 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:42:28,058 - __main__ - INFO - 📎 Вложение #0: {"type": "image", "payload": {"photo_id": 11615826502, "token": "5Wf9JEvSibPUgYg8joHIjU8PHXtEPuxljBP02TMfmRSOYywgaLDIxOM7NRnNgONC9mFx5lgWCiBaQiRZ7CrCO9raNSASu4w9PLJRMHvxOGN9UUlVwuS2BU77mlSzN+6P", "url
+2026-04-06 14:42:28,058 - __main__ - INFO - 📷 Найден прямой URL: https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8WKL6dc7P4DdLgYcto8KkvHbiWYfhP9XHJ...
+2026-04-06 14:42:28,058 - __main__ - INFO - 📤 Отправка в CRM: фото=1, гео=False
+2026-04-06 14:42:28,077 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 24
+2026-04-06 14:42:28,183 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:42:42,787 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:42:45,142 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:42:49,267 - __main__ - INFO - 📨 Сообщение от 13994310: текст=''
+2026-04-06 14:42:49,267 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:42:49,267 - __main__ - INFO - 📎 Вложение #0: {"type": "location", "payload": null, "latitude": 63.20283126831055, "longitude": 75.45181274414062}
+2026-04-06 14:42:49,267 - dispatcher - ERROR - Ошибка при обработке события: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310 | MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=handle_message, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=AttributeError: 'NoneType' object has no attribute 'get')) 
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 465, in _execute_handler
+    await handler_chain(event, kwargs_filtered)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 312, in call_handler
+    await handler.func_event(event_object)
+  File "/home/malyhin@noyabrsk.local/trapping_v2/bot_py/bot.py", line 359, in handle_message
+    latitude = payload.get('lat') or payload.get('latitude')
+               ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 598, in handle
+    await global_chain(event_object, kwargs)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 591, in _process_event
+    await _process_handlers(event_object, data)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 566, in _process_handlers
+    await self._execute_handler(
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 468, in _execute_handler
+    raise HandlerException(
+maxapi.exceptions.dispatcher.HandlerException: HandlerException(handler=handle_message, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=AttributeError: 'NoneType' object has no attribute 'get')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 611, in handle
+    raise MiddlewareException(
+maxapi.exceptions.dispatcher.MiddlewareException: MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=handle_message, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=AttributeError: 'NoneType' object has no attribute 'get'))
+2026-04-06 14:42:58,193 - __main__ - INFO - 📨 Сообщение от 13994310: текст='Test'
+2026-04-06 14:42:58,193 - __main__ - INFO - 📎 Вложений: 0
+2026-04-06 14:42:58,193 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=False
+2026-04-06 14:42:58,228 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 25
+2026-04-06 14:42:58,328 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:45:04,236 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:45:08,342 - __main__ - INFO - 📨 Сообщение от 13994310: текст=''
+2026-04-06 14:45:08,342 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:45:08,342 - __main__ - INFO - 📎 Вложение #0: {"type": "location", "payload": null, "latitude": 63.20283126831055, "longitude": 75.45181274414062}
+2026-04-06 14:45:08,342 - dispatcher - ERROR - Ошибка при обработке события: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310 | MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=handle_message, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=AttributeError: 'NoneType' object has no attribute 'get')) 
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 465, in _execute_handler
+    await handler_chain(event, kwargs_filtered)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 312, in call_handler
+    await handler.func_event(event_object)
+  File "/home/malyhin@noyabrsk.local/trapping_v2/bot_py/bot.py", line 359, in handle_message
+    latitude = payload.get('lat') or payload.get('latitude')
+               ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 598, in handle
+    await global_chain(event_object, kwargs)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 591, in _process_event
+    await _process_handlers(event_object, data)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 566, in _process_handlers
+    await self._execute_handler(
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 468, in _execute_handler
+    raise HandlerException(
+maxapi.exceptions.dispatcher.HandlerException: HandlerException(handler=handle_message, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=AttributeError: 'NoneType' object has no attribute 'get')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 611, in handle
+    raise MiddlewareException(
+maxapi.exceptions.dispatcher.MiddlewareException: MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=handle_message, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=AttributeError: 'NoneType' object has no attribute 'get'))
+2026-04-06 14:45:57,540 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7fab13cfc750>
+2026-04-06 14:46:29,185 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:46:29,303 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:46:29,303 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:46:34,495 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:46:36,690 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:46:45,793 - __main__ - INFO - 📨 Сообщение от 13994310: текст=''
+2026-04-06 14:46:45,793 - __main__ - INFO - 📎 Вложений: 2
+2026-04-06 14:46:45,793 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 14:46:45,794 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 14:46:45,794 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 14:46:45,794 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 14:46:45,794 - __main__ - INFO - 📤 Отправка в CRM: фото=2, гео=False
+2026-04-06 14:46:45,829 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 26
+2026-04-06 14:46:45,954 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:46:57,605 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:47:00,349 - __main__ - INFO - 📨 Сообщение от 13994310: текст=''
+2026-04-06 14:47:00,349 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:47:00,349 - dispatcher - ERROR - Ошибка при обработке события: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310 | MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=handle_message, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=AttributeError: 'NoneType' object has no attribute 'get')) 
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 465, in _execute_handler
+    await handler_chain(event, kwargs_filtered)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 312, in call_handler
+    await handler.func_event(event_object)
+  File "/home/malyhin@noyabrsk.local/trapping_v2/bot_py/bot.py", line 374, in handle_message
+    latitude = payload.get('lat') or payload.get('latitude')
+               ^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 598, in handle
+    await global_chain(event_object, kwargs)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 591, in _process_event
+    await _process_handlers(event_object, data)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 566, in _process_handlers
+    await self._execute_handler(
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 468, in _execute_handler
+    raise HandlerException(
+maxapi.exceptions.dispatcher.HandlerException: HandlerException(handler=handle_message, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=AttributeError: 'NoneType' object has no attribute 'get')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 611, in handle
+    raise MiddlewareException(
+maxapi.exceptions.dispatcher.MiddlewareException: MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=handle_message, router_id=0, process=UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=AttributeError: 'NoneType' object has no attribute 'get'))
+2026-04-06 14:49:08,540 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f552d8f4410>
+2026-04-06 14:49:10,276 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:49:10,401 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:49:10,401 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:49:47,028 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f6fbe4004d0>
+2026-04-06 14:49:47,979 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:49:48,093 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:49:48,093 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:49:48,813 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f7b6cdf8510>
+2026-04-06 14:49:59,022 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:49:59,142 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:49:59,143 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:50:04,301 - __main__ - INFO - 📦 Полный объект message: bot=<maxapi.bot.Bot object at 0x7f9e665de5d0> sender=User(user_id=13994310, first_name='Алексей', last_name='Малыхин', username=None, is_bot=False, last_activity_time=1775469001000, description=None, avatar_url=None, full_avatar_url=None, commands=None) recipient=Recipient(user_id=106560023, chat_id=109867857, chat_type=<ChatType.DIALOG: 'dialog'>) timestamp=1775469003978 link=None body=MessageBody(mid='mid.00000000068c7351019d623304ca4436', seq=116357136644719670, text='/ыефке', attachments=[], markup=[]) stat=None url=None
+2026-04-06 14:50:04,301 - __main__ - INFO - 📨 Сообщение от 13994310: текст='/ыефке'
+2026-04-06 14:50:04,301 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:50:08,600 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:50:10,964 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:50:17,489 - __main__ - INFO - 📦 Полный объект message: bot=<maxapi.bot.Bot object at 0x7f9e665de5d0> sender=User(user_id=13994310, first_name='Алексей', last_name='Малыхин', username=None, is_bot=False, last_activity_time=1775469017000, description=None, avatar_url=None, full_avatar_url=None, commands=None) recipient=Recipient(user_id=106560023, chat_id=109867857, chat_type=<ChatType.DIALOG: 'dialog'>) timestamp=1775469017249 link=None body=MessageBody(mid='mid.00000000068c7351019d623338a15872', seq=116357137514453106, text='', attachments=[Image(type='image', payload=PhotoAttachmentPayload(photo_id=11617114950, token='jX4sEF3CD6e4D4lY5UCl/9o8fwPvxdooQC4OjSa/sPhVLiNyzRb6pwVHnOrruN9scEhGA/g5B4UUpqviwQLQv3Bxr+49xFoMtv/N9RsCyIzuAxkJmrm8+oI+8SrTd4/+', url='https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8WKL6dc7P4DdLgYcto8KkvHbiWYfhP9XHJrTEmTrEH9A'), bot=<maxapi.bot.Bot object at 0x7f9e665de5d0>)], markup=[]) stat=None url=None
+2026-04-06 14:50:17,490 - __main__ - INFO - 📨 Сообщение от 13994310: текст='Нет'
+2026-04-06 14:50:17,490 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:50:17,490 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 14:50:17,490 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 14:50:17,490 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 14:50:17,490 - __main__ - INFO - 📤 Отправка в CRM: фото=1, гео=False
+2026-04-06 14:50:17,525 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 27
+2026-04-06 14:50:17,645 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:50:23,946 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:50:26,816 - __main__ - INFO - 📦 Полный объект message: bot=<maxapi.bot.Bot object at 0x7f9e665de5d0> sender=User(user_id=13994310, first_name='Алексей', last_name='Малыхин', username=None, is_bot=False, last_activity_time=1775469026000, description=None, avatar_url=None, full_avatar_url=None, commands=None) recipient=Recipient(user_id=106560023, chat_id=109867857, chat_type=<ChatType.DIALOG: 'dialog'>) timestamp=1775469026551 link=None body=MessageBody(mid='mid.00000000068c7351019d62335cf722e1', seq=116357138124055265, text='', attachments=[Location(type='location', payload=None, bot=<maxapi.bot.Bot object at 0x7f9e665de5d0>, latitude=63.20283126831055, longitude=75.45181274414062)], markup=[]) stat=None url=None
+2026-04-06 14:50:26,816 - __main__ - INFO - 📨 Сообщение от 13994310: текст='Нет'
+2026-04-06 14:50:26,816 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:50:26,817 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 14:50:26,817 - __main__ - INFO - 📍 Геолокация: lat=63.20283126831055, lon=75.45181274414062
+2026-04-06 14:50:26,817 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
+2026-04-06 14:50:26,835 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 28
+2026-04-06 14:50:26,980 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:51:09,842 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.BOT_STOPPED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:51:11,308 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:51:16,112 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:51:19,972 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:51:21,526 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:51:44,583 - __main__ - INFO - 📦 Полный объект message: bot=<maxapi.bot.Bot object at 0x7f9e665de5d0> sender=User(user_id=13994310, first_name='Алексей', last_name='Малыхин', username=None, is_bot=False, last_activity_time=1775469104000, description=None, avatar_url=None, full_avatar_url=None, commands=None) recipient=Recipient(user_id=106560023, chat_id=109867857, chat_type=<ChatType.DIALOG: 'dialog'>) timestamp=1775469104255 link=None body=MessageBody(mid='mid.00000000068c7351019d62348c7f0dbf', seq=116357143216459199, text='проверяем полностью работу, отправки фото  и сообщения к фото', attachments=[Image(type='image', payload=PhotoAttachmentPayload(photo_id=11617328198, token='JiRae1fHU2LWgfa8ZGuwODQkFlkn1QgO/1J4v48aI77d1QuijlUfph1Hraw/3Kt8q8vRPBQctFQNGqZ6kXtoFOebgPAj8oO31VT06Wv0Zao25IMiGAsYM9Ww6EiTguQT', url='https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8fg6qzSZ2Z06Xbqo62N2As3biWYfhP9XHJrTEmTrEH9A'), bot=<maxapi.bot.Bot object at 0x7f9e665de5d0>), Image(type='image', payload=PhotoAttachmentPayload(photo_id=11617328454, token='MMWyD7rMb8NjgXrQNF76RuD+nlBl3mdhr0MLZaFSrfp2RfJ3YcHbQq4yZFk8BDTh1DirR2ubdvNADU/Xwt7HtHkNcIX+UYxu6wx/wteth/2IYomrQt/1pVNoqBLcit3F', url='https://i.oneme.ru/i?r=BTGBPUwtwgYUeoFhO7rESmr8WKL6dc7P4DdLgYcto8KkvHbiWYfhP9XHJrTEmTrEH9A'), bot=<maxapi.bot.Bot object at 0x7f9e665de5d0>)], markup=[]) stat=None url=None
+2026-04-06 14:51:44,583 - __main__ - INFO - 📨 Сообщение от 13994310: текст='проверяем полностью работу, отправки фото  и сообщ'
+2026-04-06 14:51:44,583 - __main__ - INFO - 📎 Вложений: 2
+2026-04-06 14:51:44,583 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 14:51:44,583 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 14:51:44,583 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 14:51:44,584 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 14:51:44,584 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 14:51:44,584 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 14:51:44,584 - __main__ - INFO - 📤 Отправка в CRM: фото=2, гео=False
+2026-04-06 14:51:44,618 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 29
+2026-04-06 14:51:44,750 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:52:04,738 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:52:08,765 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:52:12,732 - __main__ - INFO - 📦 Полный объект message: bot=<maxapi.bot.Bot object at 0x7f9e665de5d0> sender=User(user_id=13994310, first_name='Алексей', last_name='Малыхин', username=None, is_bot=False, last_activity_time=1775469126000, description=None, avatar_url=None, full_avatar_url=None, commands=None) recipient=Recipient(user_id=106560023, chat_id=109867857, chat_type=<ChatType.DIALOG: 'dialog'>) timestamp=1775469132553 link=None body=MessageBody(mid='mid.00000000068c7351019d6234fb0922e1', seq=116357145071002337, text='', attachments=[Location(type='location', payload=None, bot=<maxapi.bot.Bot object at 0x7f9e665de5d0>, latitude=63.20283126831055, longitude=75.45181274414062)], markup=[]) stat=None url=None
+2026-04-06 14:52:12,732 - __main__ - INFO - 📨 Сообщение от 13994310: текст='Нет'
+2026-04-06 14:52:12,732 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 14:52:12,732 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 14:52:12,732 - __main__ - INFO - 📍 Геолокация: lat=63.20283126831055, lon=75.45181274414062
+2026-04-06 14:52:12,732 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
+2026-04-06 14:52:12,785 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 30
+2026-04-06 14:52:12,939 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310

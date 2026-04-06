@@ -10,8 +10,9 @@ class MessageBase(BaseModel):
     user_name: str
     text: str = ""
     photos: List[str] = []
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
+    latitude: Optional[float] = None  # Добавить
+    longitude: Optional[float] = None  # Добавить
+    received_at: Optional[datetime] = None
 
 class MessageCreate(MessageBase):
     received_at: Optional[datetime] = None  # <-- ДОБАВИТЬ ЭТУ СТРОКУ
@@ -31,6 +32,8 @@ class MessageResponse(MessageBase):
     updated_at: datetime
     resolved_at: Optional[datetime] = None
     response_time: Optional[int] = None
+    latitude: Optional[float] = None  # Добавить
+    longitude: Optional[float] = None  # Добавить
 
     class Config:
         from_attributes = True

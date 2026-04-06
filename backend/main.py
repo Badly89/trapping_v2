@@ -23,7 +23,8 @@ from auth import (
     require_role, get_password_hash
 )
 from schemas import (
-    UserCreate, UserResponse, LoginRequest, TokenResponse,
+    UserCreate, UserResponse, UserUpdate,  # Добавить UserUpdate
+    LoginRequest, TokenResponse,
     MessageCreate, MessageResponse, MessageUpdate,
     TaskCreate, TaskResponse, TaskUpdate,
     ReportCreate, ReportResponse
@@ -128,6 +129,74 @@ def get_users(
             updated_at=u.updated_at
         ) for u in users
     ]
+
+@app.patch("/api/users/{user_id}")
+def update_user(
+    user_id: int,
+    user_data: UserUpdate,
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    db: Session = Depends(get_db)
+):
+    """Обновление пользователя (только для администратора)"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Нельзя изменять себя через этот эндпоинт (используйте отдельный)
+    if user.id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot update yourself here")
+    
+    if user_data.email is not None:
+        user.email = user_data.email
+    if user_data.full_name is not None:
+        user.full_name = user_data.full_name
+    if user_data.role is not None:
+        user.role = UserRole(user_data.role)
+    if user_data.password is not None and user_data.password:
+        user.hashed_password = get_password_hash(user_data.password)
+    if user_data.is_active is not None:
+        user.is_active = user_data.is_active
+    
+    user.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(user)
+    
+    return UserResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        full_name=user.full_name,
+        role=user.role.value,
+        is_active=user.is_active,
+        created_at=user.created_at,
+        updated_at=user.updated_at
+    )
+
+# main.py - добавьте для смены своего пароля
+@app.patch("/api/auth/change-password")
+# main.py - добавьте этот эндпоинт
+@app.patch("/api/auth/change-password")
+def change_password(
+    old_password: str,
+    new_password: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Смена пароля текущего пользователя"""
+    from auth import verify_password
+    
+    if not verify_password(old_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Wrong password")
+    
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password too short")
+    
+    current_user.hashed_password = get_password_hash(new_password)
+    current_user.updated_at = datetime.utcnow()
+    db.commit()
+    
+    return {"status": "success", "message": "Password changed"}
+
 
 @app.patch("/api/users/{user_id}/toggle")
 def toggle_user(
