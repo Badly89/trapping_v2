@@ -1,19 +1,27 @@
-# schemas/user.py - Pydantic схемы для пользователей
-from pydantic import BaseModel, EmailStr, Field
+# schemas/user.py
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 
 class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
-    email: EmailStr
+    email: str
     full_name: str = Field(..., min_length=2, max_length=100)
     role: str = "operator"
+    
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v):
+        if '@' not in v:
+            raise ValueError('Email должен содержать символ @')
+        return v
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=6)
 
 class UserUpdate(BaseModel):
-    email: Optional[EmailStr] = None
+    """Схема для обновления пользователя"""
+    email: Optional[str] = None
     full_name: Optional[str] = None
     password: Optional[str] = None
     role: Optional[str] = None

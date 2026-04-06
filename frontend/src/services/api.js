@@ -41,6 +41,8 @@ api.interceptors.response.use(
 export const auth = {
     login: (username, password) => api.post('/auth/login', { username, password }),
     getMe: () => api.get('/auth/me'),
+    changePassword: (old_password, new_password) => 
+        api.patch('/auth/change-password', { old_password, new_password }),  // Добавить
     logout: () => {
         localStorage.removeItem('access_token');
         localStorage.removeItem('user');
@@ -49,8 +51,9 @@ export const auth = {
 
 // Пользователи
 export const users = {
-    getAll: () => api.get('/users'),
+   getAll: () => api.get('/users'),
     create: (data) => api.post('/users', data),
+    update: (userId, data) => api.patch(`/users/${userId}`, data),  // Добавить
     toggle: (userId) => api.patch(`/users/${userId}/toggle`),
 };
 
@@ -77,5 +80,24 @@ export const reports = {
         headers: { 'Content-Type': 'multipart/form-data' },
     }),
 };
+
+// src/services/api.js - добавьте перехват ошибок
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        // Не показываем ошибку 403 для запросов пользователей, если пользователь не админ
+        if (error.response?.status === 403 && error.config?.url?.includes('/users')) {
+            console.warn('Доступ к списку пользователей запрещен (недостаточно прав)');
+            return Promise.resolve({ data: [] });
+        }
+        
+        if (error.response?.status === 401) {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+        return Promise.reject(error);
+    }
+);
 
 export default api;
