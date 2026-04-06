@@ -1,9 +1,17 @@
 # models/message.py - Модель сообщения
-from sqlalchemy import Column, Integer, String, DateTime, Text, JSON, Float, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Enum, Text, Float, ForeignKey
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import enum
 from .base import Base
+
+
+# Часовой пояс Екатеринбурга (UTC+5)
+YEKATERINBURG_TZ = timezone(timedelta(hours=5))
+
+def get_yekaterinburg_time():
+    """Возвращает текущее время в Екатеринбурге (UTC+5)"""
+    return datetime.now(YEKATERINBURG_TZ)
 
 class MessageStatus(str, enum.Enum):
     NEW = "new"
@@ -35,8 +43,8 @@ class Message(Base):
     status = Column(Enum(MessageStatus), default=MessageStatus.NEW)
     priority = Column(Enum(Priority), default=Priority.MEDIUM)
     assigned_to_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_yekaterinburg_time)  # <-- ИСПРАВЛЕНО
+    updated_at = Column(DateTime, default=get_yekaterinburg_time, onupdate=get_yekaterinburg_time)
     resolved_at = Column(DateTime, nullable=True)
     response_time = Column(Integer, nullable=True)
 

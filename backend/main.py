@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 # Импорты сервисов и утилит
 from services import UserService, MessageService, TaskService, ReportService
 from utils import generate_map_links, format_datetime, validate_coordinates
-
+import logging
 
 import shutil
 import os
@@ -32,6 +32,11 @@ from schemas import (
 
 app = FastAPI(title="CRM System", version="3.0")
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 # CORS
 app.add_middleware(
     CORSMiddleware,
@@ -198,6 +203,43 @@ def change_password(
     return {"status": "success", "message": "Password changed"}
 
 
+# Добавьте после других эндпоинтов
+@app.get("/api/debug/time")
+def debug_time(db: Session = Depends(get_db)):
+    """Отладочный эндпоинт для проверки времени"""
+    from datetime import datetime, timedelta
+    
+    # Часовой пояс Екатеринбурга (UTC+5)
+    YEKATERINBURG_OFFSET = timedelta(hours=5)
+    
+    # Текущее время
+    now_utc = datetime.utcnow()
+    now_yekat = now_utc + YEKATERINBURG_OFFSET
+    
+    # Последние 5 сообщений - используем Message вместо MessageModel
+    last_messages = db.query(Message).order_by(Message.id.desc()).limit(5).all()
+    
+    messages_data = []
+    for msg in last_messages:
+        created_at_local = None
+        if msg.created_at:
+            created_at_local = msg.created_at + YEKATERINBURG_OFFSET
+        
+        messages_data.append({
+            "id": msg.id,
+            "user_name": msg.user_name,
+            "created_at": msg.created_at.isoformat() if msg.created_at else None,
+            "created_at_local": created_at_local.strftime('%Y-%m-%d %H:%M:%S') if created_at_local else None,
+        })
+    
+    return {
+        "server_time_utc": now_utc.isoformat(),
+        "server_time_utc_str": now_utc.strftime('%Y-%m-%d %H:%M:%S'),
+        "yekaterinburg_time": now_yekat.isoformat(),
+        "yekaterinburg_time_str": now_yekat.strftime('%Y-%m-%d %H:%M:%S'),
+        "last_messages": messages_data
+    }
+
 @app.patch("/api/users/{user_id}/toggle")
 def toggle_user(
     user_id: int,
@@ -217,28 +259,29 @@ def toggle_user(
 # ========== Messages ==========
 @app.post("/api/messages", response_model=MessageResponse)
 def create_message(message: MessageCreate, db: Session = Depends(get_db)):
-    db_message = Message(**message.dict())
+    """Создание нового сообщения с временем Екатеринбурга"""
+    
+    # Создаем сообщение - время created_at установится автоматически через default
+    db_message = Message(
+        source=message.source,
+        chat_id=message.chat_id,
+        user_id=message.user_id,
+        user_name=message.user_name,
+        text=message.text,
+        photos=message.photos,
+        latitude=message.latitude,
+        longitude=message.longitude
+        # created_at установится автоматически через default=get_yekaterinburg_time
+    )
     db.add(db_message)
     db.commit()
     db.refresh(db_message)
-    return MessageResponse(
-        id=db_message.id,
-        source=db_message.source,
-        chat_id=db_message.chat_id,
-        user_id=db_message.user_id,
-        user_name=db_message.user_name,
-        text=db_message.text,
-        photos=db_message.photos,
-        latitude=db_message.latitude,
-        longitude=db_message.longitude,
-        status=db_message.status.value,
-        priority=db_message.priority.value,
-        assigned_to_id=db_message.assigned_to_id,
-        created_at=db_message.created_at,
-        updated_at=db_message.updated_at,
-        resolved_at=db_message.resolved_at,
-        response_time=db_message.response_time
-    )
+    
+    # Логируем время для отладки
+    logger.info(f"📨 Сообщение #{db_message.id} создано в {db_message.created_at}")
+    
+    return db_message
+
 
 @app.get("/api/messages", response_model=List[MessageResponse])
 def get_messages(

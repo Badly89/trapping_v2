@@ -1,4 +1,4 @@
-# bot.py - Финальная версия с maxapi и правильной обработкой фото
+# bot.py - Исправленная работа с временем
 import os
 import json
 import asyncio
@@ -47,11 +47,40 @@ dp = Dispatcher()
 PHOTOS_DIR = "downloaded_photos"
 os.makedirs(PHOTOS_DIR, exist_ok=True)
 
-# ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+# ==================== РАБОТА С ВРЕМЕНЕМ ====================
+
+# Часовой пояс Екатеринбурга (UTC+5)
+YEKATERINBURG_TZ = timezone(timedelta(hours=5))
 
 def get_yekaterinburg_time() -> datetime:
-    """Возвращает текущее время в Екатеринбурге (UTC+5)"""
-    return datetime.now(timezone(timedelta(hours=5)))
+    """Возвращает текущее время в Екатеринбурге (UTC+5) с часовым поясом"""
+    return datetime.now(YEKATERINBURG_TZ)
+
+def format_yekaterinburg_time(dt: datetime = None) -> str:
+    """Форматирует время Екатеринбурга в читаемый формат"""
+    if dt is None:
+        dt = get_yekaterinburg_time()
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+def format_yekaterinburg_datetime(dt: datetime = None) -> str:
+    """Форматирует дату и время для отображения"""
+    if dt is None:
+        dt = get_yekaterinburg_time()
+    return dt.strftime("%d.%m.%Y %H:%M:%S")
+
+def format_yekaterinburg_time_short(dt: datetime = None) -> str:
+    """Короткий формат времени"""
+    if dt is None:
+        dt = get_yekaterinburg_time()
+    return dt.strftime("%H:%M:%S")
+
+def get_iso_with_tz(dt: datetime = None) -> str:
+    """Возвращает ISO формат с часовым поясом для CRM"""
+    if dt is None:
+        dt = get_yekaterinburg_time()
+    return dt.isoformat()
+
+# ==================== ОСТАЛЬНЫЕ ФУНКЦИИ ====================
 
 def generate_map_links(lat: float, lon: float) -> Dict[str, str]:
     """Генерация ссылок на карты"""
@@ -89,7 +118,6 @@ async def upload_photo_to_max(file_content: bytes, filename: str) -> Optional[st
     
     try:
         async with aiohttp.ClientSession() as session:
-            # Запрашиваем URL для загрузки
             logger.info(f"📤 Запрос URL для загрузки...")
             async with session.post(
                 "https://platform-api.max.ru/uploads?type=image",
@@ -106,7 +134,6 @@ async def upload_photo_to_max(file_content: bytes, filename: str) -> Optional[st
                     logger.error("❌ Нет URL в ответе")
                     return None
                 
-                # Загружаем файл
                 form_data = aiohttp.FormData()
                 form_data.add_field("data", file_content, filename=filename)
                 
@@ -130,11 +157,7 @@ async def upload_photo_to_max(file_content: bytes, filename: str) -> Optional[st
         return None
 
 async def get_photo_url(attachment) -> Optional[str]:
-    """
-    Получает URL фото из вложения.
-    Поддерживает прямой URL и загрузку через file_id/photo_id.
-    """
-    # Получаем данные вложения
+    """Получает URL фото из вложения"""
     if hasattr(attachment, 'model_dump'):
         att_data = attachment.model_dump()
     elif hasattr(attachment, 'dict'):
@@ -144,17 +167,14 @@ async def get_photo_url(attachment) -> Optional[str]:
     
     payload = att_data.get('payload', {})
     
-    # 1. Пробуем получить прямой URL (самый быстрый способ)
     direct_url = payload.get('url')
     if direct_url:
         logger.info(f"📷 Найден прямой URL")
         return direct_url
     
-    # 2. Пробуем получить photo_id
     photo_id = payload.get('photo_id')
     if photo_id:
         logger.info(f"📷 Найден photo_id: {photo_id}")
-        # Для photo_id нужно скачать файл
         import aiohttp
         import aiofiles
         
@@ -171,19 +191,16 @@ async def get_photo_url(attachment) -> Optional[str]:
                     file_content = await file_response.read()
                     logger.info(f"✅ Файл скачан: {len(file_content)} байт")
                     
-                    # Локальное сохранение
                     local_path = os.path.join(PHOTOS_DIR, f"{photo_id}.jpg")
                     async with aiofiles.open(local_path, 'wb') as f:
                         await f.write(file_content)
                     logger.info(f"💾 Файл сохранен локально: {local_path}")
                     
-                    # Загружаем в MAX
                     return await upload_photo_to_max(file_content, f"{photo_id}.jpg")
         except Exception as e:
             logger.error(f"❌ Ошибка при обработке photo_id: {e}")
             return None
     
-    # 3. Пробуем получить file_id
     file_id = payload.get('file_id') or att_data.get('id')
     if file_id:
         logger.info(f"📷 Найден file_id: {file_id}")
@@ -335,7 +352,6 @@ async def callback_help(event: MessageCallback):
 @dp.message_created()
 async def handle_message(event: MessageCreated):
     """Обработка всех входящих сообщений (фото, геолокация, текст)"""
-    logger.info(f"📦 Полный объект message: {event.message}")
     message = event.message
     user = message.sender
     chat_id = message.recipient.chat_id
@@ -346,6 +362,13 @@ async def handle_message(event: MessageCreated):
     
     if text and text.startswith('/'):
         return
+    
+    # Получаем текущее время в Екатеринбурге
+    now = get_yekaterinburg_time()
+    time_str = format_yekaterinburg_datetime(now)
+    time_short = format_yekaterinburg_time_short(now)
+    
+    logger.info(f"🕐 Текущее время (Екатеринбург): {time_str}")
     
     # Получаем вложения
     attachments = getattr(message.body, 'attachments', [])
@@ -366,9 +389,7 @@ async def handle_message(event: MessageCreated):
                 logger.info(f"✅ Фото обработано")
                     
         elif att_type == 'location':
-            # Безопасная обработка геолокации
             try:
-                # Пробуем получить координаты напрямую из атрибутов
                 latitude = getattr(att, 'lat', None)
                 longitude = getattr(att, 'lon', None)
                 
@@ -377,35 +398,19 @@ async def handle_message(event: MessageCreated):
                 if not longitude:
                     longitude = getattr(att, 'longitude', None)
                 
-                # Если не нашли, пробуем через payload
-                if not latitude or not longitude:
-                    if hasattr(att, 'payload'):
-                        payload = att.payload
-                        if payload:
-                            if hasattr(payload, 'get'):
-                                latitude = payload.get('lat') or payload.get('latitude')
-                                longitude = payload.get('lon') or payload.get('longitude')
-                            elif hasattr(payload, 'lat'):
-                                latitude = payload.lat
-                                longitude = payload.lon
-                
                 logger.info(f"📍 Геолокация: lat={latitude}, lon={longitude}")
             except Exception as e:
                 logger.error(f"❌ Ошибка обработки геолокации: {e}")
                 latitude = None
                 longitude = None
     
-    # Время получения
-    now = get_yekaterinburg_time()
-    time_str = now.strftime("%Y-%m-%d %H:%M:%S")
-    
     # Формируем текст
     full_text = text or ''
     if latitude and longitude:
         maps = generate_map_links(latitude, longitude)
-        full_text += (full_text and '\n\n' or '') + f"📍 Геолокация:\n"
-        full_text += f"🗺️ Яндекс.Карты: {maps['yandex']}\n"
-        full_text += f"🗺️ Google Maps: {maps['google']}\n"
+        full_text += (full_text and '\n\n' or '') + f"📍 **Геолокация:**\n"
+        full_text += f"🗺️ [Яндекс.Карты]({maps['yandex']})\n"
+        full_text += f"🗺️ [Google Maps]({maps['google']})\n"
         full_text += f"📌 Координаты: {latitude:.6f}, {longitude:.6f}"
     
     # Отправляем в CRM
@@ -419,10 +424,12 @@ async def handle_message(event: MessageCreated):
             "photos": photo_urls,
             "latitude": latitude,
             "longitude": longitude,
-            "received_at": now.isoformat()
+            "received_at": get_iso_with_tz(now)
         }
         
         logger.info(f"📤 Отправка в CRM: фото={len(photo_urls)}, гео={latitude is not None}")
+        logger.info(f"🕐 Время отправки: {time_str}")
+        
         saved = await save_to_crm(crm_payload)
         
         if saved:
@@ -436,13 +443,18 @@ async def handle_message(event: MessageCreated):
             await bot.send_message(chat_id=chat_id, text="❌ Ошибка, попробуйте позже.", attachments=[create_main_menu()])
     else:
         await bot.send_message(chat_id=chat_id, text="Используйте кнопки меню.", attachments=[create_main_menu()])
+
 # ==================== ЗАПУСК ====================
 
 async def main():
+    # Выводим информацию о времени при запуске
+    now = get_yekaterinburg_time()
+    
     print("\n" + "=" * 60)
     print("🚀 ЗАПУСК БОТА (maxapi)")
     print(f"📁 Фото: {PHOTOS_DIR}")
     print(f"🔗 CRM: {CRM_API_URL}")
+    print(f"🕐 Текущее время (Екатеринбург): {format_yekaterinburg_datetime(now)}")
     print("=" * 60 + "\n")
     
     await bot.delete_webhook()

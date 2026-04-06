@@ -1,6 +1,7 @@
 // src/components/Tasks/TaskList.jsx
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { formatTableDate, formatRelativeTime } from '../../utils/dateUtils';
 import {
     Paper,
     Table,
@@ -155,7 +156,7 @@ const TaskList = () => {
 
     const formatDate = (dateString) => {
         if (!dateString) return '—';
-        return new Date(dateString).toLocaleString('ru-RU');
+        return formatTableDate(dateString);
     };
 
     const getMessageText = (messageId) => {

@@ -12,10 +12,10 @@ class MessageBase(BaseModel):
     photos: List[str] = []
     latitude: Optional[float] = None  # Добавить
     longitude: Optional[float] = None  # Добавить
-    received_at: Optional[datetime] = None
+    # received_at: Optional[datetime] = None
 
 class MessageCreate(MessageBase):
-    received_at: Optional[datetime] = None  # <-- ДОБАВИТЬ ЭТУ СТРОКУ
+    received_at: Optional[datetime] = None # Не используется, оставлено для совместимости
 
 class MessageUpdate(BaseModel):
     status: Optional[str] = None

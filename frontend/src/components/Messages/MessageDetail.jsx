@@ -23,6 +23,7 @@ import {
     Alert,
     Link,
 } from '@mui/material';
+import { formatFullDate, formatResponseTime } from '../../utils/dateUtils';
 import {
     Close as CloseIcon,
     ExpandMore,
@@ -140,10 +141,11 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
         };
     };
 
-    const formatDate = (dateString) => {
-        if (!dateString) return '—';
-        return new Date(dateString).toLocaleString('ru-RU');
-    };
+// Замените функцию formatDate на:
+const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    return formatFullDate(dateString);
+};
 
     const getStatusColor = (status) => {
         const colors = {

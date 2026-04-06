@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест времени CRM</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        pre {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .time-box {
+            background: #e3f2fd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+        }
+        .warning {
+            background: #fff3e0;
+            border-left-color: #ff9800;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #f0f0f0;
+        }
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Тест времени в CRM</h1>
+        
+        <div class="time-box">
+            <h3>🕐 Информация о текущем времени:</h3>
+            <div id="localTime"></div>
+            <div id="utcTime"></div>
+            <div id="yekatTime"></div>
+            <div id="browserOffset"></div>
+        </div>
+        
+        <div class="time-box warning">
+            <h3>⚠️ Важная информация:</h3>
+            <p>Екатеринбург находится в часовом поясе <strong>UTC+5</strong></p>
+            <p>Ваш браузер использует часовой пояс: <strong id="browserTimezone"></strong></p>
+            <p>Разница с Екатеринбургом: <strong id="timezoneDiff"></strong></p>
+        </div>
+        
+        <button onclick="fetchMessages()">📥 Загрузить сообщения из CRM</button>
+        <button onclick="testSendMessage()">📤 Отправить тестовое сообщение</button>
+        <button onclick="clearResults()">🗑️ Очистить</button>
+        
+        <h2>📋 Результаты:</h2>
+        <div id="results">
+            <pre>Нажмите кнопку для загрузки сообщений...</pre>
+        </div>
+    </div>
+
+    <script>
+        // Функция получения времени Екатеринбурга (UTC+5)
+        function getYekaterinburgTime() {
+            const now = new Date();
+            // Получаем UTC время и добавляем 5 часов
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            return new Date(utc + (5 * 3600000));
+        }
+        
+        // Форматирование времени
+        function formatTime(date, format = 'full') {
+            if (!date) return 'Нет данных';
+            if (format === 'full') {
+                return date.toLocaleString('ru-RU', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZoneName: 'short'
+                });
+            }
+            return date.toLocaleString('ru-RU');
+        }
+        
+        // Отображение информации о времени
+        function displayTimeInfo() {
+            const now = new Date();
+            const utc = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
+            const yekat = getYekaterinburgTime();
+            
+            document.getElementById('localTime').innerHTML = `<strong>🌍 Локальное время браузера:</strong> ${formatTime(now)}`;
+            document.getElementById('utcTime').innerHTML = `<strong>🌐 UTC время:</strong> ${formatTime(utc)}`;
+            document.getElementById('yekatTime').innerHTML = `<strong>📍 Екатеринбург (UTC+5):</strong> ${formatTime(yekat)}`;
+            document.getElementById('browserOffset').innerHTML = `<strong>⏱️ Смещение браузера:</strong> ${-now.getTimezoneOffset() / 60} часов от UTC`;
+            
+            const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            document.getElementById('browserTimezone').innerHTML = tzName;
+            
+            const diff = -now.getTimezoneOffset() / 60 - 5;
+            document.getElementById('timezoneDiff').innerHTML = `${diff > 0 ? '+' : ''}${diff} часов`;
+        }
+        
+        // Загрузка сообщений из CRM
+        async function fetchMessages() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<pre>⏳ Загрузка сообщений...</pre>';
+            
+            try {
+                // Получаем токен из localStorage если есть
+                const token = localStorage.getItem('access_token');
+                const headers = {};
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+                
+                const response = await fetch('http://localhost:8000/api/messages?limit=10', {
+                    headers: headers
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const messages = await response.json();
+                
+                let html = '<h3>📊 Сообщения из CRM:</h3>';
+                html += '<table>';
+                html += '<tr><th>ID</th><th>Пользователь</th><th>created_at (сырое)</th><th>created_at (локальное)</th><th>created_at (Екатеринбург)</th><th>Разница</th></tr>';
+                
+                for (const msg of messages) {
+                    const rawDate = msg.created_at;
+                    const localDate = new Date(rawDate);
+                    const yekatDate = getYekaterinburgTime();
+                    const yekatFromRaw = new Date(new Date(rawDate).getTime() + (5 * 3600000));
+                    
+                    // Вычисляем разницу
+                    const diff = Math.round((yekatFromRaw - localDate) / 60000);
+                    
+                    html += `<tr>
+                        <td>${msg.id}</td>
+                        <td>${msg.user_name}</td>
+                        <td><code>${rawDate}</code></td>
+                        <td>${formatTime(localDate)}</td>
+                        <td>${formatTime(yekatFromRaw)}</td>
+                        <td>${diff} мин</td>
+                    </tr>`;
+                }
+                html += '</table>';
+                
+                html += '<div class="time-box" style="margin-top:20px">';
+                html += '<h4>📝 Пояснение:</h4>';
+                html += '<ul>';
+                html += '<li><strong>created_at (сырое)</strong> - значение из базы данных в ISO формате (обычно UTC)</li>';
+                html += '<li><strong>created_at (локальное)</strong> - как браузер интерпретирует эту дату</li>';
+                html += '<li><strong>created_at (Екатеринбург)</strong> - как должно быть для Екатеринбурга (UTC+5)</li>';
+                html += '</ul>';
+                html += '</div>';
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<pre style="color: red;">❌ Ошибка: ${error.message}\n\nУбедитесь, что CRM запущен на порту 8000 и вы авторизованы.</pre>`;
+            }
+        }
+        
+        // Тестовая отправка сообщения
+        async function testSendMessage() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<pre>⏳ Отправка тестового сообщения...</pre>';
+            
+            const now = new Date();
+            const yekat = getYekaterinburgTime();
+            
+            const testMessage = {
+                source: 'test',
+                chat_id: 'test_123',
+                user_id: 'test_456',
+                user_name: 'Тестовый пользователь',
+                text: `Тестовое сообщение отправлено ${formatTime(yekat)}`,
+                photos: [],
+                received_at: yekat.toISOString()
+            };
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testMessage)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                resultsDiv.innerHTML = `
+                    <pre style="background: #e8f5e9;">
+✅ Тестовое сообщение отправлено!
+
+📤 Отправлено:
+   Время отправки (Екатеринбург): ${formatTime(yekat)}
+   ISO формат: ${yekat.toISOString()}
+
+📥 Получено от CRM:
+   ID: ${result.id}
+   created_at: ${result.created_at}
+   created_at (локальное): ${formatTime(new Date(result.created_at))}
+   created_at (Екатеринбург): ${formatTime(new Date(new Date(result.created_at).getTime() + (5 * 3600000)))}
+
+${JSON.stringify(result, null, 2)}
+                    </pre>
+                `;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<pre style="color: red;">❌ Ошибка отправки: ${error.message}</pre>`;
+            }
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '<pre>Результаты очищены</pre>';
+        }
+        
+        // Инициализация
+        displayTimeInfo();
+        setInterval(displayTimeInfo, 1000);
+        
+        // Автоматическая загрузка при открытии
+        setTimeout(() => {
+            if (confirm('Загрузить сообщения из CRM?')) {
+                fetchMessages();
+            }
+        }, 500);
+        // Теперь дата из БД уже в Екатеринбургском времени
+    function displayDate(rawDate) {
+        const date = new Date(rawDate);
+        return date.toLocaleString('ru-RU', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+    
+    </script>
+</body>
+</html>

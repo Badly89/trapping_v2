@@ -15,6 +15,9 @@ import UserList from './components/Users/UserList';
 import Settings from './components/Settings/Settings';
 import { theme } from './theme';  // Импортируем созданную тему
 
+import TestTime from './components/TestTime';
+
+
 const AppRoutes = () => {
     const { isAdmin } = useAuth();
 
@@ -29,6 +32,7 @@ const AppRoutes = () => {
                 <Route path="/reports" element={<ReportList />} />
                 {isAdmin && <Route path="/users" element={<UserList />} />}
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/test-time" element={<TestTime />} />
             </Route>
         </Routes>
     );

@@ -1,6 +1,7 @@
 // src/components/Dashboard/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatRelativeTime } from '../../utils/dateUtils';
 import {
     Grid,
     Card,
@@ -153,17 +154,10 @@ const Dashboard = () => {
         return texts[status] || status;
     };
 
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diff = now - date;
-        const minutes = Math.floor(diff / 60000);
-        
-        if (minutes < 1) return 'Только что';
-        if (minutes < 60) return `${minutes} мин назад`;
-        if (minutes < 1440) return `${Math.floor(minutes / 60)} ч назад`;
-        return date.toLocaleDateString('ru-RU');
-    };
+        const formatDate = (dateString) => {
+            if (!dateString) return '—';
+            return formatRelativeTime(dateString);
+        };
 
     // Статистика для карточек
     const messageStats = [

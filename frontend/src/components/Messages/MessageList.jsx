@@ -1,8 +1,6 @@
 // src/components/Messages/MessageList.jsx
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { LocationOn } from '@mui/icons-material';
-import { Tooltip } from '@mui/material';
 import {
     Paper,
     Table,
@@ -24,11 +22,13 @@ import {
     DialogContent,
     DialogActions,
     Grid,
+    Tooltip,
 } from '@mui/material';
 import { Visibility, Refresh, FilterList, Clear } from '@mui/icons-material';
 import { messages, users } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import MessageDetail from './MessageDetail';
+import { formatTableDate, formatRelativeTime } from '../../utils/dateUtils';
 
 const statusColors = {
     new: 'warning',
@@ -86,14 +86,12 @@ const MessageList = () => {
     const fetchMessages = async () => {
         setLoading(true);
         try {
-            // Собираем параметры фильтрации
             const params = {};
             if (filters.status) params.status = filters.status;
             if (filters.priority) params.priority = filters.priority;
             if (filters.assigned_to) params.assigned_to = filters.assigned_to;
             if (filters.has_location) params.has_location = filters.has_location === 'true';
             
-            console.log('Фильтры:', params);
             const response = await messages.getAll(params);
             setMessageList(response.data || []);
         } catch (error) {
@@ -120,7 +118,6 @@ const MessageList = () => {
     };
 
     const handleApplyFilters = () => {
-        // Обновляем URL параметры
         const newParams = {};
         if (filters.status) newParams.status = filters.status;
         if (filters.priority) newParams.priority = filters.priority;
@@ -139,18 +136,6 @@ const MessageList = () => {
         });
         setSearchParams({});
         setTimeout(() => fetchMessages(), 100);
-    };
-
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diff = now - date;
-        const minutes = Math.floor(diff / 60000);
-        
-        if (minutes < 1) return 'Только что';
-        if (minutes < 60) return `${minutes} мин назад`;
-        if (minutes < 1440) return `${Math.floor(minutes / 60)} ч назад`;
-        return date.toLocaleDateString('ru-RU');
     };
 
     const getUserName = (userId) => {
@@ -174,7 +159,6 @@ const MessageList = () => {
                 </Box>
             </Box>
 
-            {/* Фильтры */}
             {showFilters && (
                 <Paper sx={{ p: 2, mb: 2 }}>
                     <Grid container spacing={2}>
@@ -240,8 +224,8 @@ const MessageList = () => {
                                 size="small"
                             >
                                 <MenuItem value="">Все</MenuItem>
-                                <MenuItem value="true">Есть геолокация</MenuItem>
-                                <MenuItem value="false">Нет геолокации</MenuItem>
+                                <MenuItem value="true">Есть</MenuItem>
+                                <MenuItem value="false">Нет</MenuItem>
                             </TextField>
                         </Grid>
                     </Grid>
@@ -257,7 +241,6 @@ const MessageList = () => {
                 </Paper>
             )}
 
-            {/* Таблица сообщений */}
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead sx={{ bgcolor: 'grey.50' }}>
@@ -268,7 +251,7 @@ const MessageList = () => {
                             <TableCell sx={{ fontWeight: 'bold' }}>Статус</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Приоритет</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Фото</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Геолокация</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Гео</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Дата</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }} align="center">Действия</TableCell>
                         </TableRow>
@@ -323,24 +306,13 @@ const MessageList = () => {
                                     <TableCell align="center">
                                         {msg.photos?.length || 0}
                                     </TableCell>
-                                   
                                     <TableCell align="center">
-                                        {msg.latitude && msg.longitude ? (
-                                            <Tooltip title={`${msg.latitude}, ${msg.longitude}`}>
-                                                <Chip 
-                                                    icon={<LocationOn />} 
-                                                    label="Есть" 
-                                                    size="small" 
-                                                    color="primary" 
-                                                    variant="outlined"
-                                                />
-                                            </Tooltip>
-                                        ) : (
-                                            <Chip label="Нет" size="small" variant="outlined" />
-                                        )}
+                                        {msg.latitude && msg.longitude ? '📍' : '—'}
                                     </TableCell>
                                     <TableCell>
-                                        {formatDate(msg.created_at)}
+                                        <Tooltip title={formatTableDate(msg.created_at)}>
+                                            <span>{formatRelativeTime(msg.created_at)}</span>
+                                        </Tooltip>
                                     </TableCell>
                                     <TableCell align="center">
                                         <IconButton onClick={() => handleViewMessage(msg)} size="small">
@@ -354,7 +326,6 @@ const MessageList = () => {
                 </Table>
             </TableContainer>
 
-            {/* Диалог деталей сообщения */}
             <MessageDetail
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
