@@ -555,3 +555,74 @@ client_session: <aiohttp.client.ClientSession object at 0x7f76261ec710>
 2026-04-06 15:36:00,983 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:36:00
 2026-04-06 15:36:01,045 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 40
 2026-04-06 15:36:01,418 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:46:12,368 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:46:54,788 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.BOT_STOPPED | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:46:58,996 - __main__ - INFO - 📨 Сообщение от 26919939: текст='7'
+2026-04-06 15:46:58,996 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:46:58
+2026-04-06 15:46:58,996 - __main__ - INFO - 📎 Вложений: 0
+2026-04-06 15:46:58,996 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=False
+2026-04-06 15:46:58,996 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:46:58
+2026-04-06 15:46:59,025 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 41
+2026-04-06 15:46:59,133 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:47:03,930 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:47:13,938 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:47:27,094 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:47:29,217 - __main__ - INFO - 📨 Сообщение от 26919939: текст='Нет'
+2026-04-06 15:47:29,218 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:47:29
+2026-04-06 15:47:29,218 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:47:29,218 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:47:29,218 - __main__ - INFO - 📍 Геолокация: lat=0.0, lon=0.0
+2026-04-06 15:47:29,326 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:47:38,730 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:47:50,743 - __main__ - INFO - 📨 Сообщение от 9324104: текст='Нет'
+2026-04-06 15:47:50,743 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:47:50
+2026-04-06 15:47:50,743 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:47:50,743 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:47:50,743 - __main__ - INFO - 📍 Геолокация: lat=63.19969940185547, lon=75.4493179321289
+2026-04-06 15:47:50,743 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
+2026-04-06 15:47:50,743 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:47:50
+2026-04-06 15:47:50,775 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 42
+2026-04-06 15:47:50,877 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:48:02,330 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:48:08,735 - __main__ - INFO - 📨 Сообщение от 26919939: текст='Нет'
+2026-04-06 15:48:08,735 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:48:08
+2026-04-06 15:48:08,735 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:48:08,735 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:48:08,735 - __main__ - INFO - 📍 Геолокация: lat=68.57109832763672, lon=69.88206481933594
+2026-04-06 15:48:08,735 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
+2026-04-06 15:48:08,735 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:48:08
+2026-04-06 15:48:08,770 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 43
+2026-04-06 15:48:08,875 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:48:16,488 - __main__ - INFO - 📨 Сообщение от 9324104: текст='Нет'
+2026-04-06 15:48:16,489 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:48:16
+2026-04-06 15:48:16,489 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:48:16,489 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:48:16,489 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:48:16,489 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:48:16,489 - __main__ - INFO - 📤 Отправка в CRM: фото=1, гео=False
+2026-04-06 15:48:16,489 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:48:16
+2026-04-06 15:48:16,538 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 44
+2026-04-06 15:48:16,666 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:48:26,347 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:48:35,016 - __main__ - INFO - 📨 Сообщение от 26919939: текст='Нет'
+2026-04-06 15:48:35,016 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:48:35
+2026-04-06 15:48:35,016 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:48:35,016 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:48:35,016 - __main__ - INFO - 📍 Геолокация: lat=0.0, lon=0.0
+2026-04-06 15:48:35,120 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:49:11,191 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:49:31,081 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:49:37,251 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:50:00,268 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.BOT_STOPPED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:50:01,428 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:50:03,504 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:50:06,423 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:50:13,256 - __main__ - INFO - 📨 Сообщение от 50383216: текст='Нет'
+2026-04-06 15:50:13,257 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:50:13
+2026-04-06 15:50:13,257 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:50:13,257 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:50:13,257 - __main__ - INFO - 📍 Геолокация: lat=63.202903747558594, lon=75.45175170898438
+2026-04-06 15:50:13,257 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
+2026-04-06 15:50:13,257 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:50:13
+2026-04-06 15:50:13,283 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 45
+2026-04-06 15:50:13,408 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 89731943, user_id: 50383216

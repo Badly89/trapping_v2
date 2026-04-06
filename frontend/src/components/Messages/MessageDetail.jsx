@@ -1,4 +1,4 @@
-// src/components/Messages/MessageDetail.jsx - с отображением геолокации
+// src/components/Messages/MessageDetail.jsx
 import React, { useState, useEffect } from 'react';
 import {
     Dialog,
@@ -16,26 +16,104 @@ import {
     IconButton,
     ImageList,
     ImageListItem,
+    ImageListItemBar,
     Paper,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
     Alert,
-    Link,
 } from '@mui/material';
-import { formatFullDate, formatResponseTime } from '../../utils/dateUtils';
 import {
     Close as CloseIcon,
-    ExpandMore,
     Assignment,
     Add,
-    LocationOn,
-    Map,
-    OpenInNew,
+    ZoomIn,
 } from '@mui/icons-material';
 import { messages, tasks, reports } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { formatFullDate } from '../../utils/dateUtils';
+import ImageViewer from './ImageViewer'; // <-- ДОБАВИТЬ ИМПОРТ
 
+// Компонент галереи с использованием ImageViewer
+const ImageGallery = ({ photos, messageId }) => {
+    const [viewerOpen, setViewerOpen] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    if (!photos || photos.length === 0) return null;
+
+    const handleOpen = (index) => {
+        setCurrentIndex(index);
+        setViewerOpen(true);
+    };
+
+    const handleClose = () => {
+        setViewerOpen(false);
+    };
+
+    return (
+        <>
+            <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                    📷 Вложения ({photos.length})
+                </Typography>
+                <ImageList sx={{ width: '100%', height: 'auto' }} cols={4} rowHeight={120} gap={8}>
+                    {photos.map((photo, idx) => (
+                        <ImageListItem 
+                            key={idx} 
+                            sx={{ 
+                                cursor: 'pointer',
+                                borderRadius: 1,
+                                overflow: 'hidden',
+                                '&:hover': {
+                                    transform: 'scale(1.02)',
+                                    transition: 'transform 0.2s',
+                                }
+                            }}
+                            onClick={() => handleOpen(idx)}
+                        >
+                            <img
+                                src={photo}
+                                alt={`Фото ${idx + 1}`}
+                                style={{
+                                    width: '100%',
+                                    height: 120,
+                                    objectFit: 'cover',
+                                }}
+                                onError={(e) => {
+                                    e.target.src = 'https://via.placeholder.com/120?text=No+image';
+                                }}
+                            />
+                            <ImageListItemBar
+                                position="bottom"
+                                sx={{
+                                    background: 'linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0))',
+                                }}
+                                actionIcon={
+                                    <IconButton
+                                        sx={{ color: 'white' }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpen(idx);
+                                        }}
+                                    >
+                                        <ZoomIn />
+                                    </IconButton>
+                                }
+                            />
+                        </ImageListItem>
+                    ))}
+                </ImageList>
+            </Box>
+
+            {/* Компонент просмотра изображений */}
+            <ImageViewer
+                open={viewerOpen}
+                onClose={handleClose}
+                images={photos}
+                initialIndex={currentIndex}
+            />
+        </>
+    );
+};
+
+// Основной компонент MessageDetail (остается без изменений)
 const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
     const [status, setStatus] = useState('');
     const [priority, setPriority] = useState('');
@@ -46,7 +124,7 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
     const [reportList, setReportList] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const { isAdmin, isOperator } = useAuth();
+    const { isAdmin, isOperator, isExecutor } = useAuth();
 
     useEffect(() => {
         if (message) {
@@ -123,29 +201,10 @@ const MessageDetail = ({ open, onClose, message, onUpdate, users }) => {
         }
     };
 
-    const handleUpdateTaskStatus = async (taskId, newStatus) => {
-        try {
-            await tasks.update(taskId, { status: newStatus });
-            fetchTasksForMessage();
-        } catch (error) {
-            console.error('Ошибка обновления статуса задачи:', error);
-        }
+    const formatDate = (dateString) => {
+        if (!dateString) return '—';
+        return formatFullDate(dateString);
     };
-
-    // Генерация ссылок на карты
-    const generateMapLinks = (lat, lon) => {
-        return {
-            yandex: `https://yandex.ru/maps/?pt=${lon},${lat}&z=17&l=map`,
-            google: `https://www.google.com/maps?q=${lat},${lon}`,
-            openstreet: `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}&zoom=17`
-        };
-    };
-
-// Замените функцию formatDate на:
-const formatDate = (dateString) => {
-    if (!dateString) return '—';
-    return formatFullDate(dateString);
-};
 
     const getStatusColor = (status) => {
         const colors = {
@@ -174,9 +233,6 @@ const formatDate = (dateString) => {
     };
 
     if (!message) return null;
-
-    const hasLocation = message.latitude && message.longitude;
-    const mapLinks = hasLocation ? generateMapLinks(message.latitude, message.longitude) : null;
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -214,58 +270,9 @@ const formatDate = (dateString) => {
                         {message.text || 'Нет текста'}
                     </Typography>
                     
-                    {/* Геолокация */}
-                    {hasLocation && (
-                        <>
-                            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>
-                                📍 Геолокация
-                            </Typography>
-                            <Paper variant="outlined" sx={{ p: 2, mt: 1, bgcolor: '#f5f5f5' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                    <LocationOn color="primary" />
-                                    <Typography variant="body2">
-                                        Координаты: {message.latitude.toFixed(6)}, {message.longitude.toFixed(6)}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                                    <Link href={mapLinks.yandex} target="_blank" rel="noopener noreferrer">
-                                        <Button size="small" startIcon={<Map />}>
-                                            Яндекс.Карты
-                                        </Button>
-                                    </Link>
-                                    <Link href={mapLinks.google} target="_blank" rel="noopener noreferrer">
-                                        <Button size="small" startIcon={<OpenInNew />}>
-                                            Google Maps
-                                        </Button>
-                                    </Link>
-                                    <Link href={mapLinks.openstreet} target="_blank" rel="noopener noreferrer">
-                                        <Button size="small" startIcon={<OpenInNew />}>
-                                            OpenStreetMap
-                                        </Button>
-                                    </Link>
-                                </Box>
-                            </Paper>
-                        </>
-                    )}
-                    
+                    {/* Галерея фото - используем ImageGallery */}
                     {message.photos && message.photos.length > 0 && (
-                        <>
-                            <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>
-                                Фото ({message.photos.length})
-                            </Typography>
-                            <ImageList sx={{ width: '100%', height: 200 }} cols={3} rowHeight={164}>
-                                {message.photos.map((photo, idx) => (
-                                    <ImageListItem key={idx}>
-                                        <img
-                                            src={photo}
-                                            alt={`Фото ${idx + 1}`}
-                                            style={{ objectFit: 'cover', height: '100%', width: '100%' }}
-                                            loading="lazy"
-                                        />
-                                    </ImageListItem>
-                                ))}
-                            </ImageList>
-                        </>
+                        <ImageGallery photos={message.photos} messageId={message.id} />
                     )}
                     
                     <Typography variant="subtitle2" color="text.secondary" sx={{ mt: 2 }}>
@@ -383,48 +390,27 @@ const formatDate = (dateString) => {
                                 Задачи по этому сообщению ({taskList.length})
                             </Typography>
                             {taskList.map((task) => (
-                                <Accordion key={task.id} sx={{ mb: 1 }}>
-                                    <AccordionSummary expandIcon={<ExpandMore />}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                                            <Assignment color="primary" />
-                                            <Typography variant="subtitle1" sx={{ flexGrow: 1 }}>
+                                <Paper key={task.id} sx={{ p: 2, mb: 1 }} variant="outlined">
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Assignment color="primary" />
+                                        <Box sx={{ flexGrow: 1 }}>
+                                            <Typography variant="subtitle1">
                                                 {task.title}
                                             </Typography>
-                                            <Chip
-                                                label={getStatusText(task.status)}
-                                                color={getStatusColor(task.status)}
-                                                size="small"
-                                            />
+                                            <Typography variant="body2" color="text.secondary">
+                                                {task.description || 'Нет описания'}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                Создана: {formatDate(task.created_at)}
+                                            </Typography>
                                         </Box>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                                            {task.description || 'Нет описания'}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary" display="block">
-                                            Создана: {formatDate(task.created_at)}
-                                        </Typography>
-                                        {(isAdmin || isOperator) && task.status !== 'completed' && (
-                                            <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-                                                <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    onClick={() => handleUpdateTaskStatus(task.id, 'in_progress')}
-                                                >
-                                                    В работу
-                                                </Button>
-                                                <Button
-                                                    size="small"
-                                                    variant="outlined"
-                                                    color="success"
-                                                    onClick={() => handleUpdateTaskStatus(task.id, 'completed')}
-                                                >
-                                                    Завершить
-                                                </Button>
-                                            </Box>
-                                        )}
-                                    </AccordionDetails>
-                                </Accordion>
+                                        <Chip
+                                            label={getStatusText(task.status)}
+                                            color={getStatusColor(task.status)}
+                                            size="small"
+                                        />
+                                    </Box>
+                                </Paper>
                             ))}
                         </Box>
                     </>
