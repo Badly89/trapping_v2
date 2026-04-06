@@ -1,0 +1,542 @@
+# main.py - Основной FastAPI сервер с использованием schemas
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from sqlalchemy.orm import Session
+from sqlalchemy import func, and_
+from typing import List, Optional
+from datetime import datetime, timedelta
+# Импорты сервисов и утилит
+from services import UserService, MessageService, TaskService, ReportService
+from utils import generate_map_links, format_datetime, validate_coordinates
+
+
+import shutil
+import os
+
+from models import (
+    User, Message, Task, Report, UserRole, 
+    MessageStatus, TaskStatus, Priority, get_db
+)
+from auth import (
+    authenticate_user, create_access_token, get_current_active_user, 
+    require_role, get_password_hash
+)
+from schemas import (
+    UserCreate, UserResponse, LoginRequest, TokenResponse,
+    MessageCreate, MessageResponse, MessageUpdate,
+    TaskCreate, TaskResponse, TaskUpdate,
+    ReportCreate, ReportResponse
+)
+
+app = FastAPI(title="CRM System", version="3.0")
+
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Директория для загрузки файлов
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# ========== Auth Endpoints ==========
+@app.post("/api/auth/login", response_model=TokenResponse)
+def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+    user = authenticate_user(db, login_data.username, login_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+        )
+    access_token = create_access_token(data={"sub": user.username})
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user_id=user.id,
+        username=user.username,
+        role=user.role.value
+    )
+
+@app.get("/api/auth/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_active_user)):
+    return UserResponse(
+        id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        role=current_user.role.value,
+        is_active=current_user.is_active,
+        created_at=current_user.created_at,
+        updated_at=current_user.updated_at
+    )
+
+# ========== User Management (Admin only) ==========
+@app.post("/api/users", response_model=UserResponse)
+def create_user(
+    user_data: UserCreate,
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    db: Session = Depends(get_db)
+):
+    existing = db.query(User).filter(
+        (User.username == user_data.username) | (User.email == user_data.email)
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="User already exists")
+    
+    new_user = User(
+        username=user_data.username,
+        email=user_data.email,
+        full_name=user_data.full_name,
+        hashed_password=get_password_hash(user_data.password),
+        role=UserRole(user_data.role)
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    return UserResponse(
+        id=new_user.id,
+        username=new_user.username,
+        email=new_user.email,
+        full_name=new_user.full_name,
+        role=new_user.role.value,
+        is_active=new_user.is_active,
+        created_at=new_user.created_at,
+        updated_at=new_user.updated_at
+    )
+
+@app.get("/api/users", response_model=List[UserResponse])
+def get_users(
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    db: Session = Depends(get_db)
+):
+    users = db.query(User).all()
+    return [
+        UserResponse(
+            id=u.id,
+            username=u.username,
+            email=u.email,
+            full_name=u.full_name,
+            role=u.role.value,
+            is_active=u.is_active,
+            created_at=u.created_at,
+            updated_at=u.updated_at
+        ) for u in users
+    ]
+
+@app.patch("/api/users/{user_id}/toggle")
+def toggle_user(
+    user_id: int,
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot deactivate yourself")
+    
+    user.is_active = not user.is_active
+    db.commit()
+    return {"status": "success", "is_active": user.is_active}
+
+# ========== Messages ==========
+@app.post("/api/messages", response_model=MessageResponse)
+def create_message(message: MessageCreate, db: Session = Depends(get_db)):
+    db_message = Message(**message.dict())
+    db.add(db_message)
+    db.commit()
+    db.refresh(db_message)
+    return MessageResponse(
+        id=db_message.id,
+        source=db_message.source,
+        chat_id=db_message.chat_id,
+        user_id=db_message.user_id,
+        user_name=db_message.user_name,
+        text=db_message.text,
+        photos=db_message.photos,
+        latitude=db_message.latitude,
+        longitude=db_message.longitude,
+        status=db_message.status.value,
+        priority=db_message.priority.value,
+        assigned_to_id=db_message.assigned_to_id,
+        created_at=db_message.created_at,
+        updated_at=db_message.updated_at,
+        resolved_at=db_message.resolved_at,
+        response_time=db_message.response_time
+    )
+
+@app.get("/api/messages", response_model=List[MessageResponse])
+def get_messages(
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    assigned_to: Optional[int] = None,
+    has_location: Optional[bool] = None,
+    limit: int = 100,
+    offset: int = 0,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    messages = MessageService.get_all(
+        db, skip=offset, limit=limit,
+        status=status, priority=priority,
+        assigned_to=assigned_to, has_location=has_location,
+        user=current_user
+    )
+    
+    return [
+        MessageResponse(
+            id=msg.id,
+            source=msg.source,
+            chat_id=msg.chat_id,
+            user_id=msg.user_id,
+            user_name=msg.user_name,
+            text=msg.text,
+            photos=msg.photos,
+            latitude=msg.latitude,
+            longitude=msg.longitude,
+            status=msg.status.value,
+            priority=msg.priority.value,
+            assigned_to_id=msg.assigned_to_id,
+            created_at=msg.created_at,
+            updated_at=msg.updated_at,
+            resolved_at=msg.resolved_at,
+            response_time=msg.response_time
+        ) for msg in messages
+    ]
+
+@app.patch("/api/messages/{message_id}", response_model=MessageResponse)
+def update_message(
+    message_id: int,
+    update: MessageUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    message = db.query(Message).filter(Message.id == message_id).first()
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    if update.status:
+        message.status = MessageStatus(update.status)
+    if update.priority:
+        message.priority = Priority(update.priority)
+    if update.assigned_to_id:
+        message.assigned_to_id = update.assigned_to_id
+        message.status = MessageStatus.ASSIGNED
+    if update.notes:
+        message.notes = update.notes
+    
+    message.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(message)
+    
+    return MessageResponse(
+        id=message.id,
+        source=message.source,
+        chat_id=message.chat_id,
+        user_id=message.user_id,
+        user_name=message.user_name,
+        text=message.text,
+        photos=message.photos,
+        latitude=message.latitude,
+        longitude=message.longitude,
+        status=message.status.value,
+        priority=message.priority.value,
+        assigned_to_id=message.assigned_to_id,
+        created_at=message.created_at,
+        updated_at=message.updated_at,
+        resolved_at=message.resolved_at,
+        response_time=message.response_time
+    )
+
+# ========== Tasks ==========
+@app.post("/api/tasks", response_model=TaskResponse)
+def create_task(
+    task: TaskCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    message = db.query(Message).filter(Message.id == task.message_id).first()
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    
+    db_task = Task(
+        message_id=task.message_id,
+        title=task.title,
+        description=task.description,
+        assigned_to_id=task.assigned_to_id,
+        created_by_id=current_user.id
+    )
+    db.add(db_task)
+    db.commit()
+    db.refresh(db_task)
+    
+    return TaskResponse(
+        id=db_task.id,
+        message_id=db_task.message_id,
+        title=db_task.title,
+        description=db_task.description,
+        status=db_task.status.value,
+        assigned_to_id=db_task.assigned_to_id,
+        created_by_id=db_task.created_by_id,
+        created_at=db_task.created_at,
+        updated_at=db_task.updated_at,
+        completed_at=db_task.completed_at
+    )
+
+@app.get("/api/tasks", response_model=List[TaskResponse])
+def get_tasks(
+    status: Optional[str] = None,
+    assigned_to: Optional[int] = None,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Task)
+    if status:
+        query = query.filter(Task.status == status)
+    if assigned_to:
+        query = query.filter(Task.assigned_to_id == assigned_to)
+    elif current_user.role == UserRole.EXECUTOR:
+        query = query.filter(Task.assigned_to_id == current_user.id)
+    
+    tasks = query.order_by(Task.created_at.desc()).all()
+    
+    return [
+        TaskResponse(
+            id=task.id,
+            message_id=task.message_id,
+            title=task.title,
+            description=task.description,
+            status=task.status.value,
+            assigned_to_id=task.assigned_to_id,
+            created_by_id=task.created_by_id,
+            created_at=task.created_at,
+            updated_at=task.updated_at,
+            completed_at=task.completed_at
+        ) for task in tasks
+    ]
+
+@app.patch("/api/tasks/{task_id}", response_model=TaskResponse)
+def update_task(
+    task_id: int,
+    update: TaskUpdate,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    if current_user.role == UserRole.EXECUTOR and task.assigned_to_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    if update.title:
+        task.title = update.title
+    if update.description:
+        task.description = update.description
+    if update.status:
+        task.status = TaskStatus(update.status)
+        if update.status == TaskStatus.COMPLETED:
+            task.completed_at = datetime.utcnow()
+    if update.assigned_to_id:
+        task.assigned_to_id = update.assigned_to_id
+    
+    task.updated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(task)
+    
+    return TaskResponse(
+        id=task.id,
+        message_id=task.message_id,
+        title=task.title,
+        description=task.description,
+        status=task.status.value,
+        assigned_to_id=task.assigned_to_id,
+        created_by_id=task.created_by_id,
+        created_at=task.created_at,
+        updated_at=task.updated_at,
+        completed_at=task.completed_at
+    )
+
+# ========== Reports ==========
+@app.post("/api/reports", response_model=dict)
+async def create_report(
+    text: str = Form(...),
+    message_id: int = Form(...),
+    task_id: Optional[int] = Form(None),
+    files: List[UploadFile] = File([]),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    photo_urls = []
+    for file in files:
+        timestamp = int(datetime.utcnow().timestamp())
+        file_path = os.path.join(UPLOAD_DIR, f"{timestamp}_{file.filename}")
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        photo_urls.append(f"/uploads/{os.path.basename(file_path)}")
+    
+    report = Report(
+        message_id=message_id,
+        task_id=task_id,
+        user_id=current_user.id,
+        text=text,
+        photos=photo_urls
+    )
+    db.add(report)
+    
+    message = db.query(Message).filter(Message.id == message_id).first()
+    if message:
+        message.status = MessageStatus.PROCESSING
+        message.updated_at = datetime.utcnow()
+    
+    if task_id:
+        task = db.query(Task).filter(Task.id == task_id).first()
+        if task:
+            task.status = TaskStatus.IN_PROGRESS
+            task.updated_at = datetime.utcnow()
+    
+    db.commit()
+    return {"status": "success", "report_id": report.id, "photos": photo_urls}
+
+@app.get("/api/reports/{message_id}", response_model=List[ReportResponse])
+def get_reports(
+    message_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    reports = db.query(Report).filter(Report.message_id == message_id).order_by(Report.created_at.desc()).all()
+    return [
+        ReportResponse(
+            id=r.id,
+            message_id=r.message_id,
+            task_id=r.task_id,
+            user_id=r.user_id,
+            text=r.text,
+            photos=r.photos,
+            status=r.status,
+            created_at=r.created_at
+        ) for r in reports
+    ]
+
+# ========== Statistics ==========
+@app.get("/api/statistics")
+def get_statistics(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    total_messages = db.query(Message).count()
+    new_messages = db.query(Message).filter(Message.status == MessageStatus.NEW).count()
+    processing = db.query(Message).filter(Message.status == MessageStatus.PROCESSING).count()
+    completed = db.query(Message).filter(Message.status == MessageStatus.COMPLETED).count()
+    cancelled = db.query(Message).filter(Message.status == MessageStatus.CANCELLED).count()
+    assigned = db.query(Message).filter(Message.status == MessageStatus.ASSIGNED).count()
+    
+    priority_stats = {}
+    for priority in Priority:
+        count = db.query(Message).filter(Message.priority == priority).count()
+        priority_stats[priority.value] = count
+    
+    messages_with_location = db.query(Message).filter(Message.latitude.isnot(None)).count()
+    messages_with_photos = db.query(Message).filter(Message.photos != []).count()
+    
+    total_tasks = db.query(Task).count()
+    pending_tasks = db.query(Task).filter(Task.status == TaskStatus.PENDING).count()
+    in_progress = db.query(Task).filter(Task.status == TaskStatus.IN_PROGRESS).count()
+    completed_tasks = db.query(Task).filter(Task.status == TaskStatus.COMPLETED).count()
+    
+    total_users = db.query(User).count()
+    active_users = db.query(User).filter(User.is_active == True).count()
+    
+    avg_response_time = db.query(func.avg(Message.response_time)).filter(
+        Message.response_time.isnot(None)
+    ).scalar() or 0
+    
+    return {
+        "messages": {
+            "total": total_messages,
+            "new": new_messages,
+            "processing": processing,
+            "completed": completed,
+            "cancelled": cancelled,
+            "assigned": assigned,
+            "with_location": messages_with_location,
+            "with_photos": messages_with_photos,
+            "by_priority": priority_stats
+        },
+        "tasks": {
+            "total": total_tasks,
+            "pending": pending_tasks,
+            "in_progress": in_progress,
+            "completed": completed_tasks
+        },
+        "users": {
+            "total": total_users,
+            "active": active_users
+        },
+        "average_response_time_seconds": round(avg_response_time, 2)
+    }
+
+# ========== Uploads ==========
+@app.get("/uploads/{filename}")
+def get_upload(filename: str):
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    if os.path.exists(file_path):
+        return FileResponse(file_path)
+    raise HTTPException(status_code=404, detail="File not found")
+
+# ========== Health Check ==========
+@app.get("/health")
+def health_check():
+    return {
+        "status": "ok",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "3.0"
+    }
+
+# ========== Root ==========
+@app.get("/")
+def root():
+    return {
+        "name": "CRM System",
+        "version": "3.0",
+        "description": "Система для фиксации и обработки сообщений",
+        "endpoints": {
+            "auth": "/api/auth",
+            "users": "/api/users",
+            "messages": "/api/messages",
+            "tasks": "/api/tasks",
+            "reports": "/api/reports",
+            "statistics": "/api/statistics",
+            "docs": "/docs",
+            "health": "/health"
+        }
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    print("=" * 60)
+    print("🚀 ЗАПУСК CRM SERVER")
+    print("=" * 60)
+    print(f"📁 Директория загрузок: {UPLOAD_DIR}")
+    print(f"🔗 API Docs: http://localhost:8000/docs")
+    print(f"🏠 Health Check: http://localhost:8000/health")
+    print("=" * 60)
+    print("\n👤 Тестовые пользователи:")
+    print("   Администратор: admin / admin123")
+    print("   Оператор: operator / operator123")
+    print("   Исполнитель: executor / executor123")
+    print("=" * 60 + "\n")
+    
+    uvicorn.run(
+       "main:app",  # строка импорта
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )
