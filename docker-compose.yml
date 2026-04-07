@@ -1,4 +1,4 @@
-version: '3.8'
+# docker-compose.yml - без version (для Docker Compose V2)
 
 services:
   db:
@@ -6,10 +6,10 @@ services:
     container_name: crm_db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: crm_db
-      MYSQL_USER: crm_user
-      MYSQL_PASSWORD: secure_password_here
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-crm_db}
+      MYSQL_USER: ${MYSQL_USER:-crm_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secure_password_here}
     volumes:
       - db_data:/var/lib/mysql
     networks:
@@ -26,10 +26,11 @@ services:
     environment:
       - DB_HOST=db
       - DB_PORT=3306
-      - DB_USER=crm_user
-      - DB_PASSWORD=secure_password_here
-      - DB_NAME=crm_db
-      - SECRET_KEY=${SECRET_KEY}
+      - DB_USER=${MYSQL_USER:-crm_user}
+      - DB_PASSWORD=${MYSQL_PASSWORD:-secure_password_here}
+      - DB_NAME=${MYSQL_DATABASE:-crm_db}
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-me}
+      - MAX_BOT_TOKEN=${MAX_BOT_TOKEN}
     volumes:
       - backend_uploads:/app/uploads
     depends_on:
@@ -72,4 +73,6 @@ networks:
 
 volumes:
   db_data:
+    driver: local
   backend_uploads:
+    driver: local
