@@ -1,5 +1,5 @@
 // src/components/Tasks/TaskList.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
     Paper,
@@ -9,6 +9,7 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    TablePagination,
     Chip,
     IconButton,
     Box,
@@ -21,14 +22,27 @@ import {
     DialogContent,
     DialogActions,
     Button,
-    Grid,  // Используем Grid2 вместо Grid
+    Grid,
     Card,
     CardContent,
     Alert,
+    Tooltip,
+    Avatar,
+    Divider,
 } from '@mui/material';
-import { Visibility, Add, Refresh } from '@mui/icons-material';
+import {
+    Visibility,
+    Add,
+    Refresh,
+    Assignment,
+    Person,
+    Schedule,
+    CheckCircle,
+    Pending,
+} from '@mui/icons-material';
 import { tasks, messages, users } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { formatFullDate, formatRelativeTime, formatTableDate } from '../../utils/dateUtils';
 
 const statusColors = {
     pending: 'warning',
@@ -46,8 +60,14 @@ const statusLabels = {
     rejected: 'Отклонена',
 };
 
+const statusIcons = {
+    pending: <Pending fontSize="small" />,
+    in_progress: <Schedule fontSize="small" />,
+    completed: <CheckCircle fontSize="small" />,
+};
+
 const TaskList = () => {
-    const [searchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [taskList, setTaskList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedTask, setSelectedTask] = useState(null);
@@ -56,6 +76,9 @@ const TaskList = () => {
     const [messagesList, setMessagesList] = useState([]);
     const [usersList, setUsersList] = useState([]);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(20);
+    const [totalCount, setTotalCount] = useState(0);
     const [filters, setFilters] = useState({
         status: searchParams.get('status') || '',
         assigned_to: '',
@@ -67,54 +90,68 @@ const TaskList = () => {
         assigned_to_id: '',
     });
     const [error, setError] = useState('');
+    
+    const cacheRef = useRef({});
     const { isAdmin, isOperator, user } = useAuth();
 
-    useEffect(() => {
-        fetchTasks();
-        fetchMessages();
-        // Загружаем пользователей только для админа или оператора
-        if (isAdmin || isOperator) {
-            fetchUsers();
-        }
-    }, [filters]);
-
-    const fetchTasks = async () => {
-        setLoading(true);
-        try {
-            const params = {};
-            if (filters.status) params.status = filters.status;
-            if (filters.assigned_to) params.assigned_to = filters.assigned_to;
-            
-            const response = await tasks.getAll(params);
-            setTaskList(response.data || []);
-        } catch (error) {
-            console.error('Ошибка загрузки задач:', error);
-            setError('Не удалось загрузить задачи');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const fetchMessages = async () => {
+    const fetchMessages = useCallback(async () => {
         try {
             const response = await messages.getAll();
             setMessagesList(response.data || []);
         } catch (error) {
             console.error('Ошибка загрузки сообщений:', error);
         }
-    };
+    }, []);
 
-    const fetchUsers = async () => {
+    const fetchUsers = useCallback(async () => {
         try {
             const response = await users.getAll();
             setUsersList(response.data || []);
         } catch (error) {
-            // Игнорируем 403, так как это ожидаемое поведение для не-админов
             if (error.response?.status !== 403) {
                 console.error('Ошибка загрузки пользователей:', error);
             }
         }
-    };
+    }, []);
+
+    const fetchTasks = useCallback(async (forceRefresh = false) => {
+        setLoading(true);
+        try {
+            const params = {
+                limit: rowsPerPage,
+                offset: page * rowsPerPage,
+            };
+            if (filters.status) params.status = filters.status;
+            if (filters.assigned_to) params.assigned_to = filters.assigned_to;
+            
+            const cacheKey = JSON.stringify(params);
+            if (!forceRefresh && cacheRef.current[cacheKey]) {
+                setTaskList(cacheRef.current[cacheKey]);
+                setLoading(false);
+                return;
+            }
+            
+            const response = await tasks.getAll(params);
+            const tasksData = response.data || [];
+            setTotalCount(response.headers['x-total-count'] || tasksData.length);
+            
+            setTaskList(tasksData);
+            cacheRef.current[cacheKey] = tasksData;
+        } catch (error) {
+            console.error('Ошибка загрузки задач:', error);
+            setError('Не удалось загрузить задачи');
+        } finally {
+            setLoading(false);
+        }
+    }, [filters, page, rowsPerPage]);
+
+    useEffect(() => {
+        fetchTasks();
+        fetchMessages();
+        if (isAdmin || isOperator) {
+            fetchUsers();
+        }
+    }, [fetchTasks, fetchMessages, fetchUsers, filters, page, rowsPerPage, isAdmin, isOperator]);
 
     const handleViewTask = (task) => {
         setSelectedTask(task);
@@ -125,7 +162,7 @@ const TaskList = () => {
     const handleUpdateStatus = async () => {
         try {
             await tasks.update(selectedTask.id, { status });
-            fetchTasks();
+            fetchTasks(true);
             setDialogOpen(false);
         } catch (error) {
             console.error('Ошибка обновления статуса:', error);
@@ -146,16 +183,49 @@ const TaskList = () => {
                 description: '',
                 assigned_to_id: '',
             });
-            fetchTasks();
+            fetchTasks(true);
         } catch (error) {
             console.error('Ошибка создания задачи:', error);
             setError('Ошибка создания задачи');
         }
     };
 
+    const handleApplyFilters = () => {
+        const newParams = {};
+        if (filters.status) newParams.status = filters.status;
+        if (filters.assigned_to) newParams.assigned_to = filters.assigned_to;
+        setSearchParams(newParams);
+        setPage(0);
+        fetchTasks(true);
+    };
+
+    const handleClearFilters = () => {
+        setFilters({
+            status: '',
+            assigned_to: '',
+        });
+        setSearchParams({});
+        setPage(0);
+        setTimeout(() => fetchTasks(true), 100);
+    };
+
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return '—';
-        return new Date(dateString).toLocaleString('ru-RU');
+        return formatTableDate(dateString);
+    };
+
+    const formatFullDateDetail = (dateString) => {
+        if (!dateString) return '—';
+        return formatFullDate(dateString);
     };
 
     const getMessageText = (messageId) => {
@@ -175,7 +245,7 @@ const TaskList = () => {
                     Задачи
                 </Typography>
                 <Box>
-                    <IconButton onClick={fetchTasks} color="primary">
+                    <IconButton onClick={() => fetchTasks(true)} color="primary">
                         <Refresh />
                     </IconButton>
                     {(isAdmin || isOperator) && (
@@ -194,7 +264,7 @@ const TaskList = () => {
             {/* Фильтры */}
             <Paper sx={{ p: 2, mb: 2 }}>
                 <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <Grid item xs={12} sm={6} md={4}>
                         <TextField
                             select
                             fullWidth
@@ -210,7 +280,7 @@ const TaskList = () => {
                         </TextField>
                     </Grid>
                     {(isAdmin || isOperator) && (
-                        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <Grid item xs={12} sm={6} md={4}>
                             <TextField
                                 select
                                 fullWidth
@@ -228,6 +298,16 @@ const TaskList = () => {
                             </TextField>
                         </Grid>
                     )}
+                    <Grid item xs={12} sm={6} md={4}>
+                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', height: '100%' }}>
+                            <Button onClick={handleClearFilters} variant="outlined" size="small">
+                                Сбросить
+                            </Button>
+                            <Button onClick={handleApplyFilters} variant="contained" size="small">
+                                Применить
+                            </Button>
+                        </Box>
+                    </Grid>
                 </Grid>
             </Paper>
 
@@ -240,6 +320,7 @@ const TaskList = () => {
             {taskList.length === 0 && !loading ? (
                 <Card>
                     <CardContent sx={{ textAlign: 'center', py: 4 }}>
+                        <Assignment sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
                         <Typography variant="h6" color="text.secondary" gutterBottom>
                             Нет задач
                         </Typography>
@@ -276,17 +357,22 @@ const TaskList = () => {
                                     <TableRow key={task.id} hover>
                                         <TableCell>{task.id}</TableCell>
                                         <TableCell>
-                                            <Typography variant="body2">
-                                                {getMessageText(task.message_id)}
-                                            </Typography>
+                                            <Tooltip title={getMessageText(task.message_id)}>
+                                                <Typography variant="body2" sx={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    #{task.message_id}
+                                                </Typography>
+                                            </Tooltip>
                                         </TableCell>
                                         <TableCell sx={{ maxWidth: 250 }}>
-                                            <Typography variant="body2" noWrap>
-                                                {task.title}
-                                            </Typography>
+                                            <Tooltip title={task.title}>
+                                                <Typography variant="body2" noWrap>
+                                                    {task.title}
+                                                </Typography>
+                                            </Tooltip>
                                         </TableCell>
                                         <TableCell>
                                             <Chip
+                                                icon={statusIcons[task.status]}
                                                 label={statusLabels[task.status]}
                                                 color={statusColors[task.status]}
                                                 size="small"
@@ -295,7 +381,11 @@ const TaskList = () => {
                                         <TableCell>
                                             {task.assigned_to_id ? getUserName(task.assigned_to_id) : 'Не назначена'}
                                         </TableCell>
-                                        <TableCell>{formatDate(task.created_at)}</TableCell>
+                                        <TableCell>
+                                            <Tooltip title={formatFullDateDetail(task.created_at)}>
+                                                <span>{formatDate(task.created_at)}</span>
+                                            </Tooltip>
+                                        </TableCell>
                                         <TableCell align="center">
                                             <IconButton onClick={() => handleViewTask(task)} size="small">
                                                 <Visibility />
@@ -306,29 +396,53 @@ const TaskList = () => {
                             )}
                         </TableBody>
                     </Table>
+                    <TablePagination
+                        rowsPerPageOptions={[10, 20, 50, 100]}
+                        component="div"
+                        count={totalCount}
+                        rowsPerPage={rowsPerPage}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                        labelRowsPerPage="Строк на странице:"
+                        labelDisplayedRows={({ from, to, count }) => `${from}-${to} из ${count}`}
+                    />
                 </TableContainer>
             )}
 
             {/* Диалог деталей задачи */}
-            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
+            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
                 {selectedTask && (
                     <>
-                        <DialogTitle>
-                             <Typography component="span" variant="h6">
-                                    Задача: {selectedTask.title}
-                             </Typography>
+                        <DialogTitle sx={{ pb: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Assignment color="primary" />
+                                <Typography variant="h6">Задача #{selectedTask.id}</Typography>
+                            </Box>
                         </DialogTitle>
-                        <DialogContent>
+                        <DialogContent dividers>
                             <Grid container spacing={2}>
-                                <Grid size={{ xs: 12 }}>
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle2" color="text.secondary">
+                                        Название
+                                    </Typography>
+                                    <Typography variant="h6" gutterBottom>
+                                        {selectedTask.title}
+                                    </Typography>
+                                </Grid>
+
+                                <Grid item xs={12}>
                                     <Typography variant="subtitle2" color="text.secondary">
                                         Описание
                                     </Typography>
-                                    <Typography variant="body1" paragraph>
+                                    <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-wrap' }}>
                                         {selectedTask.description || 'Нет описания'}
                                     </Typography>
                                 </Grid>
-                                <Grid size={{ xs: 12 }}>
+
+                                <Divider sx={{ my: 1, width: '100%' }} />
+
+                                <Grid item xs={12}>
                                     <Typography variant="subtitle2" color="text.secondary">
                                         Статус
                                     </Typography>
@@ -349,38 +463,68 @@ const TaskList = () => {
                                         </TextField>
                                     ) : (
                                         <Chip
+                                            icon={statusIcons[selectedTask.status]}
                                             label={statusLabels[selectedTask.status]}
                                             color={statusColors[selectedTask.status]}
                                             sx={{ mt: 1 }}
                                         />
                                     )}
                                 </Grid>
-                                <Grid size={{ xs: 12 }}>
+
+                                <Grid item xs={12}>
                                     <Typography variant="subtitle2" color="text.secondary">
-                                        Создана
+                                        Исполнитель
                                     </Typography>
-                                    <Typography variant="body2">
-                                        {formatDate(selectedTask.created_at)}
-                                    </Typography>
-                                </Grid>
-                                {selectedTask.completed_at && (
-                                    <Grid size={{ xs: 12 }}>
-                                        <Typography variant="subtitle2" color="text.secondary">
-                                            Завершена
-                                        </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                        <Person fontSize="small" color="action" />
                                         <Typography variant="body2">
-                                            {formatDate(selectedTask.completed_at)}
+                                            {selectedTask.assigned_to_id 
+                                                ? getUserName(selectedTask.assigned_to_id) 
+                                                : 'Не назначен'}
                                         </Typography>
-                                    </Grid>
-                                )}
-                                <Grid size={{ xs: 12 }}>
+                                    </Box>
+                                </Grid>
+
+                                <Grid item xs={12}>
                                     <Typography variant="subtitle2" color="text.secondary">
                                         Связанное сообщение
                                     </Typography>
-                                    <Typography variant="body2">
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ mt: 0.5, textTransform: 'none' }}
+                                        onClick={() => window.location.href = `/messages`}
+                                    >
                                         #{selectedTask.message_id} - {getMessageText(selectedTask.message_id)}
-                                    </Typography>
+                                    </Button>
                                 </Grid>
+
+                                <Divider sx={{ my: 1, width: '100%' }} />
+
+                                <Grid item xs={12}>
+                                    <Typography variant="subtitle2" color="text.secondary">
+                                        Создана
+                                    </Typography>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                        <Schedule fontSize="small" color="action" />
+                                        <Typography variant="body2">
+                                            {formatFullDateDetail(selectedTask.created_at)}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
+                                {selectedTask.completed_at && (
+                                    <Grid item xs={12}>
+                                        <Typography variant="subtitle2" color="text.secondary">
+                                            Завершена
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                            <CheckCircle fontSize="small" color="success" />
+                                            <Typography variant="body2">
+                                                {formatFullDateDetail(selectedTask.completed_at)}
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                )}
                             </Grid>
                         </DialogContent>
                         <DialogActions>

@@ -1,9 +1,17 @@
 # models/task.py - Модель задачи
 from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Enum
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import enum
 from .base import Base
+
+# Часовой пояс Екатеринбурга (UTC+5)
+YEKATERINBURG_TZ = timezone(timedelta(hours=5))
+
+def get_yekaterinburg_time():
+    """Возвращает текущее время в Екатеринбурге (UTC+5)"""
+    return datetime.now(YEKATERINBURG_TZ)
+
 
 class TaskStatus(str, enum.Enum):
     PENDING = "pending"
@@ -22,8 +30,8 @@ class Task(Base):
     status = Column(Enum(TaskStatus), default=TaskStatus.PENDING)
     assigned_to_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=get_yekaterinburg_time)  # <-- ИСПРАВЛЕНО
+    updated_at = Column(DateTime, default=get_yekaterinburg_time, onupdate=get_yekaterinburg_time)
     completed_at = Column(DateTime, nullable=True)
     
     # Отношения

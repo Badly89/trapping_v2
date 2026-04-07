@@ -370,3 +370,568 @@ client_session: <aiohttp.client.ClientSession object at 0x7f7b6cdf8510>
 2026-04-06 14:52:12,732 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
 2026-04-06 14:52:12,785 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 30
 2026-04-06 14:52:12,939 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:56:38,190 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f9e645f40d0>
+2026-04-06 14:56:39,604 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 14:56:39,718 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 14:56:39,718 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 14:56:46,957 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 14:57:00,842 - __main__ - INFO - 📨 Сообщение от 13994310: текст='проверка работы отправки времени и даты'
+2026-04-06 14:57:00,843 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 14:57:00
+2026-04-06 14:57:00,843 - __main__ - INFO - 📎 Вложений: 2
+2026-04-06 14:57:00,843 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 14:57:00,843 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 14:57:00,843 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 14:57:00,843 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 14:57:00,843 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 14:57:00,843 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 14:57:00,843 - __main__ - INFO - 📤 Отправка в CRM: фото=2, гео=False
+2026-04-06 14:57:00,843 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 14:57:00
+2026-04-06 14:57:00,865 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 31
+2026-04-06 14:57:00,975 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:03:00,197 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:03:08,882 - __main__ - INFO - 📨 Сообщение от 13994310: текст='екыуеуекуваыаыв'
+2026-04-06 15:03:08,882 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:03:08
+2026-04-06 15:03:08,882 - __main__ - INFO - 📎 Вложений: 2
+2026-04-06 15:03:08,882 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:03:08,883 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:03:08,883 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:03:08,883 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:03:08,883 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:03:08,883 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:03:08,883 - __main__ - INFO - 📤 Отправка в CRM: фото=2, гео=False
+2026-04-06 15:03:08,883 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:03:08
+2026-04-06 15:03:08,928 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 32
+2026-04-06 15:03:09,051 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:05:42,403 - __main__ - INFO - 📨 Сообщение от 7572418: текст='Start'
+2026-04-06 15:05:42,403 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:05:42
+2026-04-06 15:05:42,403 - __main__ - INFO - 📎 Вложений: 0
+2026-04-06 15:05:42,403 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=False
+2026-04-06 15:05:42,403 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:05:42
+2026-04-06 15:05:42,406 - __main__ - ERROR - ❌ Ошибка отправки в CRM: Cannot connect to host localhost:8000 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 8000, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 8000)]
+2026-04-06 15:05:42,534 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 103444949, user_id: 7572418
+2026-04-06 15:05:45,965 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 103444949, user_id: 7572418
+2026-04-06 15:05:56,137 - __main__ - INFO - 📨 Сообщение от 7572418: текст='Нет'
+2026-04-06 15:05:56,137 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:05:56
+2026-04-06 15:05:56,137 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:05:56,137 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:05:56,137 - __main__ - INFO - 📍 Геолокация: lat=63.202877044677734, lon=75.45138549804688
+2026-04-06 15:05:56,137 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
+2026-04-06 15:05:56,137 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:05:56
+2026-04-06 15:05:56,141 - __main__ - ERROR - ❌ Ошибка отправки в CRM: Cannot connect to host localhost:8000 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 8000, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 8000)]
+2026-04-06 15:05:56,265 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 103444949, user_id: 7572418
+2026-04-06 15:06:18,571 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 103444949, user_id: 7572418
+2026-04-06 15:06:21,854 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 103444949, user_id: 7572418
+2026-04-06 15:06:22,692 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 103444949, user_id: 7572418
+2026-04-06 15:06:26,554 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 103444949, user_id: 7572418
+2026-04-06 15:06:35,834 - __main__ - INFO - 📨 Сообщение от 7572418: текст='Нет'
+2026-04-06 15:06:35,835 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:06:35
+2026-04-06 15:06:35,835 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:06:35,835 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:06:35,835 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:06:35,835 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:06:35,835 - __main__ - INFO - 📤 Отправка в CRM: фото=1, гео=False
+2026-04-06 15:06:35,835 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:06:35
+2026-04-06 15:06:35,838 - __main__ - ERROR - ❌ Ошибка отправки в CRM: Cannot connect to host localhost:8000 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 8000, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 8000)]
+2026-04-06 15:06:35,985 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 103444949, user_id: 7572418
+2026-04-06 15:06:44,273 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 103444949, user_id: 7572418
+2026-04-06 15:06:50,970 - __main__ - INFO - 📨 Сообщение от 7572418: текст='Нет'
+2026-04-06 15:06:50,970 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:06:50
+2026-04-06 15:06:50,970 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:06:50,970 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:06:50,970 - __main__ - INFO - 📍 Геолокация: lat=63.202877044677734, lon=75.45138549804688
+2026-04-06 15:06:50,970 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
+2026-04-06 15:06:50,970 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:06:50
+2026-04-06 15:06:51,011 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 33
+2026-04-06 15:06:51,136 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 103444949, user_id: 7572418
+2026-04-06 15:07:12,725 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f76261ec710>
+2026-04-06 15:07:13,973 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 15:07:14,104 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 15:07:14,105 - dispatcher - INFO - Зарегистрировано 9 обработчиков событий
+2026-04-06 15:08:19,782 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:08:22,603 - __main__ - INFO - 📨 Сообщение от 13994310: текст='Нет'
+2026-04-06 15:08:22,604 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:08:22
+2026-04-06 15:08:22,604 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:08:22,605 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:08:22,605 - __main__ - INFO - 📍 Геолокация: lat=63.20280838012695, lon=75.45183563232422
+2026-04-06 15:08:22,605 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
+2026-04-06 15:08:22,605 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:08:22
+2026-04-06 15:08:22,651 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 34
+2026-04-06 15:08:22,790 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:11:45,860 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:11:56,663 - __main__ - INFO - 📨 Сообщение от 13994310: текст='ывывывфывыф'
+2026-04-06 15:11:56,663 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:11:56
+2026-04-06 15:11:56,663 - __main__ - INFO - 📎 Вложений: 3
+2026-04-06 15:11:56,663 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:11:56,663 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:11:56,663 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:11:56,663 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:11:56,663 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:11:56,663 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:11:56,663 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:11:56,664 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:11:56,664 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:11:56,664 - __main__ - INFO - 📤 Отправка в CRM: фото=3, гео=False
+2026-04-06 15:11:56,664 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:11:56
+2026-04-06 15:11:56,706 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 35
+2026-04-06 15:11:56,815 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:12:24,108 - __main__ - INFO - 📨 Сообщение от 7572418: текст='Нет'
+2026-04-06 15:12:24,108 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:12:24
+2026-04-06 15:12:24,108 - __main__ - INFO - 📎 Вложений: 6
+2026-04-06 15:12:24,108 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:12:24,108 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:12:24,108 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:12:24,108 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:12:24,108 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:12:24,108 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:12:24,108 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:12:24,109 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:12:24,109 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:12:24,109 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:12:24,109 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:12:24,109 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:12:24,109 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:12:24,109 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:12:24,109 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:12:24,109 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:12:24,109 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:12:24,109 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:12:24,109 - __main__ - INFO - 📤 Отправка в CRM: фото=6, гео=False
+2026-04-06 15:12:24,109 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:12:24
+2026-04-06 15:12:24,165 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 36
+2026-04-06 15:12:24,293 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 103444949, user_id: 7572418
+2026-04-06 15:33:17,591 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:33:22,195 - __main__ - INFO - 📨 Сообщение от 13994310: текст='Нет'
+2026-04-06 15:33:22,196 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:33:22
+2026-04-06 15:33:22,196 - __main__ - INFO - 📎 Вложений: 4
+2026-04-06 15:33:22,196 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:33:22,196 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:33:22,196 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:33:22,196 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:33:22,196 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:33:22,196 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:33:22,196 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:33:22,196 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:33:22,196 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:33:22,196 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:33:22,196 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:33:22,197 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:33:22,197 - __main__ - INFO - 📤 Отправка в CRM: фото=4, гео=False
+2026-04-06 15:33:22,197 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:33:22
+2026-04-06 15:33:22,259 - __main__ - ERROR - ❌ Ошибка CRM: 500
+2026-04-06 15:33:22,384 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:35:02,256 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:35:09,888 - __main__ - INFO - 📨 Сообщение от 13994310: текст='Нет'
+2026-04-06 15:35:09,888 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:35:09
+2026-04-06 15:35:09,889 - __main__ - INFO - 📎 Вложений: 4
+2026-04-06 15:35:09,889 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:35:09,889 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:35:09,889 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:35:09,889 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:35:09,889 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:35:09,889 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:35:09,889 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:35:09,889 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:35:09,889 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:35:09,889 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:35:09,889 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:35:09,889 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:35:09,889 - __main__ - INFO - 📤 Отправка в CRM: фото=4, гео=False
+2026-04-06 15:35:09,889 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:35:09
+2026-04-06 15:35:09,950 - __main__ - ERROR - ❌ Ошибка CRM: 500
+2026-04-06 15:35:10,055 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:35:54,180 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:36:00,983 - __main__ - INFO - 📨 Сообщение от 13994310: текст='Нет'
+2026-04-06 15:36:00,983 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:36:00
+2026-04-06 15:36:00,983 - __main__ - INFO - 📎 Вложений: 2
+2026-04-06 15:36:00,983 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:36:00,983 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:36:00,983 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:36:00,983 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:36:00,983 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:36:00,983 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:36:00,983 - __main__ - INFO - 📤 Отправка в CRM: фото=2, гео=False
+2026-04-06 15:36:00,983 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:36:00
+2026-04-06 15:36:01,045 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 40
+2026-04-06 15:36:01,418 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:46:12,368 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:46:54,788 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.BOT_STOPPED | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:46:58,996 - __main__ - INFO - 📨 Сообщение от 26919939: текст='7'
+2026-04-06 15:46:58,996 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:46:58
+2026-04-06 15:46:58,996 - __main__ - INFO - 📎 Вложений: 0
+2026-04-06 15:46:58,996 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=False
+2026-04-06 15:46:58,996 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:46:58
+2026-04-06 15:46:59,025 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 41
+2026-04-06 15:46:59,133 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:47:03,930 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:47:13,938 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:47:27,094 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:47:29,217 - __main__ - INFO - 📨 Сообщение от 26919939: текст='Нет'
+2026-04-06 15:47:29,218 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:47:29
+2026-04-06 15:47:29,218 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:47:29,218 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:47:29,218 - __main__ - INFO - 📍 Геолокация: lat=0.0, lon=0.0
+2026-04-06 15:47:29,326 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:47:38,730 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:47:50,743 - __main__ - INFO - 📨 Сообщение от 9324104: текст='Нет'
+2026-04-06 15:47:50,743 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:47:50
+2026-04-06 15:47:50,743 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:47:50,743 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:47:50,743 - __main__ - INFO - 📍 Геолокация: lat=63.19969940185547, lon=75.4493179321289
+2026-04-06 15:47:50,743 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
+2026-04-06 15:47:50,743 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:47:50
+2026-04-06 15:47:50,775 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 42
+2026-04-06 15:47:50,877 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:48:02,330 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:48:08,735 - __main__ - INFO - 📨 Сообщение от 26919939: текст='Нет'
+2026-04-06 15:48:08,735 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:48:08
+2026-04-06 15:48:08,735 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:48:08,735 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:48:08,735 - __main__ - INFO - 📍 Геолокация: lat=68.57109832763672, lon=69.88206481933594
+2026-04-06 15:48:08,735 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
+2026-04-06 15:48:08,735 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:48:08
+2026-04-06 15:48:08,770 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 43
+2026-04-06 15:48:08,875 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:48:16,488 - __main__ - INFO - 📨 Сообщение от 9324104: текст='Нет'
+2026-04-06 15:48:16,489 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:48:16
+2026-04-06 15:48:16,489 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:48:16,489 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:48:16,489 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:48:16,489 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:48:16,489 - __main__ - INFO - 📤 Отправка в CRM: фото=1, гео=False
+2026-04-06 15:48:16,489 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:48:16
+2026-04-06 15:48:16,538 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 44
+2026-04-06 15:48:16,666 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 114801759, user_id: 9324104
+2026-04-06 15:48:26,347 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:48:35,016 - __main__ - INFO - 📨 Сообщение от 26919939: текст='Нет'
+2026-04-06 15:48:35,016 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:48:35
+2026-04-06 15:48:35,016 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:48:35,016 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:48:35,016 - __main__ - INFO - 📍 Геолокация: lat=0.0, lon=0.0
+2026-04-06 15:48:35,120 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:49:11,191 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:49:31,081 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:49:37,251 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:50:00,268 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.BOT_STOPPED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:50:01,428 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:50:03,504 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 130235924, user_id: 26919939
+2026-04-06 15:50:06,423 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:50:13,256 - __main__ - INFO - 📨 Сообщение от 50383216: текст='Нет'
+2026-04-06 15:50:13,257 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:50:13
+2026-04-06 15:50:13,257 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:50:13,257 - __main__ - INFO - 📎 Тип вложения: location
+2026-04-06 15:50:13,257 - __main__ - INFO - 📍 Геолокация: lat=63.202903747558594, lon=75.45175170898438
+2026-04-06 15:50:13,257 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
+2026-04-06 15:50:13,257 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:50:13
+2026-04-06 15:50:13,283 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 45
+2026-04-06 15:50:13,408 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:52:52,180 - __main__ - INFO - 📨 Сообщение от 50383216: текст='Нет'
+2026-04-06 15:52:52,181 - __main__ - INFO - 🕐 Текущее время (Екатеринбург): 06.04.2026 15:52:52
+2026-04-06 15:52:52,181 - __main__ - INFO - 📎 Вложений: 1
+2026-04-06 15:52:52,181 - __main__ - INFO - 📎 Тип вложения: image
+2026-04-06 15:52:52,181 - __main__ - INFO - 📷 Найден прямой URL
+2026-04-06 15:52:52,181 - __main__ - INFO - ✅ Фото обработано
+2026-04-06 15:52:52,181 - __main__ - INFO - 📤 Отправка в CRM: фото=1, гео=False
+2026-04-06 15:52:52,181 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:52:52
+2026-04-06 15:52:52,197 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 46
+2026-04-06 15:52:52,305 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:54:37,531 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:54:42,314 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:54:47,414 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7efcc15f8dd0>
+2026-04-06 15:54:48,441 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 15:54:48,607 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 15:54:48,608 - dispatcher - INFO - Зарегистрировано 13 обработчиков событий
+2026-04-06 15:55:01,260 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:55:06,822 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:55:15,237 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-06 15:55:15,364 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:55:18,077 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-06 15:55:18,179 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:55:23,485 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:55:23,734 - __main__ - INFO - 📍 Добавлена геолокация: 63.20279312133789, 75.45183563232422
+2026-04-06 15:55:23,854 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:55:28,053 - __main__ - INFO - 📍 Добавлена геолокация: 63.202850341796875, 75.45184326171875
+2026-04-06 15:55:28,184 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:55:31,074 - __main__ - INFO - 📝 Добавлен текст: Проверка...
+2026-04-06 15:55:31,178 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:55:36,591 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 47
+2026-04-06 15:55:36,592 - dispatcher - ERROR - Ошибка при обработке события: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216 | MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert')) 
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 465, in _execute_handler
+    await handler_chain(event, kwargs_filtered)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 312, in call_handler
+    await handler.func_event(event_object)
+  File "/home/malyhin@noyabrsk.local/trapping_v2/bot_py/bot.py", line 376, in callback_send_all
+    await event.answer(notification="✅ Сообщение отправлено!", show_alert=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 598, in handle
+    await global_chain(event_object, kwargs)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 591, in _process_event
+    await _process_handlers(event_object, data)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 566, in _process_handlers
+    await self._execute_handler(
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 468, in _execute_handler
+    raise HandlerException(
+maxapi.exceptions.dispatcher.HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 611, in handle
+    raise MiddlewareException(
+maxapi.exceptions.dispatcher.MiddlewareException: MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert'))
+2026-04-06 15:55:37,320 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 48
+2026-04-06 15:55:37,320 - dispatcher - ERROR - Ошибка при обработке события: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310 | MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert')) 
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 465, in _execute_handler
+    await handler_chain(event, kwargs_filtered)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 312, in call_handler
+    await handler.func_event(event_object)
+  File "/home/malyhin@noyabrsk.local/trapping_v2/bot_py/bot.py", line 376, in callback_send_all
+    await event.answer(notification="✅ Сообщение отправлено!", show_alert=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 598, in handle
+    await global_chain(event_object, kwargs)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 591, in _process_event
+    await _process_handlers(event_object, data)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 566, in _process_handlers
+    await self._execute_handler(
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 468, in _execute_handler
+    raise HandlerException(
+maxapi.exceptions.dispatcher.HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 611, in handle
+    raise MiddlewareException(
+maxapi.exceptions.dispatcher.MiddlewareException: MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert'))
+2026-04-06 15:55:40,977 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:55:47,175 - __main__ - INFO - 📝 Добавлен текст: Текст...
+2026-04-06 15:55:47,326 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 89731943, user_id: 50383216
+2026-04-06 15:55:49,170 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 49
+2026-04-06 15:55:49,171 - dispatcher - ERROR - Ошибка при обработке события: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216 | MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert')) 
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 465, in _execute_handler
+    await handler_chain(event, kwargs_filtered)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 312, in call_handler
+    await handler.func_event(event_object)
+  File "/home/malyhin@noyabrsk.local/trapping_v2/bot_py/bot.py", line 376, in callback_send_all
+    await event.answer(notification="✅ Сообщение отправлено!", show_alert=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 598, in handle
+    await global_chain(event_object, kwargs)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 591, in _process_event
+    await _process_handlers(event_object, data)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 566, in _process_handlers
+    await self._execute_handler(
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 468, in _execute_handler
+    raise HandlerException(
+maxapi.exceptions.dispatcher.HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 611, in handle
+    raise MiddlewareException(
+maxapi.exceptions.dispatcher.MiddlewareException: MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert'))
+2026-04-06 15:55:50,225 - dispatcher - ERROR - Ошибка при обработке события: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216 | MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert')) 
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 465, in _execute_handler
+    await handler_chain(event, kwargs_filtered)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 312, in call_handler
+    await handler.func_event(event_object)
+  File "/home/malyhin@noyabrsk.local/trapping_v2/bot_py/bot.py", line 346, in callback_send_all
+    await event.answer(notification="❌ Нечего отправлять!", show_alert=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 598, in handle
+    await global_chain(event_object, kwargs)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 591, in _process_event
+    await _process_handlers(event_object, data)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 566, in _process_handlers
+    await self._execute_handler(
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 468, in _execute_handler
+    raise HandlerException(
+maxapi.exceptions.dispatcher.HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 611, in handle
+    raise MiddlewareException(
+maxapi.exceptions.dispatcher.MiddlewareException: MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert'))
+2026-04-06 15:58:12,915 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7fdc7ade2710>
+2026-04-06 15:58:14,467 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 15:58:14,580 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 15:58:14,581 - dispatcher - INFO - Зарегистрировано 14 обработчиков событий
+2026-04-06 15:58:21,930 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:58:24,091 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:58:27,106 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:58:31,204 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-06 15:58:31,344 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:58:35,976 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:58:38,640 - __main__ - INFO - 📍 Добавлена геолокация: 63.20279312133789, 75.45183563232422
+2026-04-06 15:58:38,763 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:58:41,093 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:58:44,564 - __main__ - INFO - 📝 Добавлен текст: Приманиии...
+2026-04-06 15:58:44,668 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 15:58:46,511 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 50
+2026-04-06 15:58:46,512 - dispatcher - ERROR - Ошибка при обработке события: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310 | MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert')) 
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 465, in _execute_handler
+    await handler_chain(event, kwargs_filtered)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 312, in call_handler
+    await handler.func_event(event_object)
+  File "/home/malyhin@noyabrsk.local/trapping_v2/bot_py/bot.py", line 397, in callback_send_all
+    await event.answer(notification="✅ Сообщение отправлено!", show_alert=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 598, in handle
+    await global_chain(event_object, kwargs)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 591, in _process_event
+    await _process_handlers(event_object, data)
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 566, in _process_handlers
+    await self._execute_handler(
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 468, in _execute_handler
+    raise HandlerException(
+maxapi.exceptions.dispatcher.HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/malyhin@noyabrsk.local/.local/lib/python3.11/site-packages/maxapi/dispatcher.py", line 611, in handle
+    raise MiddlewareException(
+maxapi.exceptions.dispatcher.MiddlewareException: MiddlewareException(middleware=_process_event, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=HandlerException: HandlerException(handler=callback_send_all, router_id=0, process=UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310, context_keys=['data', 'state'], cause=TypeError: MessageCallback.answer() got an unexpected keyword argument 'show_alert'))
+2026-04-06 16:01:19,150 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f5911906710>
+2026-04-06 16:01:20,104 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 16:01:20,220 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 16:01:20,221 - dispatcher - INFO - Зарегистрировано 14 обработчиков событий
+2026-04-06 16:01:26,593 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:01:30,607 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:01:34,731 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:01:38,255 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:01:39,703 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:01:43,302 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-06 16:01:43,426 - __main__ - INFO - 📷 Добавлено фото, всего: 2
+2026-04-06 16:01:43,535 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:01:45,867 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:01:48,092 - __main__ - INFO - 📍 Добавлена геолокация: 63.20279312133789, 75.45183563232422
+2026-04-06 16:01:48,211 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:01:50,223 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:01:55,203 - __main__ - INFO - 📝 Добавлен текст: Прроииспримот...
+2026-04-06 16:01:55,322 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:01:57,061 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 51
+2026-04-06 16:01:57,291 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:56:35,966 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:56:38,654 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:56:40,223 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:56:44,974 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-06 16:56:45,095 - __main__ - INFO - 📷 Добавлено фото, всего: 2
+2026-04-06 16:56:45,217 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:56:48,964 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:56:52,241 - __main__ - INFO - 📍 Добавлена геолокация: 63.202796936035156, 75.45184326171875
+2026-04-06 16:56:52,367 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:56:55,306 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:57:01,842 - __main__ - INFO - 📝 Добавлен текст: Пппримиттолпввууам44567...
+2026-04-06 16:57:01,977 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:57:04,744 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 52
+2026-04-06 16:57:04,963 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:57:25,521 - asyncio - ERROR - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7fe4ec5168d0>
+2026-04-06 16:57:28,170 - __main__ - INFO - ✅ Бот запущен
+2026-04-06 16:57:28,289 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-06 16:57:28,289 - dispatcher - INFO - Зарегистрировано 14 обработчиков событий
+2026-04-06 16:57:41,301 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.BOT_STOPPED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:57:42,494 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:57:46,619 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:57:48,376 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:57:51,798 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-06 16:57:51,944 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:57:53,580 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:58:08,996 - __main__ - INFO - 📍 Добавлена геолокация: 63.18743896484375, 75.44349670410156
+2026-04-06 16:58:09,114 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:58:11,176 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:58:16,400 - __main__ - INFO - 📝 Добавлен текст: Проверка работы...
+2026-04-06 16:58:16,515 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 16:58:18,085 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 53
+2026-04-06 16:58:18,297 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 17:01:04,246 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 104214492, user_id: 7329227
+2026-04-06 17:01:12,216 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 104214492, user_id: 7329227
+2026-04-06 17:01:23,681 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 104214492, user_id: 7329227
+2026-04-06 18:28:00,733 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:08,224 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:11,881 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:12,390 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:31,426 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-06 18:28:31,546 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:33,589 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:37,979 - __main__ - INFO - 📍 Добавлена геолокация: 63.124481201171875, 75.3681411743164
+2026-04-06 18:28:38,104 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:42,039 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:47,012 - __main__ - INFO - 📝 Добавлен текст: Проблема...
+2026-04-06 18:28:47,129 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:48,723 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 54
+2026-04-06 18:28:48,966 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:06:56,680 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:00,663 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:14,016 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-06 19:07:14,124 - __main__ - INFO - 📷 Добавлено фото, всего: 2
+2026-04-06 19:07:14,238 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:19,476 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:32,345 - __main__ - INFO - 📍 Добавлена геолокация: 63.11642074584961, 75.34554290771484
+2026-04-06 19:07:32,471 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:35,583 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:43,001 - __main__ - INFO - 📝 Добавлен текст: Ещё одна проверка....
+2026-04-06 19:07:43,119 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:45,240 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 55
+2026-04-06 19:07:45,463 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:08:03,464 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:08:13,458 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:08:40,407 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:08:44,377 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:08:51,940 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:09:00,703 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:40:02,586 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 19:40:11,961 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 19:40:15,073 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-07 06:06:34,894 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:06:36,912 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:06:48,435 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-07 06:06:48,539 - __main__ - INFO - 📷 Добавлено фото, всего: 2
+2026-04-07 06:06:48,661 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:07:00,973 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:07:34,653 - __main__ - INFO - 📍 Добавлена геолокация: 63.11664962768555, 75.34661865234375
+2026-04-07 06:07:34,775 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:07:37,303 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:08:08,494 - __main__ - INFO - 📝 Добавлен текст: Где-то тут была замечена стая собак...
+2026-04-07 06:08:08,598 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:08:10,820 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:08:12,396 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310

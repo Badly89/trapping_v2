@@ -1,10 +1,13 @@
-# bot.py - Финальная версия с maxapi и правильной обработкой фото
+# bot.py - Адаптированная версия с поддержкой составных сообщений
 import os
 import json
 import asyncio
 import logging
+import aiohttp
+import aiofiles
 from datetime import datetime, timezone, timedelta
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List, Tuple
+from enum import Enum
 from dotenv import load_dotenv
 
 # Загружаем конфигурацию
@@ -47,23 +50,71 @@ dp = Dispatcher()
 PHOTOS_DIR = "downloaded_photos"
 os.makedirs(PHOTOS_DIR, exist_ok=True)
 
-# ==================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ====================
+# ==================== СОСТОЯНИЯ ДЛЯ СОСТАВНЫХ СООБЩЕНИЙ ====================
+
+class ComposeState(Enum):
+    """Состояния составного сообщения"""
+    IDLE = "idle"
+    AWAITING_PHOTO = "awaiting_photo"
+    AWAITING_LOCATION = "awaiting_location"
+    AWAITING_TEXT = "awaiting_text"
+    COMPOSING = "composing"
+
+# Хранилище временных данных для составных сообщений
+user_compose_data: Dict[int, Dict[str, Any]] = {}
+
+def get_compose_data(user_id: int) -> Dict[str, Any]:
+    """Получить данные составного сообщения пользователя"""
+    if user_id not in user_compose_data:
+        user_compose_data[user_id] = {
+            'photos': [],
+            'location': None,
+            'text': '',
+            'state': ComposeState.IDLE
+        }
+    return user_compose_data[user_id]
+
+def clear_compose_data(user_id: int):
+    """Очистить данные составного сообщения"""
+    if user_id in user_compose_data:
+        user_compose_data[user_id] = {
+            'photos': [],
+            'location': None,
+            'text': '',
+            'state': ComposeState.IDLE
+        }
+
+# ==================== РАБОТА С ВРЕМЕНЕМ ====================
+
+# Часовой пояс Екатеринбурга (UTC+5)
+YEKATERINBURG_TZ = timezone(timedelta(hours=5))
 
 def get_yekaterinburg_time() -> datetime:
-    """Возвращает текущее время в Екатеринбурге (UTC+5)"""
-    return datetime.now(timezone(timedelta(hours=5)))
+    """Возвращает текущее время в Екатеринбурге (UTC+5) с часовым поясом"""
+    return datetime.now(YEKATERINBURG_TZ)
+
+def format_yekaterinburg_datetime(dt: datetime = None) -> str:
+    """Форматирует дату и время для отображения"""
+    if dt is None:
+        dt = get_yekaterinburg_time()
+    return dt.strftime("%d.%m.%Y %H:%M:%S")
+
+def get_iso_with_tz(dt: datetime = None) -> str:
+    """Возвращает ISO формат с часовым поясом для CRM"""
+    if dt is None:
+        dt = get_yekaterinburg_time()
+    return dt.isoformat()
+
+# ==================== ОСТАЛЬНЫЕ ФУНКЦИИ ====================
 
 def generate_map_links(lat: float, lon: float) -> Dict[str, str]:
     """Генерация ссылок на карты"""
     return {
         "yandex": f"https://yandex.ru/maps/?pt={lon},{lat}&z=17&l=map",
-        "google": f"https://www.google.com/maps?q={lat},{lon}"
-    }
+        }
 
 async def save_to_crm(message_data: Dict[str, Any]) -> bool:
     """Сохранение сообщения в CRM"""
-    import aiohttp
-    
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -85,56 +136,34 @@ async def save_to_crm(message_data: Dict[str, Any]) -> bool:
 
 async def upload_photo_to_max(file_content: bytes, filename: str) -> Optional[str]:
     """Загружает изображение в MAX и возвращает постоянный URL"""
-    import aiohttp
-    
     try:
         async with aiohttp.ClientSession() as session:
-            # Запрашиваем URL для загрузки
-            logger.info(f"📤 Запрос URL для загрузки...")
             async with session.post(
                 "https://platform-api.max.ru/uploads?type=image",
                 headers={"Authorization": MAX_BOT_TOKEN}
             ) as upload_url_response:
                 if upload_url_response.status != 200:
-                    logger.error(f"❌ Ошибка получения URL: {upload_url_response.status}")
                     return None
                 
                 upload_data = await upload_url_response.json()
                 upload_url = upload_data.get("url")
-                
                 if not upload_url:
-                    logger.error("❌ Нет URL в ответе")
                     return None
                 
-                # Загружаем файл
                 form_data = aiohttp.FormData()
                 form_data.add_field("data", file_content, filename=filename)
                 
                 async with session.post(upload_url, data=form_data) as upload_response:
                     if upload_response.status != 200:
-                        logger.error(f"❌ Ошибка загрузки: {upload_response.status}")
                         return None
-                    
                     result = await upload_response.json()
-                    photo_url = result.get("url") or result.get("link")
-                    
-                    if photo_url:
-                        logger.info(f"✅ Фото загружено в MAX")
-                        return photo_url
-                    else:
-                        logger.error(f"❌ Неожиданный ответ: {result}")
-                        return None
-                            
+                    return result.get("url") or result.get("link")
     except Exception as e:
         logger.error(f"❌ Ошибка загрузки: {e}")
         return None
 
 async def get_photo_url(attachment) -> Optional[str]:
-    """
-    Получает URL фото из вложения.
-    Поддерживает прямой URL и загрузку через file_id/photo_id.
-    """
-    # Получаем данные вложения
+    """Получает URL фото из вложения"""
     if hasattr(attachment, 'model_dump'):
         att_data = attachment.model_dump()
     elif hasattr(attachment, 'dict'):
@@ -144,20 +173,12 @@ async def get_photo_url(attachment) -> Optional[str]:
     
     payload = att_data.get('payload', {})
     
-    # 1. Пробуем получить прямой URL (самый быстрый способ)
     direct_url = payload.get('url')
     if direct_url:
-        logger.info(f"📷 Найден прямой URL")
         return direct_url
     
-    # 2. Пробуем получить photo_id
     photo_id = payload.get('photo_id')
     if photo_id:
-        logger.info(f"📷 Найден photo_id: {photo_id}")
-        # Для photo_id нужно скачать файл
-        import aiohttp
-        import aiofiles
-        
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
@@ -165,31 +186,14 @@ async def get_photo_url(attachment) -> Optional[str]:
                     headers={"Authorization": MAX_BOT_TOKEN}
                 ) as file_response:
                     if file_response.status != 200:
-                        logger.error(f"❌ Ошибка получения файла: {file_response.status}")
                         return None
-                    
                     file_content = await file_response.read()
-                    logger.info(f"✅ Файл скачан: {len(file_content)} байт")
-                    
-                    # Локальное сохранение
-                    local_path = os.path.join(PHOTOS_DIR, f"{photo_id}.jpg")
-                    async with aiofiles.open(local_path, 'wb') as f:
-                        await f.write(file_content)
-                    logger.info(f"💾 Файл сохранен локально: {local_path}")
-                    
-                    # Загружаем в MAX
                     return await upload_photo_to_max(file_content, f"{photo_id}.jpg")
-        except Exception as e:
-            logger.error(f"❌ Ошибка при обработке photo_id: {e}")
+        except Exception:
             return None
     
-    # 3. Пробуем получить file_id
     file_id = payload.get('file_id') or att_data.get('id')
     if file_id:
-        logger.info(f"📷 Найден file_id: {file_id}")
-        import aiohttp
-        import aiofiles
-        
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
@@ -197,32 +201,52 @@ async def get_photo_url(attachment) -> Optional[str]:
                     headers={"Authorization": MAX_BOT_TOKEN}
                 ) as file_response:
                     if file_response.status != 200:
-                        logger.error(f"❌ Ошибка получения файла: {file_response.status}")
                         return None
-                    
                     file_content = await file_response.read()
-                    logger.info(f"✅ Файл скачан: {len(file_content)} байт")
-                    
-                    local_path = os.path.join(PHOTOS_DIR, f"{file_id}.jpg")
-                    async with aiofiles.open(local_path, 'wb') as f:
-                        await f.write(file_content)
-                    logger.info(f"💾 Файл сохранен локально: {local_path}")
-                    
                     return await upload_photo_to_max(file_content, f"{file_id}.jpg")
-        except Exception as e:
-            logger.error(f"❌ Ошибка при обработке file_id: {e}")
+        except Exception:
             return None
     
-    logger.warning(f"⚠️ Не удалось получить URL для фото, payload: {payload}")
     return None
 
 # ==================== КНОПКИ ====================
 
+def create_compose_keyboard(has_photo: bool = False, has_location: bool = False, has_text: bool = False) -> Attachment:
+    """Клавиатура для составного сообщения с отображением текущего состояния"""
+    buttons = []
+    
+    # Статус текущего сообщения
+    status_row = []
+    if has_photo:
+        status_row.append(CallbackButton(text="✅ Фото", payload="status_photo", intent=Intent.POSITIVE))
+    else:
+        status_row.append(CallbackButton(text="📸 Добавить фото", payload="add_photo", intent=Intent.DEFAULT))
+    
+    if has_location:
+        status_row.append(CallbackButton(text="✅ Гео", payload="status_location", intent=Intent.POSITIVE))
+    else:
+        status_row.append(CallbackButton(text="📍 Добавить гео", payload="add_location", intent=Intent.DEFAULT))
+    
+    if has_text:
+        status_row.append(CallbackButton(text="✅ Текст", payload="status_text", intent=Intent.POSITIVE))
+    else:
+        status_row.append(CallbackButton(text="📝 Добавить текст", payload="add_text", intent=Intent.DEFAULT))
+    
+    buttons.append(status_row)
+    buttons.append([
+        CallbackButton(text="✅ Отправить всё", payload="send_all", intent=Intent.POSITIVE),
+        CallbackButton(text="🗑️ Очистить", payload="clear_all", intent=Intent.NEGATIVE)
+    ])
+    buttons.append([
+        CallbackButton(text="◀️ Главное меню", payload="back_to_main", intent=Intent.DEFAULT)
+    ])
+    
+    return Attachment(type="inline_keyboard", payload=ButtonsPayload(buttons=buttons))
+
 def create_main_menu() -> Attachment:
     buttons = ButtonsPayload(buttons=[
         [
-            CallbackButton(text="📸 Отправить фото", payload="send_photo", intent=Intent.DEFAULT),
-            CallbackButton(text="📍 Отправить геолокацию", payload="send_location", intent=Intent.DEFAULT)
+            CallbackButton(text="📝 Новое сообщение", payload="new_message", intent=Intent.POSITIVE)
         ],
         [
             CallbackButton(text="ℹ️ Информация", payload="info", intent=Intent.DEFAULT),
@@ -237,7 +261,7 @@ def create_main_menu() -> Attachment:
 def create_location_keyboard() -> Attachment:
     buttons = ButtonsPayload(buttons=[
         [RequestGeoLocationButton(text="📍 Отправить мою геолокацию", quick=True)],
-        [CallbackButton(text="◀️ Назад", payload="back_to_main", intent=Intent.DEFAULT)]
+        [CallbackButton(text="◀️ Назад", payload="back_to_compose", intent=Intent.DEFAULT)]
     ])
     return Attachment(type="inline_keyboard", payload=buttons)
 
@@ -251,10 +275,11 @@ async def handle_bot_started(event: BotStarted):
     await bot.send_message(
         chat_id=event.chat_id,
         text=f"👋 Привет, {name}!\n\n"
-             "📢 Данный бот предназначен для фиксации нанесенных надписей по распространению наркотиков\n\n"
-             "📸 Отправьте фото с местом нанесения надписи\n"
-             "📍 Отправьте геолокацию места нанесения\n"
-             "📝 Укажите адрес в описании\n\n"
+             "📢 Бот для фиксации нанесенных надписей\n\n"
+             "📝 **Как отправить сообщение:**\n"
+             "1. Нажмите 'Новое сообщение'\n"
+             "2. Добавьте фото, геолокацию и/или текст\n"
+             "3. Нажмите 'Отправить всё'\n\n"
              "Спасибо за активную гражданскую позицию! 🙏",
         attachments=[create_main_menu()]
     )
@@ -271,29 +296,149 @@ async def cmd_start(event: MessageCreated):
 
 # ==================== ОБРАБОТКА КНОПОК ====================
 
-@dp.message_callback(F.callback.payload == "send_photo")
-async def callback_send_photo(event: MessageCallback):
-    await event.answer(notification="📸 Режим отправки фото")
-    await bot.send_message(
-        chat_id=event.message.recipient.chat_id,
-        text="📸 Пожалуйста, отправьте фото с местом нанесения надписи и укажите адрес в описании."
+@dp.message_callback(F.callback.payload == "new_message")
+async def callback_new_message(event: MessageCallback):
+    """Начать новое составное сообщение"""
+    user_id = event.callback.user.user_id
+    clear_compose_data(user_id)
+    compose_data = get_compose_data(user_id)
+    compose_data['state'] = ComposeState.COMPOSING
+    
+    await event.answer(notification="📝 Начинаем новое сообщение")  # Убрали show_alert
+    await event.message.edit(
+        text="📝 **Составление сообщения**\n\n"
+             "Добавьте содержимое с помощью кнопок ниже:\n"
+             "• 📸 Добавить фото\n"
+             "• 📍 Добавить геолокацию\n"
+             "• 📝 Добавить текст\n\n"
+             "После добавления всего необходимого нажмите 'Отправить всё'",
+        attachments=[create_compose_keyboard()]
     )
 
-@dp.message_callback(F.callback.payload == "send_location")
-async def callback_send_location(event: MessageCallback):
-    await event.answer(notification="📍 Режим отправки геолокации")
+@dp.message_callback(F.callback.payload == "add_photo")
+async def callback_add_photo(event: MessageCallback):
+    """Добавить фото к сообщению"""
+    user_id = event.callback.user.user_id
+    compose_data = get_compose_data(user_id)
+    compose_data['state'] = ComposeState.AWAITING_PHOTO
+    
+    await event.answer(notification="📸 Режим добавления фото")  # OK
     await bot.send_message(
         chat_id=event.message.recipient.chat_id,
-        text="📍 Нажмите кнопку ниже, чтобы отправить ваше местоположение:",
+        text="📸 Отправьте фото, которое хотите добавить к сообщению.\n\n"
+             "После отправки фото вы вернетесь к редактированию."
+    )
+
+@dp.message_callback(F.callback.payload == "add_location")
+async def callback_add_location(event: MessageCallback):
+    """Добавить геолокацию к сообщению"""
+    await event.answer(notification="📍 Режим добавления геолокации")
+    await bot.send_message(
+        chat_id=event.message.recipient.chat_id,
+        text="📍 Отправьте вашу геолокацию:",
         attachments=[create_location_keyboard()]
+    )
+
+@dp.message_callback(F.callback.payload == "add_text")
+async def callback_add_text(event: MessageCallback):
+    """Добавить текст к сообщению"""
+    user_id = event.callback.user.user_id
+    compose_data = get_compose_data(user_id)
+    compose_data['state'] = ComposeState.AWAITING_TEXT
+    
+    await event.answer(notification="📝 Режим добавления текста")
+    await bot.send_message(
+        chat_id=event.message.recipient.chat_id,
+        text="📝 Отправьте текст, который хотите добавить к сообщению.\n\n"
+             "После отправки текста вы вернетесь к редактированию."
+    )
+
+@dp.message_callback(F.callback.payload == "send_all")
+async def callback_send_all(event: MessageCallback):
+    """Отправить составное сообщение в CRM"""
+    user_id = event.callback.user.user_id
+    compose_data = get_compose_data(user_id)
+    
+    photos = compose_data.get('photos', [])
+    location = compose_data.get('location')
+    text = compose_data.get('text', '')
+    
+    if not photos and not location and not text:
+        await event.answer(notification="❌ Нечего отправлять!")  # Убрали show_alert
+        return
+    
+    full_text = text or ''
+    if location:
+        lat, lon = location
+        maps = generate_map_links(lat, lon)
+        full_text += (full_text and '\n\n' or '') + f"📍 **Геолокация:**\n"
+        full_text += f"📌 Координаты: {lat:.6f}, {lon:.6f}"
+    
+    now = get_yekaterinburg_time()
+    crm_payload = {
+        "source": "max",
+        "chat_id": str(event.message.recipient.chat_id),
+        "user_id": str(user_id),
+        "user_name": event.callback.user.first_name or 'Unknown',
+        "text": full_text,
+        "photos": photos,
+        "latitude": location[0] if location else None,
+        "longitude": location[1] if location else None,
+        "received_at": get_iso_with_tz(now)
+    }
+    
+    saved = await save_to_crm(crm_payload)
+    
+    if saved:
+        clear_compose_data(user_id)
+        await event.answer(notification="✅ Сообщение отправлено!")  # Убрали show_alert
+        await event.message.edit(
+            text=f"✅ **Сообщение успешно отправлено в CRM!**\n\n"
+                 f"📷 Фото: {len(photos)}\n"
+                 f"📍 Геолокация: {'Да' if location else 'Нет'}\n"
+                 f"📝 Текст: {'Да' if text else 'Нет'}\n\n"
+                 f"🕐 Время: {format_yekaterinburg_datetime(now)}\n\n"
+                 "Вы можете создать новое сообщение через главное меню.",
+            attachments=[create_main_menu()]
+        )
+    else:
+        await event.answer(notification="❌ Ошибка отправки!")  # Убрали show_alert
+
+@dp.message_callback(F.callback.payload == "clear_all")
+async def callback_clear_all(event: MessageCallback):
+    """Очистить все добавленные данные"""
+    user_id = event.callback.user.user_id
+    clear_compose_data(user_id)
+    
+    await event.answer(notification="🗑️ Все данные очищены")  # Убрали show_alert
+    await event.message.edit(
+        text="📝 **Составление сообщения**\n\n"
+             "Все данные очищены. Добавьте содержимое с помощью кнопок:",
+        attachments=[create_compose_keyboard()]
     )
 
 @dp.message_callback(F.callback.payload == "back_to_main")
 async def callback_back_to_main(event: MessageCallback):
     await event.answer(notification="◀️ Главное меню")
     await event.message.edit(
-        text="Выберите действие:",
+        text="👋 Главное меню",
         attachments=[create_main_menu()]
+    )
+
+@dp.message_callback(F.callback.payload == "back_to_compose")
+async def callback_back_to_compose(event: MessageCallback):
+    user_id = event.callback.user.user_id
+    compose_data = get_compose_data(user_id)
+    
+    await event.answer(notification="◀️ Возврат к составлению")
+    await event.message.edit(
+        text="📝 **Составление сообщения**\n\n"
+             "Продолжайте добавлять содержимое:",
+        attachments=[create_compose_keyboard(
+            has_photo=len(compose_data.get('photos', [])) > 0,
+            has_location=compose_data.get('location') is not None,
+            has_text=bool(compose_data.get('text', ''))
+        )]
     )
 
 @dp.message_callback(F.callback.payload == "info")
@@ -302,7 +447,7 @@ async def callback_info(event: MessageCallback):
     await bot.send_message(
         chat_id=event.message.recipient.chat_id,
         text="📢 Бот для фиксации надписей по распространению наркотиков.\n\n"
-             "Отправьте фото и геолокацию места нанесения.",
+             "Используйте кнопки для составления сообщения.",
         attachments=[create_main_menu()]
     )
 
@@ -321,128 +466,113 @@ async def callback_rules(event: MessageCallback):
 @dp.message_callback(F.callback.payload == "help")
 async def callback_help(event: MessageCallback):
     await event.answer(notification="❓ Помощь")
+    help_text = "❓ **Помощь:**\n\n"
+    help_text += "1️⃣ Нажмите 'Новое сообщение'\n"
+    help_text += "2️⃣ Добавьте фото, геолокацию и текст\n"
+    help_text += "3️⃣ Нажмите 'Отправить всё'\n\n"
+    help_text += "💡 Можно добавлять несколько фото!"
     await bot.send_message(
         chat_id=event.message.recipient.chat_id,
-        text="❓ **Помощь:**\n\n"
-             "📸 Отправить фото - нажмите кнопку и выберите фото\n"
-             "📍 Отправить геолокацию - нажмите и подтвердите отправку\n\n"
-             "💡 Можно отправить фото и геолокацию в одном сообщении!",
+        text=help_text,
+        attachments=[create_main_menu()],
         parse_mode=ParseMode.MARKDOWN
     )
 
-# ==================== ОСНОВНОЙ ОБРАБОТЧИК ====================
+# ==================== ОБРАБОТКА ВХОДЯЩИХ СООБЩЕНИЙ ====================
 
 @dp.message_created()
 async def handle_message(event: MessageCreated):
     """Обработка всех входящих сообщений (фото, геолокация, текст)"""
-    logger.info(f"📦 Полный объект message: {event.message}")
     message = event.message
     user = message.sender
+    user_id = user.user_id
     chat_id = message.recipient.chat_id
     
-    # Получаем текст
     text = getattr(message.body, 'text', '') or ''
-    logger.info(f"📨 Сообщение от {user.user_id}: текст='{text[:50] if text else 'Нет'}'")
+    attachments = getattr(message.body, 'attachments', [])
     
-    if text and text.startswith('/'):
+    compose_data = get_compose_data(user_id)
+    state = compose_data.get('state', ComposeState.IDLE)
+    
+    # Обработка в режиме составления сообщения
+    if state != ComposeState.IDLE:
+        for att in attachments:
+            att_type = getattr(att, 'type', None)
+            
+            if att_type == 'image':
+                photo_url = await get_photo_url(att)
+                if photo_url:
+                    compose_data['photos'].append(photo_url)
+                    logger.info(f"📷 Добавлено фото, всего: {len(compose_data['photos'])}")
+                    await bot.send_message(
+                        chat_id=chat_id,
+                        text=f"✅ Фото добавлено! Всего фото: {len(compose_data['photos'])}\n\n"
+                             "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
+                        attachments=[create_compose_keyboard(
+                            has_photo=len(compose_data['photos']) > 0,
+                            has_location=compose_data['location'] is not None,
+                            has_text=bool(compose_data['text'])
+                        )]
+                    )
+            
+            elif att_type == 'location':
+                lat = getattr(att, 'lat', None) or getattr(att, 'latitude', None)
+                lon = getattr(att, 'lon', None) or getattr(att, 'longitude', None)
+                if lat and lon:
+                    compose_data['location'] = (lat, lon)
+                    logger.info(f"📍 Добавлена геолокация: {lat}, {lon}")
+                    await bot.send_message(
+                        chat_id=chat_id,
+                        text=f"✅ Геолокация добавлена!\n\n"
+                             "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
+                        attachments=[create_compose_keyboard(
+                            has_photo=len(compose_data['photos']) > 0,
+                            has_location=True,
+                            has_text=bool(compose_data['text'])
+                        )]
+                    )
+        
+        if text and state == ComposeState.AWAITING_TEXT:
+            compose_data['text'] = text
+            logger.info(f"📝 Добавлен текст: {text[:50]}...")
+            await bot.send_message(
+                chat_id=chat_id,
+                text=f"✅ Текст добавлен!\n\n"
+                     f"📝 \"{text[:100]}{'...' if len(text) > 100 else ''}\"\n\n"
+                     "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
+                attachments=[create_compose_keyboard(
+                    has_photo=len(compose_data['photos']) > 0,
+                    has_location=compose_data['location'] is not None,
+                    has_text=True
+                )]
+            )
+        
+        compose_data['state'] = ComposeState.COMPOSING
         return
     
-    # Получаем вложения
-    attachments = getattr(message.body, 'attachments', [])
-    logger.info(f"📎 Вложений: {len(attachments)}")
-    
-    photo_urls = []
-    latitude = None
-    longitude = None
-    
-    for att in attachments:
-        att_type = getattr(att, 'type', None)
-        logger.info(f"📎 Тип вложения: {att_type}")
-        
-        if att_type == 'image':
-            photo_url = await get_photo_url(att)
-            if photo_url:
-                photo_urls.append(photo_url)
-                logger.info(f"✅ Фото обработано")
-                    
-        elif att_type == 'location':
-            # Безопасная обработка геолокации
-            try:
-                # Пробуем получить координаты напрямую из атрибутов
-                latitude = getattr(att, 'lat', None)
-                longitude = getattr(att, 'lon', None)
-                
-                if not latitude:
-                    latitude = getattr(att, 'latitude', None)
-                if not longitude:
-                    longitude = getattr(att, 'longitude', None)
-                
-                # Если не нашли, пробуем через payload
-                if not latitude or not longitude:
-                    if hasattr(att, 'payload'):
-                        payload = att.payload
-                        if payload:
-                            if hasattr(payload, 'get'):
-                                latitude = payload.get('lat') or payload.get('latitude')
-                                longitude = payload.get('lon') or payload.get('longitude')
-                            elif hasattr(payload, 'lat'):
-                                latitude = payload.lat
-                                longitude = payload.lon
-                
-                logger.info(f"📍 Геолокация: lat={latitude}, lon={longitude}")
-            except Exception as e:
-                logger.error(f"❌ Ошибка обработки геолокации: {e}")
-                latitude = None
-                longitude = None
-    
-    # Время получения
-    now = get_yekaterinburg_time()
-    time_str = now.strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Формируем текст
-    full_text = text or ''
-    if latitude and longitude:
-        maps = generate_map_links(latitude, longitude)
-        full_text += (full_text and '\n\n' or '') + f"📍 Геолокация:\n"
-        full_text += f"🗺️ Яндекс.Карты: {maps['yandex']}\n"
-        full_text += f"🗺️ Google Maps: {maps['google']}\n"
-        full_text += f"📌 Координаты: {latitude:.6f}, {longitude:.6f}"
-    
-    # Отправляем в CRM
-    if full_text or photo_urls:
-        crm_payload = {
-            "source": "max",
-            "chat_id": str(chat_id),
-            "user_id": str(user.user_id),
-            "user_name": getattr(user, 'full_name', None) or getattr(user, 'first_name', 'Unknown'),
-            "text": full_text,
-            "photos": photo_urls,
-            "latitude": latitude,
-            "longitude": longitude,
-            "received_at": now.isoformat()
-        }
-        
-        logger.info(f"📤 Отправка в CRM: фото={len(photo_urls)}, гео={latitude is not None}")
-        saved = await save_to_crm(crm_payload)
-        
-        if saved:
-            reply = f"✅ Сообщение принято!\n🕐 {time_str}"
-            if photo_urls:
-                reply += f"\n📷 Фото: {len(photo_urls)}"
-            if latitude:
-                reply += f"\n📍 Геолокация получена"
-            await bot.send_message(chat_id=chat_id, text=reply, attachments=[create_main_menu()])
-        else:
-            await bot.send_message(chat_id=chat_id, text="❌ Ошибка, попробуйте позже.", attachments=[create_main_menu()])
-    else:
-        await bot.send_message(chat_id=chat_id, text="Используйте кнопки меню.", attachments=[create_main_menu()])
+    # Обычный режим - показываем меню
+    if not attachments and not text:
+        await bot.send_message(
+            chat_id=chat_id,
+            text="Используйте кнопки для взаимодействия.",
+            attachments=[create_main_menu()]
+        )
+
 # ==================== ЗАПУСК ====================
 
 async def main():
+    now = get_yekaterinburg_time()
+    
     print("\n" + "=" * 60)
-    print("🚀 ЗАПУСК БОТА (maxapi)")
+    print("🚀 ЗАПУСК БОТА (составные сообщения)")
     print(f"📁 Фото: {PHOTOS_DIR}")
     print(f"🔗 CRM: {CRM_API_URL}")
+    print(f"🕐 Текущее время (Екатеринбург): {format_yekaterinburg_datetime(now)}")
+    print("=" * 60)
+    print("\n📱 Как отправить сообщение:")
+    print("   1. Нажмите 'Новое сообщение'")
+    print("   2. Добавьте фото, геолокацию и/или текст")
+    print("   3. Нажмите 'Отправить всё'")
     print("=" * 60 + "\n")
     
     await bot.delete_webhook()
