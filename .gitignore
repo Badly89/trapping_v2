@@ -7,3 +7,36 @@
 /bot_py/*.log
 */bot_py/bot.log
 */bot_js/*
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.env
+.venv
+venv/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+build/
+.env.local
+
+# Docker
+*.log
+*.pid
+
+# Uploads
+uploads/
+downloaded_photos/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
