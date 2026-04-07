@@ -6,3 +6,4 @@
 .log
 /bot_py/*.log
 */bot_py/bot.log
+*/bot_js/*
