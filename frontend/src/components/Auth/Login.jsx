@@ -89,15 +89,7 @@ const Login = () => {
                         </Button>
                     </form>
                     
-                    <Typography variant="body2" color="text.secondary" align="center">
-                        Тестовые учетные записи:
-                        <br />
-                        admin / admin123
-                        <br />
-                        operator / operator123
-                        <br />
-                        executor / executor123
-                    </Typography>
+                  
                 </Paper>
             </Box>
         </Container>
