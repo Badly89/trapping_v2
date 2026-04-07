@@ -886,3 +886,52 @@ client_session: <aiohttp.client.ClientSession object at 0x7fe4ec5168d0>
 2026-04-06 17:01:04,246 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 104214492, user_id: 7329227
 2026-04-06 17:01:12,216 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 104214492, user_id: 7329227
 2026-04-06 17:01:23,681 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 104214492, user_id: 7329227
+2026-04-06 18:28:00,733 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:08,224 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:11,881 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:12,390 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:31,426 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-06 18:28:31,546 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:33,589 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:37,979 - __main__ - INFO - 📍 Добавлена геолокация: 63.124481201171875, 75.3681411743164
+2026-04-06 18:28:38,104 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:42,039 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:47,012 - __main__ - INFO - 📝 Добавлен текст: Проблема...
+2026-04-06 18:28:47,129 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 18:28:48,723 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 54
+2026-04-06 18:28:48,966 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:06:56,680 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:00,663 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:14,016 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-06 19:07:14,124 - __main__ - INFO - 📷 Добавлено фото, всего: 2
+2026-04-06 19:07:14,238 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:19,476 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:32,345 - __main__ - INFO - 📍 Добавлена геолокация: 63.11642074584961, 75.34554290771484
+2026-04-06 19:07:32,471 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:35,583 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:43,001 - __main__ - INFO - 📝 Добавлен текст: Ещё одна проверка....
+2026-04-06 19:07:43,119 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:07:45,240 - __main__ - INFO - ✅ Сообщение сохранено в CRM, ID: 55
+2026-04-06 19:07:45,463 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:08:03,464 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:08:13,458 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:08:40,407 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:08:44,377 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:08:51,940 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:09:00,703 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-06 19:40:02,586 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 19:40:11,961 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-06 19:40:15,073 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 89731943, user_id: 50383216
+2026-04-07 06:06:34,894 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:06:36,912 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:06:48,435 - __main__ - INFO - 📷 Добавлено фото, всего: 1
+2026-04-07 06:06:48,539 - __main__ - INFO - 📷 Добавлено фото, всего: 2
+2026-04-07 06:06:48,661 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:07:00,973 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:07:34,653 - __main__ - INFO - 📍 Добавлена геолокация: 63.11664962768555, 75.34661865234375
+2026-04-07 06:07:34,775 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:07:37,303 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:08:08,494 - __main__ - INFO - 📝 Добавлен текст: Где-то тут была замечена стая собак...
+2026-04-07 06:08:08,598 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:08:10,820 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310
+2026-04-07 06:08:12,396 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 109867857, user_id: 13994310

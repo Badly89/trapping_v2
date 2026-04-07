@@ -3,3 +3,5 @@
 *__pycache__
 /bot/node_modules/*
 /frontend/node_modules/*
+.log
+/bot_py/*.log
