@@ -5,3 +5,4 @@
 /frontend/node_modules/*
 .log
 /bot_py/*.log
+*/bot_py/bot.log

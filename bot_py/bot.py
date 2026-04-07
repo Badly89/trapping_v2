@@ -561,23 +561,51 @@ async def handle_message(event: MessageCreated):
 # ==================== ЗАПУСК ====================
 
 async def main():
-    now = get_yekaterinburg_time()
-    
+    """Запуск бота"""
     print("\n" + "=" * 60)
-    print("🚀 ЗАПУСК БОТА (составные сообщения)")
+    print("🚀 ЗАПУСК БОТА (maxapi)")
     print(f"📁 Фото: {PHOTOS_DIR}")
     print(f"🔗 CRM: {CRM_API_URL}")
-    print(f"🕐 Текущее время (Екатеринбург): {format_yekaterinburg_datetime(now)}")
-    print("=" * 60)
-    print("\n📱 Как отправить сообщение:")
-    print("   1. Нажмите 'Новое сообщение'")
-    print("   2. Добавьте фото, геолокацию и/или текст")
-    print("   3. Нажмите 'Отправить всё'")
     print("=" * 60 + "\n")
     
-    await bot.delete_webhook()
-    logger.info("✅ Бот запущен")
-    await dp.start_polling(bot)
+    try:
+        await bot.delete_webhook()
+        logger.info("✅ Бот запущен")
+        
+        # Запускаем polling
+        polling_task = asyncio.create_task(dp.start_polling(bot))
+        
+        # Ждем завершения
+        await polling_task
+        
+    except asyncio.CancelledError:
+        logger.info("👋 Задача отменена")
+    except KeyboardInterrupt:
+        logger.info("👋 Остановка пользователем")
+    finally:
+        # Корректное закрытие
+        logger.info("🔄 Закрытие соединений...")
+        
+        # Отменяем все задачи
+        for task in asyncio.all_tasks():
+            if task is not asyncio.current_task():
+                task.cancel()
+                try:
+                    await task
+                except:
+                    pass
+        
+        # Закрываем сессию бота
+        try:
+            await bot.session.close()
+            logger.info("✅ Сессия закрыта")
+        except:
+            pass
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n👋 Бот остановлен")
+    except Exception as e:
+        print(f"\n❌ Критическая ошибка: {e}")

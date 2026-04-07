@@ -10,6 +10,7 @@ import {
     TableHead,
     TableRow,
     TablePagination,
+    TableSortLabel,
     Chip,
     IconButton,
     Box,
@@ -106,6 +107,10 @@ const MessageList = () => {
     const [rowsPerPage, setRowsPerPage] = useState(20);
     const [totalCount, setTotalCount] = useState(0);
     
+    // Состояние для сортировки
+    const [orderBy, setOrderBy] = useState('id');
+    const [order, setOrder] = useState('desc');
+    
     const [taskDialogOpen, setTaskDialogOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
     const [reportDialogOpen, setReportDialogOpen] = useState(false);
@@ -138,6 +143,8 @@ const MessageList = () => {
             const params = {
                 limit: rowsPerPage,
                 offset: page * rowsPerPage,
+                order_by: orderBy,    // Добавить
+                order: order,         // Добавить
             };
             if (filters.status) params.status = filters.status;
             if (filters.priority) params.priority = filters.priority;
@@ -153,9 +160,24 @@ const MessageList = () => {
             
             const response = await messages.getAll(params);
             const messagesData = response.data || [];
-            setTotalCount(response.headers['x-total-count'] || messagesData.length);
             
-            // Загружаем все задачи одним запросом
+             // ========== ВСТАВИТЬ КОД СОРТИРОВКИ ЗДЕСЬ ==========
+                    
+            // Получаем общее количество
+            let total = 0;
+            const totalFromHeader = response.headers['x-total-count'];
+            if (totalFromHeader) {
+                total = parseInt(totalFromHeader);
+            } else if (messagesData.length < rowsPerPage) {
+                total = page * rowsPerPage + messagesData.length;
+            } else if (page === 0 && messagesData.length < rowsPerPage) {
+                total = messagesData.length;
+            } else {
+                total = page * rowsPerPage + rowsPerPage + 1;
+            }
+            setTotalCount(total);
+            
+            // Загружаем все задачи
             const tasksResponse = await tasks.getAll();
             const allTasks = tasksResponse.data || [];
             const tasksByMessage = {};
@@ -166,7 +188,7 @@ const MessageList = () => {
                 tasksByMessage[task.message_id].push(task);
             });
             
-            // Отчеты пока не загружаем - загрузим при раскрытии
+            // Отчеты пока не загружаем
             const enrichedMessages = messagesData.map(msg => ({
                 ...msg,
                 tasks: tasksByMessage[msg.id] || [],
@@ -180,7 +202,7 @@ const MessageList = () => {
         } finally {
             setLoading(false);
         }
-    }, [filters, page, rowsPerPage]);
+    }, [filters, page, rowsPerPage, orderBy, order]);
 
     const loadReportsForMessage = async (messageId) => {
         setLoadingReports(prev => ({ ...prev, [messageId]: true }));
@@ -208,7 +230,7 @@ const MessageList = () => {
         if (isAdmin || isOperator) {
             fetchUsers();
         }
-    }, [filters, page, rowsPerPage, fetchMessages, isAdmin, isOperator]);
+    }, [filters, page, rowsPerPage, orderBy, order, fetchMessages, isAdmin, isOperator]);
 
     const handleViewMessage = (message) => {
         setSelectedMessage(message);
@@ -252,11 +274,21 @@ const MessageList = () => {
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
+    };
+
+    // Обработчик сортировки
+    const handleSort = (property) => {
+        const isAsc = orderBy === property && order === 'asc';
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
+        setPage(0);
+        fetchMessages(true);
     };
 
     const getUserName = (userId) => {
@@ -375,14 +407,30 @@ const MessageList = () => {
                     <TableHead sx={{ bgcolor: 'grey.50' }}>
                         <TableRow>
                             <TableCell sx={{ fontWeight: 'bold', width: 40 }}></TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>
+                                <TableSortLabel
+                                    active={orderBy === 'id'}
+                                    direction={orderBy === 'id' ? order : 'asc'}
+                                    onClick={() => handleSort('id')}
+                                >
+                                    ID
+                                </TableSortLabel>
+                            </TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Пользователь</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Текст</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Статус</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Приоритет</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Фото</TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }}>Гео</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Дата</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>
+                                <TableSortLabel
+                                    active={orderBy === 'created_at'}
+                                    direction={orderBy === 'created_at' ? order : 'asc'}
+                                    onClick={() => handleSort('created_at')}
+                                >
+                                    Дата
+                                </TableSortLabel>
+                            </TableCell>
                             <TableCell sx={{ fontWeight: 'bold' }} align="center">Действия</TableCell>
                         </TableRow>
                     </TableHead>
@@ -404,8 +452,8 @@ const MessageList = () => {
                         ) : (
                             messageList.map((msg) => {
                                 const hasTasks = msg.tasks && msg.tasks.length > 0;
-                                const hasReports = msg.reports && msg.reports !== null && msg.reports.length > 0;
-                                const hasData = hasTasks || (msg.reports !== null && msg.reports.length > 0);
+                                const hasReports = msg.reports !== null && msg.reports && msg.reports.length > 0;
+                                const hasData = hasTasks || (msg.reports !== null && msg.reports && msg.reports.length > 0);
                                 const isExpanded = expandedRows[msg.id];
                                 const reportsLoading = loadingReports[msg.id];
                                 
@@ -419,7 +467,20 @@ const MessageList = () => {
                                                     </IconButton>
                                                 )}
                                             </TableCell>
-                                            <TableCell>{msg.id}</TableCell>
+                                            <TableCell>
+                                                <Typography 
+                                                    variant="body2" 
+                                                    sx={{ 
+                                                        cursor: 'pointer', 
+                                                        color: 'primary.main',
+                                                        fontWeight: 'medium',
+                                                        '&:hover': { textDecoration: 'underline' }
+                                                    }}
+                                                    onClick={() => handleViewMessage(msg)}
+                                                >
+                                                    {msg.id}
+                                                </Typography>
+                                            </TableCell>
                                             <TableCell>
                                                 <Typography variant="body2" fontWeight="medium">
                                                     {msg.user_name}

@@ -1,20 +1,23 @@
-# main.py - Основной FastAPI сервер с использованием schemas
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Query
+# main.py - Основной FastAPI сервер
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 from typing import List, Optional
-
 from datetime import datetime, timedelta
-# Импорты сервисов и утилит
-from services import UserService, MessageService, TaskService, ReportService
-from utils import generate_map_links, format_datetime, validate_coordinates
-import logging
-
 import shutil
 import os
+import logging
 
+# Настройка логирования
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Импорты из модулей
 from models import (
     User, Message, Task, Report, UserRole, 
     MessageStatus, TaskStatus, Priority, get_db
@@ -24,7 +27,7 @@ from auth import (
     require_role, get_password_hash
 )
 from schemas import (
-    UserCreate, UserResponse, UserUpdate,  # Добавить UserUpdate
+    UserCreate, UserResponse, UserUpdate,
     LoginRequest, TokenResponse,
     MessageCreate, MessageResponse, MessageUpdate,
     TaskCreate, TaskResponse, TaskUpdate,
@@ -33,11 +36,6 @@ from schemas import (
 
 app = FastAPI(title="CRM System", version="3.0")
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 # CORS
 app.add_middleware(
     CORSMiddleware,
@@ -81,6 +79,28 @@ def get_me(current_user: User = Depends(get_current_active_user)):
         created_at=current_user.created_at,
         updated_at=current_user.updated_at
     )
+
+@app.patch("/api/auth/change-password")
+def change_password(
+    old_password: str,
+    new_password: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Смена пароля текущего пользователя"""
+    from auth import verify_password
+    
+    if not verify_password(old_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Wrong password")
+    
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password too short")
+    
+    current_user.hashed_password = get_password_hash(new_password)
+    current_user.updated_at = datetime.utcnow()
+    db.commit()
+    
+    return {"status": "success", "message": "Password changed"}
 
 # ========== User Management (Admin only) ==========
 @app.post("/api/users", response_model=UserResponse)
@@ -148,7 +168,6 @@ def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Нельзя изменять себя через этот эндпоинт (используйте отдельный)
     if user.id == current_user.id:
         raise HTTPException(status_code=400, detail="Cannot update yourself here")
     
@@ -178,69 +197,6 @@ def update_user(
         updated_at=user.updated_at
     )
 
-# main.py - добавьте для смены своего пароля
-@app.patch("/api/auth/change-password")
-# main.py - добавьте этот эндпоинт
-@app.patch("/api/auth/change-password")
-def change_password(
-    old_password: str,
-    new_password: str,
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """Смена пароля текущего пользователя"""
-    from auth import verify_password
-    
-    if not verify_password(old_password, current_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Wrong password")
-    
-    if len(new_password) < 6:
-        raise HTTPException(status_code=400, detail="Password too short")
-    
-    current_user.hashed_password = get_password_hash(new_password)
-    current_user.updated_at = datetime.utcnow()
-    db.commit()
-    
-    return {"status": "success", "message": "Password changed"}
-
-
-# Добавьте после других эндпоинтов
-@app.get("/api/debug/time")
-def debug_time(db: Session = Depends(get_db)):
-    """Отладочный эндпоинт для проверки времени"""
-    from datetime import datetime, timedelta
-    
-    # Часовой пояс Екатеринбурга (UTC+5)
-    YEKATERINBURG_OFFSET = timedelta(hours=5)
-    
-    # Текущее время
-    now_utc = datetime.utcnow()
-    now_yekat = now_utc + YEKATERINBURG_OFFSET
-    
-    # Последние 5 сообщений - используем Message вместо MessageModel
-    last_messages = db.query(Message).order_by(Message.id.desc()).limit(5).all()
-    
-    messages_data = []
-    for msg in last_messages:
-        created_at_local = None
-        if msg.created_at:
-            created_at_local = msg.created_at + YEKATERINBURG_OFFSET
-        
-        messages_data.append({
-            "id": msg.id,
-            "user_name": msg.user_name,
-            "created_at": msg.created_at.isoformat() if msg.created_at else None,
-            "created_at_local": created_at_local.strftime('%Y-%m-%d %H:%M:%S') if created_at_local else None,
-        })
-    
-    return {
-        "server_time_utc": now_utc.isoformat(),
-        "server_time_utc_str": now_utc.strftime('%Y-%m-%d %H:%M:%S'),
-        "yekaterinburg_time": now_yekat.isoformat(),
-        "yekaterinburg_time_str": now_yekat.strftime('%Y-%m-%d %H:%M:%S'),
-        "last_messages": messages_data
-    }
-
 @app.patch("/api/users/{user_id}/toggle")
 def toggle_user(
     user_id: int,
@@ -260,9 +216,7 @@ def toggle_user(
 # ========== Messages ==========
 @app.post("/api/messages", response_model=MessageResponse)
 def create_message(message: MessageCreate, db: Session = Depends(get_db)):
-    """Создание нового сообщения с временем Екатеринбурга"""
-    
-    # Создаем сообщение - время created_at установится автоматически через default
+    """Создание нового сообщения"""
     db_message = Message(
         source=message.source,
         chat_id=message.chat_id,
@@ -272,56 +226,64 @@ def create_message(message: MessageCreate, db: Session = Depends(get_db)):
         photos=message.photos,
         latitude=message.latitude,
         longitude=message.longitude
-        # created_at установится автоматически через default=get_yekaterinburg_time
     )
     db.add(db_message)
     db.commit()
     db.refresh(db_message)
     
-    # Логируем время для отладки
-    logger.info(f"📨 Сообщение #{db_message.id} создано в {db_message.created_at}")
-    
+    logger.info(f"📨 Сообщение #{db_message.id} создано")
     return db_message
 
-
+@app.get("/api/messages", response_model=List[MessageResponse])
 @app.get("/api/messages", response_model=List[MessageResponse])
 def get_messages(
+    response: Response,  # <-- Первым параметром (без значения по умолчанию)
     status: Optional[str] = None,
     priority: Optional[str] = None,
     assigned_to: Optional[int] = None,
     has_location: Optional[bool] = None,
-    limit: int = 100,
-    offset: int = 0,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    order_by: str = Query("created_at", pattern="^(id|created_at)$"),  # regex -> pattern
+    order: str = Query("desc", pattern="^(asc|desc)$"), 
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    messages = MessageService.get_all(
-        db, skip=offset, limit=limit,
-        status=status, priority=priority,
-        assigned_to=assigned_to, has_location=has_location,
-        user=current_user
-    )
+    query = db.query(Message)
     
-    return [
-        MessageResponse(
-            id=msg.id,
-            source=msg.source,
-            chat_id=msg.chat_id,
-            user_id=msg.user_id,
-            user_name=msg.user_name,
-            text=msg.text,
-            photos=msg.photos,
-            latitude=msg.latitude,
-            longitude=msg.longitude,
-            status=msg.status.value,
-            priority=msg.priority.value,
-            assigned_to_id=msg.assigned_to_id,
-            created_at=msg.created_at,
-            updated_at=msg.updated_at,
-            resolved_at=msg.resolved_at,
-            response_time=msg.response_time
-        ) for msg in messages
-    ]
+    if status:
+        query = query.filter(Message.status == status)
+    if priority:
+        query = query.filter(Message.priority == priority)
+    if assigned_to:
+        query = query.filter(Message.assigned_to_id == assigned_to)
+    if has_location is not None:
+        if has_location:
+            query = query.filter(Message.latitude.isnot(None))
+        else:
+            query = query.filter(Message.latitude.is_(None))
+    
+    if current_user.role == UserRole.EXECUTOR:
+        query = query.filter(Message.assigned_to_id == current_user.id)
+    
+    total_count = query.count()
+    response.headers["X-Total-Count"] = str(total_count)  # <-- Добавить заголовок
+    
+    # Применяем сортировку
+    if order_by == "id":
+        if order == "asc":
+            query = query.order_by(Message.id.asc())
+        else:
+            query = query.order_by(Message.id.desc())
+    else:
+        if order == "asc":
+            query = query.order_by(Message.created_at.asc())
+        else:
+            query = query.order_by(Message.created_at.desc())
+    
+    messages = query.offset(offset).limit(limit).all()
+    
+    return messages
 
 @app.patch("/api/messages/{message_id}", response_model=MessageResponse)
 def update_message(
@@ -347,25 +309,7 @@ def update_message(
     message.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(message)
-    
-    return MessageResponse(
-        id=message.id,
-        source=message.source,
-        chat_id=message.chat_id,
-        user_id=message.user_id,
-        user_name=message.user_name,
-        text=message.text,
-        photos=message.photos,
-        latitude=message.latitude,
-        longitude=message.longitude,
-        status=message.status.value,
-        priority=message.priority.value,
-        assigned_to_id=message.assigned_to_id,
-        created_at=message.created_at,
-        updated_at=message.updated_at,
-        resolved_at=message.resolved_at,
-        response_time=message.response_time
-    )
+    return message
 
 # ========== Tasks ==========
 @app.post("/api/tasks", response_model=TaskResponse)
@@ -388,24 +332,15 @@ def create_task(
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
-    
-    return TaskResponse(
-        id=db_task.id,
-        message_id=db_task.message_id,
-        title=db_task.title,
-        description=db_task.description,
-        status=db_task.status.value,
-        assigned_to_id=db_task.assigned_to_id,
-        created_by_id=db_task.created_by_id,
-        created_at=db_task.created_at,
-        updated_at=db_task.updated_at,
-        completed_at=db_task.completed_at
-    )
+    return db_task
 
 @app.get("/api/tasks", response_model=List[TaskResponse])
 def get_tasks(
     status: Optional[str] = None,
     assigned_to: Optional[int] = None,
+    message_id: Optional[int] = None,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -414,25 +349,13 @@ def get_tasks(
         query = query.filter(Task.status == status)
     if assigned_to:
         query = query.filter(Task.assigned_to_id == assigned_to)
-    elif current_user.role == UserRole.EXECUTOR:
+    if message_id:
+        query = query.filter(Task.message_id == message_id)
+    if current_user.role == UserRole.EXECUTOR:
         query = query.filter(Task.assigned_to_id == current_user.id)
     
-    tasks = query.order_by(Task.created_at.desc()).all()
-    
-    return [
-        TaskResponse(
-            id=task.id,
-            message_id=task.message_id,
-            title=task.title,
-            description=task.description,
-            status=task.status.value,
-            assigned_to_id=task.assigned_to_id,
-            created_by_id=task.created_by_id,
-            created_at=task.created_at,
-            updated_at=task.updated_at,
-            completed_at=task.completed_at
-        ) for task in tasks
-    ]
+    tasks = query.order_by(Task.created_at.desc()).offset(offset).limit(limit).all()
+    return tasks
 
 @app.patch("/api/tasks/{task_id}", response_model=TaskResponse)
 def update_task(
@@ -450,7 +373,7 @@ def update_task(
     
     if update.title:
         task.title = update.title
-    if update.description:
+    if update.description is not None:
         task.description = update.description
     if update.status:
         task.status = TaskStatus(update.status)
@@ -462,22 +385,9 @@ def update_task(
     task.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(task)
-    
-    return TaskResponse(
-        id=task.id,
-        message_id=task.message_id,
-        title=task.title,
-        description=task.description,
-        status=task.status.value,
-        assigned_to_id=task.assigned_to_id,
-        created_by_id=task.created_by_id,
-        created_at=task.created_at,
-        updated_at=task.updated_at,
-        completed_at=task.completed_at
-    )
+    return task
 
 # ========== Reports ==========
-@app.post("/api/reports", response_model=dict)
 @app.post("/api/reports")
 async def create_report(
     text: str = Form(...),
@@ -488,10 +398,6 @@ async def create_report(
     db: Session = Depends(get_db)
 ):
     """Создание отчета по выполненной работе"""
-    import shutil
-    from datetime import datetime
-    
-    # Сохранение фото
     photo_urls = []
     for file in files:
         timestamp = int(datetime.utcnow().timestamp())
@@ -585,6 +491,38 @@ def get_statistics(
         "average_response_time_seconds": round(avg_response_time, 2)
     }
 
+# ========== Debug Endpoints ==========
+@app.get("/api/debug/time")
+def debug_time(db: Session = Depends(get_db)):
+    """Отладочный эндпоинт для проверки времени"""
+    YEKATERINBURG_OFFSET = timedelta(hours=5)
+    
+    now_utc = datetime.utcnow()
+    now_yekat = now_utc + YEKATERINBURG_OFFSET
+    
+    last_messages = db.query(Message).order_by(Message.id.desc()).limit(5).all()
+    
+    messages_data = []
+    for msg in last_messages:
+        created_at_local = None
+        if msg.created_at:
+            created_at_local = msg.created_at + YEKATERINBURG_OFFSET
+        
+        messages_data.append({
+            "id": msg.id,
+            "user_name": msg.user_name,
+            "created_at": msg.created_at.isoformat() if msg.created_at else None,
+            "created_at_local": created_at_local.strftime('%Y-%m-%d %H:%M:%S') if created_at_local else None,
+        })
+    
+    return {
+        "server_time_utc": now_utc.isoformat(),
+        "server_time_utc_str": now_utc.strftime('%Y-%m-%d %H:%M:%S'),
+        "yekaterinburg_time": now_yekat.isoformat(),
+        "yekaterinburg_time_str": now_yekat.strftime('%Y-%m-%d %H:%M:%S'),
+        "last_messages": messages_data
+    }
+
 # ========== Uploads ==========
 @app.get("/uploads/{filename}")
 def get_upload(filename: str):
@@ -637,7 +575,7 @@ if __name__ == "__main__":
     print("=" * 60 + "\n")
     
     uvicorn.run(
-       "main:app",  # строка импорта
+        "main:app",
         host="0.0.0.0",
         port=8000,
         reload=True,
