@@ -59,7 +59,15 @@ export const users = {
 
 // Сообщения
 export const messages = {
-    getAll: (params) => api.get('/messages', { params }),
+   getAll: (params) => {
+        // Добавляем параметры сортировки по умолчанию
+        const defaultParams = {
+            order_by: 'created_at',
+            order: 'desc',
+            ...params
+        };
+        return api.get('/messages', { params: defaultParams });
+    },
     getById: (id) => api.get(`/messages/${id}`),
     update: (id, data) => api.patch(`/messages/${id}`, data),
     getStatistics: () => api.get('/statistics'),
