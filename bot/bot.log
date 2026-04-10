@@ -970,3 +970,6 @@ client_session: <aiohttp.client.ClientSession object at 0x7fb0b303f210>
 2026-04-07 11:58:05,398 - __main__ - INFO - ✅ Бот запущен
 2026-04-07 11:58:05,513 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
 2026-04-07 11:58:05,514 - dispatcher - INFO - Зарегистрировано 14 обработчиков событий
+2026-04-10 12:03:21,861 - __main__ - INFO - ✅ Бот запущен
+2026-04-10 12:03:21,970 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-10 12:03:21,971 - dispatcher - INFO - Зарегистрировано 14 обработчиков событий
