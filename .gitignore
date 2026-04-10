@@ -38,3 +38,4 @@ downloaded_photos/
 # OS
 .DS_Store
 Thumbs.db
+*.sh
