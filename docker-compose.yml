@@ -60,15 +60,17 @@ services:
       - crm_network
 
   frontend:
-    build: ./frontend
-    container_name: crm_frontend
-    restart: unless-stopped
-    ports:
-      - "8181:80"
-    depends_on:
-      - backend
-    networks:
-      - crm_network
+  build: ./frontend
+  container_name: crm_frontend
+  restart: unless-stopped
+  ports:
+    - "89:89"  # хост:контейнер
+  environment:
+    - REACT_APP_API_URL=${REACT_APP_API_URL:-http://10.87.0.59:6005/api}
+  depends_on:
+    - backend
+  networks:
+    - crm_network
 
 networks:
   crm_network:
