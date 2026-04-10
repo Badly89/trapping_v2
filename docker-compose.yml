@@ -18,7 +18,7 @@ services:
       timeout: 10s
       retries: 5
     ports:
-      - "3306:3306"
+      - "3308:3306"  # Новый порт для MySQL
 
   backend:
     build: ./backend
@@ -45,7 +45,7 @@ services:
       timeout: 10s
       retries: 3
     ports:
-      - "8000:8000"
+      - "8090:8000"  # Новый порт для бэкенда (было 8000/8001)
 
   bot:
     build: ./bot
@@ -64,7 +64,9 @@ services:
     container_name: crm_frontend
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "89:80"  # Фронтенд на порту 89
+    environment:
+      - REACT_APP_API_URL=${REACT_APP_API_URL:-http://10.87.0.59:8090/api}
     depends_on:
       - backend
     networks:
