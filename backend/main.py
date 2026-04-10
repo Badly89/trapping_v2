@@ -139,9 +139,13 @@ def create_user(
 
 @app.get("/api/users", response_model=List[UserResponse])
 def get_users(
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    # Проверка прав
+    if current_user.role not in [UserRole.ADMIN, UserRole.OPERATOR]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
     users = db.query(User).all()
     return [
         UserResponse(
