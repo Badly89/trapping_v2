@@ -393,7 +393,7 @@ async def callback_send_all(event: MessageCallback):
         clear_compose_data(user_id)
         await event.answer(notification="✅ Сообщение отправлено!")  # Убрали show_alert
         await event.message.edit(
-            text=f"✅ **Сообщение успешно отправлено в CRM!**\n\n"
+            text=f"✅ **Сообщение успешно отправлено!**\n\n"
                  f"📷 Фото: {len(photos)}\n"
                  f"📍 Геолокация: {'Да' if location else 'Нет'}\n"
                  f"📝 Текст: {'Да' if text else 'Нет'}\n\n"
