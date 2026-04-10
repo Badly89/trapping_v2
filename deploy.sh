@@ -34,7 +34,7 @@ print_separator() {
 
 # Настройки
 PROJECT_DIR="/opt/crm"
-GIT_REPO_URL="https://github.com/ваш-username/ваш-репозиторий.git"  # Замените на ваш URL
+GIT_REPO_URL="https://github.com/Badly89/trapping_v2.git"  # Замените на ваш URL
 GIT_BRANCH="main"  # или master
 BACKUP_DIR="/opt/crm_backups"
 LOG_FILE="/var/log/crm-deploy.log"
