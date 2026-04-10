@@ -2,26 +2,21 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Копирование package.json
+# Копирование и установка зависимостей
 COPY package*.json ./
+RUN npm install
 
-# Установка зависимостей (вместо npm ci)
-RUN npm install --production=false
-
-# Копирование исходников
+# Копирование кода и сборка
 COPY . .
-
-# Сборка
 ARG REACT_APP_API_URL
 ENV REACT_APP_API_URL=$REACT_APP_API_URL
 RUN npm run build
 
 # Production stage
 FROM nginx:alpine
-
 COPY --from=builder /app/build /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 81
+EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]

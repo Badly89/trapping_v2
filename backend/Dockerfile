@@ -12,5 +12,5 @@ COPY . .
 # Создание директории для загрузок
 RUN mkdir -p uploads
 
-# Запуск через gunicorn
-CMD ["gunicorn", "main:app", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:6005"]
+# Запуск (используем uvicorn напрямую, без gunicorn для простоты)
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
