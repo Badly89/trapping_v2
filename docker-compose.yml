@@ -31,7 +31,7 @@ services:
       DB_USER: ${MYSQL_USER}
       DB_PASSWORD: ${MYSQL_PASSWORD}
       DB_NAME: ${MYSQL_DATABASE}
-      SECRET_KEY: ${SECRET_KEY:-change_me_in_production}
+      SECRET_KEY: ${SECRET_KEY}
       MAX_BOT_TOKEN: ${MAX_BOT_TOKEN}
     volumes:
       - backend_uploads:/app/uploads
@@ -59,13 +59,14 @@ services:
       - crm_network
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://10.87.0.59:6005/api}
     container_name: crm_frontend
     restart: unless-stopped
     ports:
       - "89:80"
-    environment:
-      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://10.87.0.59:6005/api}
     depends_on:
       - backend
     networks:
