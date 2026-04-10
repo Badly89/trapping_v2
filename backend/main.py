@@ -39,7 +39,13 @@ app = FastAPI(title="CRM System", version="3.0")
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://10.87.0.59:81",
+        "http://localhost:81",
+        "http://10.87.0.59:6005",
+        "http://localhost:6005",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -565,8 +571,8 @@ if __name__ == "__main__":
     print("🚀 ЗАПУСК CRM SERVER")
     print("=" * 60)
     print(f"📁 Директория загрузок: {UPLOAD_DIR}")
-    print(f"🔗 API Docs: http://localhost:8000/docs")
-    print(f"🏠 Health Check: http://localhost:8000/health")
+    print(f"🔗 API Docs: http://localhost:6005/docs")
+    print(f"🏠 Health Check: http://localhost:6005/health")
     print("=" * 60)
     print("\n👤 Тестовые пользователи:")
     print("   Администратор: admin / admin123")
@@ -577,7 +583,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=6005,
         reload=True,
         log_level="info"
     )
