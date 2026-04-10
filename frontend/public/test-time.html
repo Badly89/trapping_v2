@@ -147,7 +147,7 @@
                     headers['Authorization'] = `Bearer ${token}`;
                 }
                 
-                const response = await fetch('http://localhost:6005/api/messages?limit=10', {
+                const response = await fetch('http://10.87.0.59:6005/api/messages?limit=10', {
                     headers: headers
                 });
                 
