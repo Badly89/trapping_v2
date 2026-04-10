@@ -147,7 +147,7 @@
                     headers['Authorization'] = `Bearer ${token}`;
                 }
                 
-                const response = await fetch('http://localhost:8000/api/messages?limit=10', {
+                const response = await fetch('http://localhost:6005/api/messages?limit=10', {
                     headers: headers
                 });
                 
@@ -193,7 +193,7 @@
                 resultsDiv.innerHTML = html;
                 
             } catch (error) {
-                resultsDiv.innerHTML = `<pre style="color: red;">❌ Ошибка: ${error.message}\n\nУбедитесь, что CRM запущен на порту 8000 и вы авторизованы.</pre>`;
+                resultsDiv.innerHTML = `<pre style="color: red;">❌ Ошибка: ${error.message}\n\nУбедитесь, что CRM запущен на порту 6005 и вы авторизованы.</pre>`;
             }
         }
         
@@ -216,7 +216,7 @@
             };
             
             try {
-                const response = await fetch('http://localhost:8000/api/messages', {
+                const response = await fetch('http://localhost:6005/api/messages', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

@@ -408,7 +408,7 @@ client_session: <aiohttp.client.ClientSession object at 0x7f9e645f40d0>
 2026-04-06 15:05:42,403 - __main__ - INFO - 📎 Вложений: 0
 2026-04-06 15:05:42,403 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=False
 2026-04-06 15:05:42,403 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:05:42
-2026-04-06 15:05:42,406 - __main__ - ERROR - ❌ Ошибка отправки в CRM: Cannot connect to host localhost:8000 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 8000, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 8000)]
+2026-04-06 15:05:42,406 - __main__ - ERROR - ❌ Ошибка отправки в CRM: Cannot connect to host localhost:6005 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 6005, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 6005)]
 2026-04-06 15:05:42,534 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 103444949, user_id: 7572418
 2026-04-06 15:05:45,965 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 103444949, user_id: 7572418
 2026-04-06 15:05:56,137 - __main__ - INFO - 📨 Сообщение от 7572418: текст='Нет'
@@ -418,7 +418,7 @@ client_session: <aiohttp.client.ClientSession object at 0x7f9e645f40d0>
 2026-04-06 15:05:56,137 - __main__ - INFO - 📍 Геолокация: lat=63.202877044677734, lon=75.45138549804688
 2026-04-06 15:05:56,137 - __main__ - INFO - 📤 Отправка в CRM: фото=0, гео=True
 2026-04-06 15:05:56,137 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:05:56
-2026-04-06 15:05:56,141 - __main__ - ERROR - ❌ Ошибка отправки в CRM: Cannot connect to host localhost:8000 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 8000, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 8000)]
+2026-04-06 15:05:56,141 - __main__ - ERROR - ❌ Ошибка отправки в CRM: Cannot connect to host localhost:6005 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 6005, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 6005)]
 2026-04-06 15:05:56,265 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 103444949, user_id: 7572418
 2026-04-06 15:06:18,571 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 103444949, user_id: 7572418
 2026-04-06 15:06:21,854 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 103444949, user_id: 7572418
@@ -432,7 +432,7 @@ client_session: <aiohttp.client.ClientSession object at 0x7f9e645f40d0>
 2026-04-06 15:06:35,835 - __main__ - INFO - ✅ Фото обработано
 2026-04-06 15:06:35,835 - __main__ - INFO - 📤 Отправка в CRM: фото=1, гео=False
 2026-04-06 15:06:35,835 - __main__ - INFO - 🕐 Время отправки: 06.04.2026 15:06:35
-2026-04-06 15:06:35,838 - __main__ - ERROR - ❌ Ошибка отправки в CRM: Cannot connect to host localhost:8000 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 8000, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 8000)]
+2026-04-06 15:06:35,838 - __main__ - ERROR - ❌ Ошибка отправки в CRM: Cannot connect to host localhost:6005 ssl:default [Multiple exceptions: [Errno 111] Connect call failed ('::1', 6005, 0, 0), [Errno 111] Connect call failed ('127.0.0.1', 6005)]
 2026-04-06 15:06:35,985 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CREATED | chat_id: 103444949, user_id: 7572418
 2026-04-06 15:06:44,273 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.MESSAGE_CALLBACK | chat_id: 103444949, user_id: 7572418
 2026-04-06 15:06:50,970 - __main__ - INFO - 📨 Сообщение от 7572418: текст='Нет'
@@ -978,3 +978,9 @@ client_session: <aiohttp.client.ClientSession object at 0x7fb0b303f210>
 2026-04-10 13:36:10,860 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.DIALOG_CLEARED | chat_id: 109867857, user_id: 13994310
 2026-04-10 13:36:14,128 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.BOT_STOPPED | chat_id: 109867857, user_id: 13994310
 2026-04-10 13:36:16,154 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 109867857, user_id: 13994310
+2026-04-10 13:56:47,754 - __main__ - INFO - 👋 Задача отменена
+2026-04-10 13:56:47,755 - __main__ - INFO - 🔄 Закрытие соединений...
+2026-04-10 13:56:47,755 - __main__ - INFO - ✅ Сессия закрыта
+2026-04-10 13:56:49,723 - __main__ - INFO - ✅ Бот запущен
+2026-04-10 13:56:49,837 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
+2026-04-10 13:56:49,838 - dispatcher - INFO - Зарегистрировано 14 обработчиков событий

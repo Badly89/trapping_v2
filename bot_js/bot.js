@@ -1,4 +1,4 @@
-// bot.js - Адаптирован под CRM на порту 8000
+// bot.js - Адаптирован под CRM на порту 6005
 const { Bot, Keyboard } = require('@maxhub/max-bot-api');
 const axios = require('axios');
 const dotenv = require('dotenv');
@@ -9,7 +9,7 @@ dotenv.config();
 
 // Конфигурация
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const CRM_API_URL = 'http://localhost:8000/api/messages';  // правильный эндпоинт
+const CRM_API_URL = 'http://localhost:6005/api/messages';  // правильный эндпоинт
 
 // Часовой пояс Екатеринбурга (UTC+5)
 const YEKATERINBURG_OFFSET = 5 * 60 * 60 * 1000;
@@ -100,7 +100,7 @@ async function saveToCRM(messageData) {
     } catch (error) {
         console.error('❌ Ошибка отправки в CRM:', error.message);
         if (error.code === 'ECONNREFUSED') {
-            console.error('   Убедитесь, что CRM backend запущен на порту 8000');
+            console.error('   Убедитесь, что CRM backend запущен на порту 6005');
             console.error('   Запустите: python main.py');
         }
         if (error.response) {
@@ -311,7 +311,7 @@ async function startBot() {
     
     // Проверка соединения с CRM
     try {
-        const healthCheck = await axios.get('http://localhost:8000/health', { timeout: 5000 });
+        const healthCheck = await axios.get('http://localhost:6005/health', { timeout: 5000 });
         console.log('✅ CRM backend доступен');
         console.log(`   Время на CRM: ${healthCheck.data.timestamp}`);
     } catch (error) {

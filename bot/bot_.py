@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 # Конфигурация
 MAX_BOT_TOKEN = os.getenv("MAX_BOT_TOKEN")
-CRM_API_URL = os.getenv("CRM_API_URL", "http://localhost:8000/api/messages")
+CRM_API_URL = os.getenv("CRM_API_URL", "http://localhost:6005/api/messages")
 
 if not MAX_BOT_TOKEN:
     logger.error("MAX_BOT_TOKEN не найден в .env")
