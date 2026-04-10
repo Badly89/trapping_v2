@@ -973,3 +973,8 @@ client_session: <aiohttp.client.ClientSession object at 0x7fb0b303f210>
 2026-04-10 12:03:21,861 - __main__ - INFO - ✅ Бот запущен
 2026-04-10 12:03:21,970 - dispatcher - INFO - Бот: @nbrmessage_bot first_name=Увидел Надпись? Сообщи! id=106560023
 2026-04-10 12:03:21,971 - dispatcher - INFO - Зарегистрировано 14 обработчиков событий
+2026-04-10 13:36:01,950 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.BOT_STOPPED | chat_id: 109867857, user_id: 13994310
+2026-04-10 13:36:03,279 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 109867857, user_id: 13994310
+2026-04-10 13:36:10,860 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.DIALOG_CLEARED | chat_id: 109867857, user_id: 13994310
+2026-04-10 13:36:14,128 - dispatcher - INFO - Проигнорировано: router_id: 0 | UpdateType.BOT_STOPPED | chat_id: 109867857, user_id: 13994310
+2026-04-10 13:36:16,154 - dispatcher - INFO - Обработано: router_id: 0 | UpdateType.BOT_STARTED | chat_id: 109867857, user_id: 13994310
