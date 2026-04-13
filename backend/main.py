@@ -39,7 +39,14 @@ app = FastAPI(title="CRM System", version="3.0")
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:85",
+        "http://10.87.0.59:85",     # ← ДОБАВИТЬ ЭТО
+        "http://10.87.0.59:6005",
+        "http://10.87.0.59:81",
+        "*"  # Временно для теста
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
