@@ -14,6 +14,10 @@ services:
       - db_data:/var/lib/mysql
     networks:
       - crm-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
 
   backend:
     build: ./backend
@@ -24,9 +28,10 @@ services:
     env_file:
       - ./backend/.env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
-      - backend_uploads:/app/uploads  # Убедитесь, что путь правильный  
+      - backend_uploads:/app/uploads
     networks:
       - crm-network
 
@@ -35,7 +40,9 @@ services:
     container_name: crm_frontend
     restart: unless-stopped
     ports:
-      - "85:85"      # ← ТОЛЬКО ЭТО МЕНЯЕМ: 85:80
+      - "85:85"   
+    environment:
+      - REACT_APP_API_URL=http://10.87.0.59:6005/api
     depends_on:
       - backend
     networks:
@@ -45,6 +52,9 @@ services:
     build: ./bot
     container_name: crm_bot
     restart: unless-stopped
+    environment:
+      - MAX_BOT_TOKEN=${MAX_BOT_TOKEN}
+      - CRM_API_URL=http://backend:8000/api/messages
     env_file:
       - ./bot/.env
     depends_on:
@@ -58,3 +68,4 @@ networks:
 
 volumes:
   db_data:
+  backend_uploads:    # ← ДОБАВЛЕНО
