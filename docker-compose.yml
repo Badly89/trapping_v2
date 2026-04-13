@@ -25,6 +25,8 @@ services:
       - ./backend/.env
     depends_on:
       - db
+    volumes:
+      - backend_uploads:/app/uploads  # Убедитесь, что путь правильный  
     networks:
       - crm-network
 
