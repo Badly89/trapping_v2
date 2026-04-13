@@ -54,7 +54,7 @@ services:
     restart: unless-stopped
     environment:
       - MAX_BOT_TOKEN=${MAX_BOT_TOKEN}
-      - CRM_API_URL=http://backend:8000/api/messages
+      - CRM_API_URL=http://10.87.0.59:6005/api/messages
     env_file:
       - ./bot/.env
     depends_on:
