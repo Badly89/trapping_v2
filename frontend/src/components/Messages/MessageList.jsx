@@ -109,7 +109,7 @@ const MessageList = () => {
     
     // Состояние для сортировки
     const [orderBy, setOrderBy] = useState('id');
-    const [order, setOrder] = useState('desc');
+    const [order, setOrder] = useState('asc');
     
     const [taskDialogOpen, setTaskDialogOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
