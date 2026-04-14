@@ -75,6 +75,11 @@ class MaxConnectRequest(BaseModel):
     max_user_id: str
     max_chat_id: str
 
+class StoreCodeRequest(BaseModel):  # <-- ДОБАВИТЬ ЭТУ МОДЕЛЬ
+    user_id: int
+    code: str
+    chat_id: str    
+
 # ========== Auth Endpoints ==========
 @app.post("/api/auth/login", response_model=TokenResponse)
 def login(login_data: LoginRequest, db: Session = Depends(get_db)):
