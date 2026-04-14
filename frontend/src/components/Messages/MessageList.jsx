@@ -285,7 +285,7 @@ const MessageList = () => {
     // Обработчик сортировки
     const handleSort = (property) => {
         const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
+        setOrder(isAsc ? 'asc' : 'desc');
         setOrderBy(property);
         setPage(0);
         fetchMessages(true);
