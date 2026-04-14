@@ -12,21 +12,21 @@ redis_client = redis.Redis(
     decode_responses=True
 )
 
-def store_verification_code(username: str, code: str, chat_id: str, expires_in: int = 300):
-    """Сохранить код верификации в Redis по username"""
-    key = f"verification:{username}"
+def store_verification_code(email: str, code: str, chat_id: str, expires_in: int = 300):
+    """Сохранить код верификации в Redis по email"""
+    key = f"verification:{email}"
     data = {
         "code": code,
         "chat_id": chat_id,
-        "username": username
+        "email": email
     }
     redis_client.setex(key, expires_in, json.dumps(data))
-    print(f"✅ Код сохранен в Redis для {username}")
+    print(f"✅ Код {code} сохранен в Redis для {email}")
     return True
 
-def verify_code(username: str, code: str):
-    """Проверить код верификации в Redis по username"""
-    key = f"verification:{username}"
+def verify_code(email: str, code: str):
+    """Проверить код верификации в Redis по email"""
+    key = f"verification:{email}"
     data = redis_client.get(key)
     
     if data:
