@@ -321,16 +321,17 @@ async def cmd_connect(event: MessageCreated):
             async with session.post(
                 "http://backend:8000/api/bot/store-verification-code",
                 json={
-                    "user_id": user_id,
-                    "code": verification_code,
-                    "chat_id": chat_id,
-                    "user_name": user_name
+                     "user_id": user_id,
+                     "code": verification_code,
+                     "chat_id": chat_id
                 }
             ) as resp:
+                print(f"Статус отправки кода: {resp.status}")
                 if resp.status == 200:
                     print(f"✅ Код {verification_code} отправлен в CRM для пользователя {user_id}")
                 else:
-                    print(f"❌ Ошибка отправки кода в CRM: {resp.status}")
+                    text = await resp.text()
+                    print(f"❌ Ошибка: {text}")
     except Exception as e:
         print(f"❌ Ошибка отправки кода в CRM: {e}")
     
