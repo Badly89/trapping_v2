@@ -69,15 +69,8 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # ========== Pydantic Models ==========
-class VerifyCodeRequest(BaseModel):
-    code: str
-
-class MaxConnectRequest(BaseModel):
-    max_user_id: str
-    max_chat_id: str
-
 class StoreCodeRequest(BaseModel):
-    username: str  # <-- использовать email вместо user_id
+    username: str
     code: str
     chat_id: str
 
@@ -88,6 +81,10 @@ class EmailVerificationRequest(BaseModel):
 
 class VerifyCodeRequest(BaseModel):
     code: str
+
+class MaxConnectRequest(BaseModel):
+    max_user_id: str
+    max_chat_id: str
 
 # ========== Auth Endpoints ==========
 @app.post("/api/auth/login", response_model=TokenResponse)
@@ -529,15 +526,21 @@ def connect_max_account(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    """Привязка MAX аккаунта к пользователю CRM"""
     current_user.max_user_id = data.max_user_id
     current_user.max_chat_id = data.max_chat_id
     current_user.notifications_enabled = True
     db.commit()
-    return {"status": "success", "message": "MAX аккаунт привязан"}@app.post("/api/user/disconnect-max")
+    return {"status": "success", "message": "MAX аккаунт привязан"}
+
+
+
+@app.post("/api/user/disconnect-max")
 def disconnect_max_account(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    """Отвязка MAX аккаунта"""
     current_user.max_user_id = None
     current_user.max_chat_id = None
     current_user.notifications_enabled = False
@@ -549,6 +552,7 @@ def toggle_notifications(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    """Включить/отключить уведомления в MAX"""
     current_user.notifications_enabled = not current_user.notifications_enabled
     db.commit()
     return {"status": "success", "notifications_enabled": current_user.notifications_enabled}
@@ -558,6 +562,7 @@ def get_max_status(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    """Получить статус привязки MAX аккаунта"""
     return {
         "connected": current_user.max_chat_id is not None,
         "notifications_enabled": current_user.notifications_enabled,
@@ -621,17 +626,9 @@ def verify_max_code(
         current_user.notifications_enabled = True
         db.commit()
         print(f"✅ Пользователь {email} привязан к чату {chat_id}")
-        return {
-            "status": "success",
-            "verified": True,
-            "message": "Аккаунт успешно привязан"
-        }
+        return {"status": "success", "verified": True, "message": "Аккаунт успешно привязан"}
     else:
-        return {
-            "status": "error",
-            "verified": False,
-            "message": "Неверный или истекший код"
-        }
+        return {"status": "error", "verified": False, "message": "Неверный или истекший код"}
 
 # Эндпоинт для бота (исправленный)
 @app.post("/api/bot/store-verification-code")
