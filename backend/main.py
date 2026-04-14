@@ -572,16 +572,6 @@ def get_upload(filename: str):
         }
     )
 
-# @app.get("/uploads/{filename}")
-# def get_upload(filename: str):
-#     file_path = os.path.join(UPLOAD_DIR, filename)
-#     print(f"Looking for: {file_path}")
-#     print(f"File exists: {os.path.exists(file_path)}")
-    
-#     if os.path.exists(file_path):
-#         return FileResponse(file_path)
-#     raise HTTPException(status_code=404, detail=f"File not found: {filename}")
-
 # ========== Health Check ==========
 @app.get("/health")
 def health_check():
