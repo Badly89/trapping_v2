@@ -29,11 +29,20 @@ def verify_code(user_id: int, code: str):
     key = f"verification:{user_id}"
     data = redis_client.get(key)
     
+    print(f"🔍 Redis ключ: {key}")
+    print(f"🔍 Данные в Redis: {data}")
+    
     if data:
         stored = json.loads(data)
+        print(f"🔍 Хранимый код: {stored.get('code')}, полученный: {code}")
         if stored.get("code") == code:
             chat_id = stored.get("chat_id")
             redis_client.delete(key)
+            print(f"✅ Код верный, удаляем из Redis")
             return True, chat_id
+        else:
+            print(f"❌ Код не совпадает")
+    else:
+        print(f"❌ Ключ {key} не найден в Redis")
     
     return False, None
