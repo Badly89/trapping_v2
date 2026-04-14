@@ -302,45 +302,51 @@ async def cmd_start(event: MessageCreated):
 
 @dp.message_created(Command('connect'))
 async def cmd_connect(event: MessageCreated):
-    user_id = event.message.sender.user_id
-    chat_id = event.message.recipient.chat_id
-    
-    # Генерируем код
+    """Привязка MAX аккаунта к CRM"""
+    import aiohttp
     import random
     import string
+    from datetime import datetime, timedelta
+    
+    user_id = event.message.sender.user_id
+    chat_id = event.message.recipient.chat_id
+    user_name = event.message.sender.first_name or 'Пользователь'
+    
+    # Генерируем 6-значный код
     verification_code = ''.join(random.choices(string.digits, k=6))
     
     # Отправляем код в CRM
-    async with aiohttp.ClientSession() as session:
-        try:
-            await session.post(
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
                 "http://backend:8000/api/bot/store-verification-code",
                 json={
                     "user_id": user_id,
                     "code": verification_code,
-                    "chat_id": chat_id
+                    "chat_id": chat_id,
+                    "user_name": user_name
                 }
-            )
-        except Exception as e:
-            print(f"Ошибка отправки кода в CRM: {e}")
+            ) as resp:
+                if resp.status == 200:
+                    print(f"✅ Код {verification_code} отправлен в CRM для пользователя {user_id}")
+                else:
+                    print(f"❌ Ошибка отправки кода в CRM: {resp.status}")
+    except Exception as e:
+        print(f"❌ Ошибка отправки кода в CRM: {e}")
     
     # Отправляем код пользователю
     await event.message.answer(
-        f"🔗 **Ваш код подтверждения:**\n"
+        f"🔗 **Привязка к CRM системе**\n\n"
+        f"Ваш код подтверждения:\n"
         f"```\n{verification_code}\n```\n\n"
         f"Введите этот код в настройках CRM.\n"
-        f"Код действителен 5 минут.",
+        f"Код действителен 5 минут.\n\n"
+        f"После привязки вы будете получать уведомления о:\n"
+        f"• Новых сообщениях\n"
+        f"• Назначенных задачах\n"
+        f"• Изменении статусов",
         format=ParseMode.MARKDOWN
     )
-    
-    # Также отправляем в CRM для сохранения
-    import aiohttp
-    try:
-        async with aiohttp.ClientSession() as session:
-            # Здесь нужно отправить код в CRM
-            pass
-    except:
-        pass
 
 @dp.message_created(Command('disconnect'))
 async def cmd_disconnect(event: MessageCreated):
