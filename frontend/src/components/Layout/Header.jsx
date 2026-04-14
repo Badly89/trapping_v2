@@ -10,6 +10,7 @@ import {
     MenuItem,
     Avatar,
     Badge,
+    Divider
 } from '@mui/material';
 import { Notifications } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
