@@ -76,10 +76,10 @@ class MaxConnectRequest(BaseModel):
     max_user_id: str
     max_chat_id: str
 
-class StoreCodeRequest(BaseModel):  # <-- ДОБАВИТЬ ЭТУ МОДЕЛЬ
+class StoreCodeRequest(BaseModel):
     user_id: int
     code: str
-    chat_id: str    
+    chat_id: str 
 
 # ========== Auth Endpoints ==========
 @app.post("/api/auth/login", response_model=TokenResponse)
@@ -525,9 +525,7 @@ def connect_max_account(
     current_user.max_chat_id = data.max_chat_id
     current_user.notifications_enabled = True
     db.commit()
-    return {"status": "success", "message": "MAX аккаунт привязан"}
-
-@app.post("/api/user/disconnect-max")
+    return {"status": "success", "message": "MAX аккаунт привязан"}@app.post("/api/user/disconnect-max")
 def disconnect_max_account(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
@@ -579,23 +577,16 @@ def verify_max_code(
         return {"status": "success", "verified": True, "message": "Аккаунт успешно привязан"}
     else:
         return {"status": "error", "verified": False, "message": "Неверный или истекший код"}
-    
 
-class StoreCodeRequest(BaseModel):
-    user_id: int
-    code: str
-    chat_id: str
-
+# Эндпоинт для бота (исправленный)
 @app.post("/api/bot/store-verification-code")
-def store_verification_code(
-    user_id: int,
-    code: str,
-    chat_id: str,
+def store_verification_code_endpoint(
+    request: StoreCodeRequest,
     db: Session = Depends(get_db)
 ):
     """Сохранение кода верификации от бота"""
     from redis_client import store_verification_code as store_code
-    store_code(user_id, code, chat_id)
+    store_code(request.user_id, request.code, request.chat_id)
     return {"status": "success"}
 
 
