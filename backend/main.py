@@ -581,15 +581,12 @@ def verify_max_code(
 # Эндпоинт для бота (исправленный)
 @app.post("/api/bot/store-verification-code")
 def store_verification_code_endpoint(
-    user_id: int,
-    code: str,
-    chat_id: str,
+    request: StoreCodeRequest,  # <-- используем модель, а не отдельные параметры
     db: Session = Depends(get_db)
 ):
     """Сохранение кода верификации от бота"""
-    print(f"🔐 Получен код: user_id={user_id}, code={code}, chat_id={chat_id}")
     from redis_client import store_verification_code
-    store_verification_code(user_id, code, chat_id)
+    store_verification_code(request.user_id, request.code, request.chat_id)
     return {"status": "success"}
 
 
