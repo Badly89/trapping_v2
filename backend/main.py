@@ -605,7 +605,6 @@ def root():
             "tasks": "/api/tasks",
             "reports": "/api/reports",
             "statistics": "/api/statistics",
-            "docs": "/docs",
             "health": "/health"
         }
     }
@@ -613,16 +612,10 @@ def root():
 if __name__ == "__main__":
     import uvicorn
     print("=" * 60)
-    print("🚀 ЗАПУСК CRM SERVER")
+    print("🚀 ЗАПУСК SERVER")
     print("=" * 60)
     print(f"📁 Директория загрузок: {UPLOAD_DIR}")
-    print(f"🔗 API Docs: http://localhost:6005/docs")
     print(f"🏠 Health Check: http://localhost:6005/health")
-    print("=" * 60)
-    print("\n👤 Тестовые пользователи:")
-    print("   Администратор: admin / admin123")
-    print("   Оператор: operator / operator123")
-    print("   Исполнитель: executor / executor123")
     print("=" * 60 + "\n")
     
     uvicorn.run(
