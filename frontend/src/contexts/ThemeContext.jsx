@@ -30,6 +30,24 @@ const lightTheme = createTheme({
     shape: {
         borderRadius: 8,
     },
+    components: {
+        MuiTableHead: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#f5f5f5',
+                },
+            },
+        },
+        MuiTableCell: {
+            styleOverrides: {
+                head: {
+                    fontWeight: 600,
+                    backgroundColor: '#f5f5f5',
+                    color: '#000000',
+                },
+            },
+        },
+    },
 });
 
 // Темная тема
@@ -49,6 +67,48 @@ const darkTheme = createTheme({
     },
     shape: {
         borderRadius: 8,
+    },
+    components: {
+        MuiTableHead: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#2d2d2d',
+                },
+            },
+        },
+        MuiTableCell: {
+            styleOverrides: {
+                head: {
+                    fontWeight: 600,
+                    backgroundColor: '#2d2d2d',
+                    color: '#e0e0e0',
+                },
+                body: {
+                    color: '#e0e0e0',
+                },
+            },
+        },
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#1e1e1e',
+                },
+            },
+        },
+        MuiCard: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#1e1e1e',
+                },
+            },
+        },
+        MuiDialog: {
+            styleOverrides: {
+                paper: {
+                    backgroundColor: '#1e1e1e',
+                },
+            },
+        },
     },
 });
 
