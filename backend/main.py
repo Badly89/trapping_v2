@@ -1,14 +1,12 @@
 # main.py - Основной FastAPI сервер
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Query, Response
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Query, Response, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 from typing import List, Optional
 from datetime import datetime, timedelta
-from max_notifications import notify_new_message, notify_task_assigned, notify_task_completed, notify_status_changed
 from pydantic import BaseModel
-import asyncio
 import mimetypes
 import shutil
 import os
@@ -21,9 +19,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
-class VerifyCodeRequest(BaseModel):
-    code: str
+# Импорты уведомлений
+from max_notifications import notify_new_message, notify_task_assigned, notify_task_completed, notify_status_changed
 
 # Импорты из модулей
 from models import (
@@ -48,7 +45,7 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
     openapi_url=None
-    )
+)
 
 # CORS
 app.add_middleware(
@@ -56,10 +53,10 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:85",
-        "http://10.87.0.59:85",     # ← ДОБАВИТЬ ЭТО
+        "http://10.87.0.59:85",
         "http://10.87.0.59:6005",
         "http://10.87.0.59:81",
-        "*"  # Временно для теста
+        "*"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -69,6 +66,14 @@ app.add_middleware(
 # Директория для загрузки файлов
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# ========== Pydantic Models ==========
+class VerifyCodeRequest(BaseModel):
+    code: str
+
+class MaxConnectRequest(BaseModel):
+    max_user_id: str
+    max_chat_id: str
 
 # ========== Auth Endpoints ==========
 @app.post("/api/auth/login", response_model=TokenResponse)
@@ -108,22 +113,17 @@ def change_password(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Смена пароля текущего пользователя"""
     from auth import verify_password
-    
     if not verify_password(old_password, current_user.hashed_password):
         raise HTTPException(status_code=400, detail="Wrong password")
-    
     if len(new_password) < 6:
         raise HTTPException(status_code=400, detail="Password too short")
-    
     current_user.hashed_password = get_password_hash(new_password)
     current_user.updated_at = datetime.utcnow()
     db.commit()
-    
     return {"status": "success", "message": "Password changed"}
 
-# ========== User Management (Admin only) ==========
+# ========== User Management ==========
 @app.post("/api/users", response_model=UserResponse)
 def create_user(
     user_data: UserCreate,
@@ -163,7 +163,6 @@ def get_users(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    # Проверка прав
     if current_user.role not in [UserRole.ADMIN, UserRole.OPERATOR]:
         raise HTTPException(status_code=403, detail="Access denied")
     
@@ -188,11 +187,9 @@ def update_user(
     current_user: User = Depends(require_role(UserRole.ADMIN)),
     db: Session = Depends(get_db)
 ):
-    """Обновление пользователя (только для администратора)"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
     if user.id == current_user.id:
         raise HTTPException(status_code=400, detail="Cannot update yourself here")
     
@@ -210,17 +207,7 @@ def update_user(
     user.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(user)
-    
-    return UserResponse(
-        id=user.id,
-        username=user.username,
-        email=user.email,
-        full_name=user.full_name,
-        role=user.role.value,
-        is_active=user.is_active,
-        created_at=user.created_at,
-        updated_at=user.updated_at
-    )
+    return user
 
 @app.patch("/api/users/{user_id}/toggle")
 def toggle_user(
@@ -240,8 +227,12 @@ def toggle_user(
 
 # ========== Messages ==========
 @app.post("/api/messages", response_model=MessageResponse)
-def create_message(message: MessageCreate, db: Session = Depends(get_db)):
-    """Создание нового сообщения"""
+def create_message(
+    message: MessageCreate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """Создание нового сообщения с уведомлениями"""
     db_message = Message(
         source=message.source,
         chat_id=message.chat_id,
@@ -256,27 +247,31 @@ def create_message(message: MessageCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_message)
     
-    # Отправляем уведомление
-    asyncio.create_task(notify_new_message({
-        "id": db_message.id,
-        "user_name": db_message.user_name,
-        "text": db_message.text
-    }))
-
+    # Отправляем уведомление через BackgroundTasks
+    background_tasks.add_task(
+        notify_new_message,
+        {
+            "id": db_message.id,
+            "user_name": db_message.user_name,
+            "text": db_message.text
+        },
+        db_message.assigned_to_id
+    )
+    
     logger.info(f"📨 Сообщение #{db_message.id} создано")
     return db_message
 
 @app.get("/api/messages", response_model=List[MessageResponse])
 def get_messages(
-    response: Response,  # <-- Первым параметром (без значения по умолчанию)
+    response: Response,
     status: Optional[str] = None,
     priority: Optional[str] = None,
     assigned_to: Optional[int] = None,
     has_location: Optional[bool] = None,
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
-    order_by: str = Query("created_at", pattern="^(id|created_at)$"),  # regex -> pattern
-    order: str = Query("dsc", pattern="^(asc|desc)$"), 
+    order_by: str = Query("created_at", pattern="^(id|created_at)$"),
+    order: str = Query("desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -298,9 +293,8 @@ def get_messages(
         query = query.filter(Message.assigned_to_id == current_user.id)
     
     total_count = query.count()
-    response.headers["X-Total-Count"] = str(total_count)  # <-- Добавить заголовок
+    response.headers["X-Total-Count"] = str(total_count)
     
-    # Применяем сортировку
     if order_by == "id":
         if order == "asc":
             query = query.order_by(Message.id.asc())
@@ -313,19 +307,21 @@ def get_messages(
             query = query.order_by(Message.created_at.desc())
     
     messages = query.offset(offset).limit(limit).all()
-    
     return messages
 
 @app.patch("/api/messages/{message_id}", response_model=MessageResponse)
 def update_message(
     message_id: int,
     update: MessageUpdate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     message = db.query(Message).filter(Message.id == message_id).first()
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
+    
+    old_status = message.status.value
     
     if update.status:
         message.status = MessageStatus(update.status)
@@ -340,12 +336,24 @@ def update_message(
     message.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(message)
+    
+    # Уведомление об изменении статуса
+    if update.status and old_status != update.status:
+        background_tasks.add_task(
+            notify_status_changed,
+            message.id,
+            old_status,
+            update.status,
+            message.assigned_to_id
+        )
+    
     return message
 
 # ========== Tasks ==========
 @app.post("/api/tasks", response_model=TaskResponse)
 def create_task(
     task: TaskCreate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -363,13 +371,18 @@ def create_task(
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
+    
     if task.assigned_to_id:
-        asyncio.create_task(notify_task_assigned({
-            "id": db_task.id,
-            "title": db_task.title,
-            "description": db_task.description
-        }, task.assigned_to_id))
-
+        background_tasks.add_task(
+            notify_task_assigned,
+            {
+                "id": db_task.id,
+                "title": db_task.title,
+                "description": db_task.description
+            },
+            task.assigned_to_id
+        )
+    
     return db_task
 
 @app.get("/api/tasks", response_model=List[TaskResponse])
@@ -399,6 +412,7 @@ def get_tasks(
 def update_task(
     task_id: int,
     update: TaskUpdate,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
@@ -409,6 +423,8 @@ def update_task(
     if current_user.role == UserRole.EXECUTOR and task.assigned_to_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
     
+    old_status = task.status.value
+    
     if update.title:
         task.title = update.title
     if update.description is not None:
@@ -417,12 +433,32 @@ def update_task(
         task.status = TaskStatus(update.status)
         if update.status == TaskStatus.COMPLETED:
             task.completed_at = datetime.utcnow()
+            background_tasks.add_task(
+                notify_task_completed,
+                {
+                    "id": task.id,
+                    "title": task.title,
+                    "assignee_name": current_user.full_name
+                },
+                task.created_by_id
+            )
     if update.assigned_to_id:
         task.assigned_to_id = update.assigned_to_id
     
     task.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(task)
+    
+    # Уведомление об изменении статуса
+    if update.status and old_status != update.status:
+        background_tasks.add_task(
+            notify_status_changed,
+            task.message_id,
+            old_status,
+            update.status,
+            task.assigned_to_id
+        )
+    
     return task
 
 # ========== Reports ==========
@@ -435,7 +471,6 @@ async def create_report(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Создание отчета по выполненной работе"""
     photo_urls = []
     for file in files:
         timestamp = int(datetime.utcnow().timestamp())
@@ -443,10 +478,7 @@ async def create_report(
         file_path = os.path.join(UPLOAD_DIR, filename)
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-        
-        # Сохраняем полный URL
         photo_url = f"http://10.87.0.59:6005/uploads/{filename}"
-        # или если через nginx: photo_url = f"http://10.87.0.59:85/uploads/{filename}"
         photo_urls.append(photo_url)
     
     report = Report(
@@ -461,8 +493,8 @@ async def create_report(
     db.refresh(report)
     
     return {
-        "status": "success", 
-        "report_id": report.id, 
+        "status": "success",
+        "report_id": report.id,
         "photos": photo_urls,
         "created_at": report.created_at
     }
@@ -476,11 +508,6 @@ def get_reports(
     reports = db.query(Report).filter(Report.message_id == message_id).order_by(Report.created_at.desc()).all()
     return reports
 
-
-class MaxConnectRequest(BaseModel):
-    max_user_id: str
-    max_chat_id: str
-
 # ========== MAX Notifications ==========
 @app.post("/api/user/connect-max")
 def connect_max_account(
@@ -488,7 +515,6 @@ def connect_max_account(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Привязка MAX аккаунта к пользователю CRM"""
     current_user.max_user_id = data.max_user_id
     current_user.max_chat_id = data.max_chat_id
     current_user.notifications_enabled = True
@@ -500,7 +526,6 @@ def disconnect_max_account(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Отвязка MAX аккаунта"""
     current_user.max_user_id = None
     current_user.max_chat_id = None
     current_user.notifications_enabled = False
@@ -512,18 +537,15 @@ def toggle_notifications(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Включить/отключить уведомления в MAX"""
     current_user.notifications_enabled = not current_user.notifications_enabled
     db.commit()
     return {"status": "success", "notifications_enabled": current_user.notifications_enabled}
-
 
 @app.get("/api/user/max-status")
 def get_max_status(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Получить статус привязки MAX аккаунта"""
     return {
         "connected": current_user.max_chat_id is not None,
         "notifications_enabled": current_user.notifications_enabled,
@@ -531,30 +553,15 @@ def get_max_status(
         "max_chat_id": current_user.max_chat_id
     }
 
-
 @app.post("/api/user/verify-max-code")
 def verify_max_code(
     request: VerifyCodeRequest,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """Проверка кода привязки MAX аккаунта"""
     code = request.code
-    
-    # Здесь нужно проверить код через API бота
-    # Пока возвращаем успех для теста
+    # TODO: Реальная проверка кода через API бота
     return {"status": "success", "verified": True}
-
-
-@app.patch("/api/user/notifications-toggle")
-def toggle_notifications(
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """Включить/отключить уведомления в MAX"""
-    current_user.notifications_enabled = not current_user.notifications_enabled
-    db.commit()
-    return {"status": "success", "notifications_enabled": current_user.notifications_enabled}
 
 # ========== Statistics ==========
 @app.get("/api/statistics")
@@ -617,12 +624,9 @@ def get_statistics(
 # ========== Debug Endpoints ==========
 @app.get("/api/debug/time")
 def debug_time(db: Session = Depends(get_db)):
-    """Отладочный эндпоинт для проверки времени"""
     YEKATERINBURG_OFFSET = timedelta(hours=5)
-    
     now_utc = datetime.utcnow()
     now_yekat = now_utc + YEKATERINBURG_OFFSET
-    
     last_messages = db.query(Message).order_by(Message.id.desc()).limit(5).all()
     
     messages_data = []
@@ -630,7 +634,6 @@ def debug_time(db: Session = Depends(get_db)):
         created_at_local = None
         if msg.created_at:
             created_at_local = msg.created_at + YEKATERINBURG_OFFSET
-        
         messages_data.append({
             "id": msg.id,
             "user_name": msg.user_name,
@@ -649,21 +652,17 @@ def debug_time(db: Session = Depends(get_db)):
 # ========== Uploads ==========
 @app.get("/uploads/{filename}")
 def get_upload(filename: str):
-    # Безопасность: проверяем, что filename не содержит пути
     if '..' in filename or '/' in filename or '\\' in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
     
     file_path = os.path.join(UPLOAD_DIR, filename)
-    
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail=f"File not found: {filename}")
     
-    # Определяем MIME тип
     mime_type, _ = mimetypes.guess_type(file_path)
     if not mime_type:
         mime_type = 'application/octet-stream'
     
-    # Возвращаем файл
     return FileResponse(
         file_path,
         media_type=mime_type,
@@ -700,15 +699,14 @@ def root():
         }
     }
 
-
 if __name__ == "__main__":
     import uvicorn
     print("=" * 60)
-    print("🚀 ЗАПУСК SERVER")
+    print("🚀 ЗАПУСК CRM SERVER")
     print("=" * 60)
     print(f"📁 Директория загрузок: {UPLOAD_DIR}")
-    print(f"🏠 Health Check: http://localhost:6005/health")
-    print("=" * 60 + "\n")
+    print(f"🏠 Health Check: http://10.87.0.59:6005/health")
+    print("=" * 60)
     
     uvicorn.run(
         "main:app",
