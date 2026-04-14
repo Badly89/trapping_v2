@@ -63,7 +63,7 @@ export const messages = {
         // Добавляем параметры сортировки по умолчанию
         const defaultParams = {
             order_by: 'created_at',
-            order: 'asc',
+            order: 'desc',
             ...params
         };
         return api.get('/messages', { params: defaultParams });
