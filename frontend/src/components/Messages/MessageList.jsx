@@ -284,7 +284,7 @@ const MessageList = () => {
 
     // Обработчик сортировки
     const handleSort = (property) => {
-        const isAsc = orderBy === property && order === 'asc';
+        const isAsc = orderBy === property && order === 'desc';
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
         setPage(0);
@@ -410,7 +410,7 @@ const MessageList = () => {
                             <TableCell sx={{ fontWeight: 'bold' }}>
                                 <TableSortLabel
                                     active={orderBy === 'id'}
-                                    direction={orderBy === 'id' ? order : 'asc'}
+                                    direction={orderBy === 'id' ? order : 'desc'}
                                     onClick={() => handleSort('id')}
                                 >
                                     ID
