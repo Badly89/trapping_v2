@@ -77,9 +77,9 @@ class MaxConnectRequest(BaseModel):
     max_chat_id: str
 
 class StoreCodeRequest(BaseModel):
-    user_id: int
+    email: str  # <-- использовать email вместо user_id
     code: str
-    chat_id: str 
+    chat_id: str
 
 # ========== Auth Endpoints ==========
 @app.post("/api/auth/login", response_model=TokenResponse)
@@ -567,34 +567,33 @@ def verify_max_code(
     from redis_client import verify_code
     
     code = request.code
-    user_id = current_user.id
+    email = current_user.email  # <-- используем email текущего пользователя
     
-    print(f"🔐 ПРОВЕРКА КОДА: user_id={user_id}, code={code}")
+    print(f"🔐 Проверка кода для email: {email}")
     
-    is_valid, chat_id = verify_code(user_id, code)
-    
-    print(f"🔐 РЕЗУЛЬТАТ: is_valid={is_valid}, chat_id={chat_id}")
+    is_valid, chat_id = verify_code(email, code)
     
     if is_valid and chat_id:
-        current_user.max_user_id = str(user_id)
+        current_user.max_user_id = str(current_user.id)
         current_user.max_chat_id = chat_id
         current_user.notifications_enabled = True
         db.commit()
-        print(f"✅ Пользователь {user_id} привязан к чату {chat_id}")
+        print(f"✅ Пользователь {email} привязан к чату {chat_id}")
         return {"status": "success", "verified": True, "message": "Аккаунт успешно привязан"}
     else:
-        print(f"❌ Неверный или истекший код для пользователя {user_id}")
         return {"status": "error", "verified": False, "message": "Неверный или истекший код"}
 
 # Эндпоинт для бота (исправленный)
 @app.post("/api/bot/store-verification-code")
 def store_verification_code_endpoint(
-    request: StoreCodeRequest,  # <-- используем модель, а не отдельные параметры
+    request: StoreCodeRequest,
     db: Session = Depends(get_db)
 ):
     """Сохранение кода верификации от бота"""
     from redis_client import store_verification_code
-    store_verification_code(request.user_id, request.code, request.chat_id)
+    # Сохраняем по email
+    store_verification_code(request.email, request.code, request.chat_id)
+    print(f"✅ Код {request.code} сохранен для {request.email}")
     return {"status": "success"}
 
 
