@@ -77,7 +77,7 @@ class MaxConnectRequest(BaseModel):
     max_chat_id: str
 
 class StoreCodeRequest(BaseModel):
-    email: str  # <-- использовать email вместо user_id
+    username: str  # <-- использовать email вместо user_id
     code: str
     chat_id: str
 
@@ -567,18 +567,18 @@ def verify_max_code(
     from redis_client import verify_code
     
     code = request.code
-    email = current_user.email  # <-- используем email текущего пользователя
+    username = current_user.username  # <-- используем username из CRM
     
-    print(f"🔐 Проверка кода для email: {email}")
+    print(f"🔐 Проверка кода для username: {username}")
     
-    is_valid, chat_id = verify_code(email, code)
+    is_valid, chat_id = verify_code(username, code)
     
     if is_valid and chat_id:
         current_user.max_user_id = str(current_user.id)
         current_user.max_chat_id = chat_id
         current_user.notifications_enabled = True
         db.commit()
-        print(f"✅ Пользователь {email} привязан к чату {chat_id}")
+        print(f"✅ Пользователь {username} привязан к чату {chat_id}")
         return {"status": "success", "verified": True, "message": "Аккаунт успешно привязан"}
     else:
         return {"status": "error", "verified": False, "message": "Неверный или истекший код"}
@@ -591,9 +591,8 @@ def store_verification_code_endpoint(
 ):
     """Сохранение кода верификации от бота"""
     from redis_client import store_verification_code
-    # Сохраняем по email
-    store_verification_code(request.email, request.code, request.chat_id)
-    print(f"✅ Код {request.code} сохранен для {request.email}")
+    store_verification_code(request.username, request.code, request.chat_id)
+    print(f"✅ Код {request.code} сохранен для {request.username}")
     return {"status": "success"}
 
 
