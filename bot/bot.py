@@ -51,6 +51,12 @@ dp = Dispatcher()
 PHOTOS_DIR = "downloaded_photos"
 os.makedirs(PHOTOS_DIR, exist_ok=True)
 
+class ConnectState(Enum):
+    AWAITING_EMAIL = "awaiting_email"
+
+# Хранилище временных данных для привязки
+user_connect_data: Dict[int, Dict[str, Any]] = {}
+
 # ==================== СОСТОЯНИЯ ДЛЯ СОСТАВНЫХ СООБЩЕНИЙ ====================
 
 class ComposeState(Enum):
@@ -298,46 +304,100 @@ async def cmd_start(event: MessageCreated):
 
 @dp.message_created(Command('connect'))
 async def cmd_connect(event: MessageCreated):
-    """Привязка MAX аккаунта к CRM"""
+    """Начало привязки MAX аккаунта к CRM - запрос email"""
     user_id = event.message.sender.user_id
-    chat_id = str(event.message.recipient.chat_id)
-    username = event.message.sender.username  # <-- используем username (никнейм)
+    chat_id = event.message.recipient.chat_id
+    user_name = event.message.sender.first_name or 'Пользователь'
     
-    # Если username не задан, используем user_id
-    if not username:
-        username = f"max_user_{user_id}"
-        logger.warning(f"У пользователя {user_id} нет username, используем {username}")
-    
-    verification_code = ''.join(random.choices(string.digits, k=6))
-    
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "http://backend:8000/api/bot/store-verification-code",
-                json={
-                    "username": username,
-                    "code": verification_code,
-                    "chat_id": chat_id
-                }
-            ) as resp:
-                if resp.status == 200:
-                    logger.info(f"✅ Код {verification_code} сохранен для {username}")
-                else:
-                    text = await resp.text()
-                    logger.error(f"❌ Ошибка: {resp.status} - {text}")
-    except Exception as e:
-        logger.error(f"❌ Ошибка отправки: {e}")
+    # Сохраняем данные пользователя
+    user_connect_data[user_id] = {
+        'chat_id': chat_id,
+        'user_name': user_name,
+        'state': ConnectState.AWAITING_EMAIL
+    }
     
     await event.message.answer(
         f"🔗 **Привязка к CRM системе**\n\n"
-        f"Ваш код подтверждения:\n```\n{verification_code}\n```\n\n"
-        f"Введите этот код в настройках CRM.\n"
-        f"Код действителен 5 минут.\n\n"
-        f"**Важно:** Ваш username в MAX: `{username}`\n"
-        f"Он должен совпадать с username в CRM.",
+        f"Пожалуйста, введите ваш email, который указан в CRM:\n\n"
+        f"Пример: `user@example.com`\n\n"
+        f"Email должен совпадать с email в вашем профиле CRM.",
         format=ParseMode.MARKDOWN
     )
 
+@dp.message_created()
+async def handle_email_input(event: MessageCreated):
+    """Обработка ввода email для привязки"""
+    user_id = event.message.sender.user_id
+    text = event.message.body.text or ''
+    
+    # Проверяем, ждем ли мы email от этого пользователя
+    if user_id not in user_connect_data:
+        return
+    
+    state_data = user_connect_data[user_id]
+    if state_data.get('state') != ConnectState.AWAITING_EMAIL:
+        return
+    
+    # Проверяем, что введен email
+    if '@' not in text or '.' not in text:
+        await event.message.answer(
+            "❌ **Неверный формат email**\n\n"
+            "Пожалуйста, введите корректный email адрес.\n"
+            "Пример: `user@example.com`",
+            format=ParseMode.MARKDOWN
+        )
+        return
+    
+    email = text.strip().lower()
+    
+    # Отправляем email в CRM для проверки и генерации кода
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "http://backend:8000/api/bot/request-verification-code",
+                json={
+                    "email": email,
+                    "chat_id": str(state_data['chat_id']),
+                    "user_name": state_data['user_name']
+                }
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get('exists'):
+                        verification_code = data.get('code')
+                        await event.message.answer(
+                            f"✅ **Код подтверждения отправлен!**\n\n"
+                            f"Ваш код: `{verification_code}`\n\n"
+                            f"Введите этот код в настройках CRM для завершения привязки.\n"
+                            f"Код действителен 5 минут.",
+                            format=ParseMode.MARKDOWN
+                        )
+                        # Удаляем данные после успешной отправки
+                        del user_connect_data[user_id]
+                    else:
+                        await event.message.answer(
+                            f"❌ **Email не найден в CRM**\n\n"
+                            f"Пользователь с email `{email}` не зарегистрирован в CRM.\n\n"
+                            f"Пожалуйста, используйте email, указанный в вашем профиле CRM.\n"
+                            f"Или обратитесь к администратору.",
+                            format=ParseMode.MARKDOWN
+                        )
+                else:
+                    text = await resp.text()
+                    await event.message.answer(
+                        f"❌ **Ошибка сервера**\n\n"
+                        f"Попробуйте позже или обратитесь к администратору.",
+                        format=ParseMode.MARKDOWN
+                    )
+    except Exception as e:
+        logger.error(f"Ошибка при проверке email: {e}")
+        await event.message.answer(
+            f"❌ **Ошибка подключения к серверу**\n\n"
+            f"Попробуйте позже.",
+            format=ParseMode.MARKDOWN
+        )
+        
+            
 @dp.message_created(Command('disconnect'))
 async def cmd_disconnect(event: MessageCreated):
     """Отвязка MAX аккаунта от CRM"""

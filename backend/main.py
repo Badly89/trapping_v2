@@ -81,6 +81,14 @@ class StoreCodeRequest(BaseModel):
     code: str
     chat_id: str
 
+class EmailVerificationRequest(BaseModel):
+    email: str
+    chat_id: str
+    user_name: str
+
+class VerifyCodeRequest(BaseModel):
+    code: str
+
 # ========== Auth Endpoints ==========
 @app.post("/api/auth/login", response_model=TokenResponse)
 def login(login_data: LoginRequest, db: Session = Depends(get_db)):
@@ -557,6 +565,40 @@ def get_max_status(
         "max_chat_id": current_user.max_chat_id
     }
 
+@app.post("/api/bot/request-verification-code")
+def request_verification_code(
+    request: EmailVerificationRequest,
+    db: Session = Depends(get_db)
+):
+    """Проверка email и генерация кода верификации"""
+    from redis_client import store_verification_code
+    import random
+    import string
+    
+    email = request.email.lower()
+    
+    # Проверяем, существует ли пользователь с таким email
+    user = db.query(User).filter(User.email == email).first()
+    
+    if not user:
+        return {"exists": False, "message": "Email не найден в CRM"}
+    
+    # Генерируем 6-значный код
+    verification_code = ''.join(random.choices(string.digits, k=6))
+    
+    # Сохраняем код в Redis по email
+    store_verification_code(email, verification_code, request.chat_id)
+    
+    print(f"✅ Сгенерирован код {verification_code} для {email}")
+    
+    return {
+        "exists": True,
+        "code": verification_code,
+        "user_id": user.id,
+        "user_name": user.full_name
+    }
+
+
 @app.post("/api/user/verify-max-code")
 def verify_max_code(
     request: VerifyCodeRequest,
@@ -567,20 +609,29 @@ def verify_max_code(
     from redis_client import verify_code
     
     code = request.code
-    username = current_user.username  # username из CRM
+    email = current_user.email
     
-    print(f"🔐 Проверка кода для username: {username}")
+    print(f"🔐 Проверка кода {code} для email {email}")
     
-    is_valid, chat_id = verify_code(username, code)
+    is_valid, chat_id = verify_code(email, code)
     
     if is_valid and chat_id:
         current_user.max_user_id = str(current_user.id)
         current_user.max_chat_id = chat_id
         current_user.notifications_enabled = True
         db.commit()
-        return {"status": "success", "verified": True, "message": "Аккаунт успешно привязан"}
+        print(f"✅ Пользователь {email} привязан к чату {chat_id}")
+        return {
+            "status": "success",
+            "verified": True,
+            "message": "Аккаунт успешно привязан"
+        }
     else:
-        return {"status": "error", "verified": False, "message": "Неверный или истекший код"}
+        return {
+            "status": "error",
+            "verified": False,
+            "message": "Неверный или истекший код"
+        }
 
 # Эндпоинт для бота (исправленный)
 @app.post("/api/bot/store-verification-code")
