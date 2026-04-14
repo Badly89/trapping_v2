@@ -296,6 +296,60 @@ const Settings = () => {
                         </CardContent>
                     </Card>
                 </Grid>
+                
+                {/* cекциz для привязки MAX */}
+                <Grid item xs={12} md={6}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="h6" gutterBottom>
+                                <MessageIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
+                                Уведомления в MAX
+                            </Typography>
+                            <Divider sx={{ mb: 2 }} />
+                            
+                            <Box sx={{ mb: 2 }}>
+                                <Typography variant="body2" color="text.secondary" gutterBottom>
+                                    Привяжите ваш аккаунт в мессенджере MAX для получения уведомлений
+                                </Typography>
+                                
+                                {user?.max_chat_id ? (
+                                    <>
+                                        <Alert severity="success" sx={{ mb: 2 }}>
+                                            ✅ MAX аккаунт привязан
+                                        </Alert>
+                                        <Button
+                                            variant="outlined"
+                                            color="error"
+                                            startIcon={<MessageIcon />}
+                                            onClick={handleDisconnectMax}
+                                        >
+                                            Отвязать MAX аккаунт
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Alert severity="info" sx={{ mb: 2 }}>
+                                            Для привязки аккаунта отправьте боту команду /connect
+                                        </Alert>
+                                        <Typography variant="body2">
+                                            🤖 Имя бота: @your_bot_name
+                                        </Typography>
+                                    </>
+                                )}
+                            </Box>
+                            
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={maxNotifications}
+                                        onChange={(e) => setMaxNotifications(e.target.checked)}
+                                    />
+                                }
+                                label="Получать уведомления в MAX"
+                            />
+                        </CardContent>
+                    </Card>
+                </Grid>                
 
                 {/* Смена пароля */}
                 <Grid item xs={12} md={6}>
