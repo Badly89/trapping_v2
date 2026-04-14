@@ -20,6 +20,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
+class VerifyCodeRequest(BaseModel):
+    code: str
+
 # Импорты из модулей
 from models import (
     User, Message, Task, Report, UserRole, 
