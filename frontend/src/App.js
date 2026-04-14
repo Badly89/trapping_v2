@@ -1,9 +1,10 @@
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from '@mui/material/styles';  // Импортируем ThemeProvider
-import CssBaseline from '@mui/material/CssBaseline';   // Импортируем CssBaseline для нормализации стилей
+import { CssBaseline } from '@mui/material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import PrivateRoute from './components/Auth/PrivateRoute';
 import Login from './components/Auth/Login';
 import Layout from './components/Layout/Layout';
@@ -13,10 +14,6 @@ import TaskList from './components/Tasks/TaskList';
 import ReportList from './components/Reports/ReportList';
 import UserList from './components/Users/UserList';
 import Settings from './components/Settings/Settings';
-import { theme } from './theme';  // Импортируем созданную тему
-
-import TestTime from './components/TestTime';
-
 
 const AppRoutes = () => {
     const { isAdmin } = useAuth();
@@ -32,7 +29,6 @@ const AppRoutes = () => {
                 <Route path="/reports" element={<ReportList />} />
                 {isAdmin && <Route path="/users" element={<UserList />} />}
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/test-time" element={<TestTime />} />
             </Route>
         </Routes>
     );
@@ -40,13 +36,15 @@ const AppRoutes = () => {
 
 function App() {
     return (
-        <ThemeProvider theme={theme}>      {/* Оборачиваем приложение в ThemeProvider */}
-            <CssBaseline />                 {/* Сбрасываем CSS стили */}
-            <Router>
-                <AuthProvider>
-                    <AppRoutes />
-                </AuthProvider>
-            </Router>
+        <ThemeProvider>
+            <CssBaseline />
+            <NotificationProvider>
+                <Router>
+                    <AuthProvider>
+                        <AppRoutes />
+                    </AuthProvider>
+                </Router>
+            </NotificationProvider>
         </ThemeProvider>
     );
 }

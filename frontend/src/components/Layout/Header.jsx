@@ -9,17 +9,21 @@ import {
     Menu,
     MenuItem,
     Avatar,
-    useTheme,
+    Badge,
 } from '@mui/material';
-import { AccountCircle, Menu as MenuIcon } from '@mui/icons-material';
+import { Notifications } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotification } from '../../contexts/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 
-const Header = ({ drawerWidth = 280, onMenuClick }) => {
+const Header = () => {
     const { user, logout } = useAuth();
+    const { notifications, markAsRead, clearAll } = useNotification();
     const navigate = useNavigate();
-    const theme = useTheme();
     const [anchorEl, setAnchorEl] = React.useState(null);
+    const [notifAnchorEl, setNotifAnchorEl] = React.useState(null);
+
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     const handleMenu = (event) => {
         setAnchorEl(event.currentTarget);
@@ -27,6 +31,14 @@ const Header = ({ drawerWidth = 280, onMenuClick }) => {
 
     const handleClose = () => {
         setAnchorEl(null);
+    };
+
+    const handleNotifOpen = (event) => {
+        setNotifAnchorEl(event.currentTarget);
+    };
+
+    const handleNotifClose = () => {
+        setNotifAnchorEl(null);
     };
 
     const handleLogout = () => {
@@ -45,41 +57,60 @@ const Header = ({ drawerWidth = 280, onMenuClick }) => {
     };
 
     return (
-        <AppBar
-            position="fixed"
-            sx={{
-                zIndex: theme.zIndex.drawer + 1,
-                backgroundColor: theme.palette.background.paper,
-                color: theme.palette.text.primary,
-                boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
-            }}
-        >
+        <AppBar position="fixed" sx={{ zIndex: 1201 }}>
             <Toolbar>
-                <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
+                <Typography variant="h6" sx={{ flexGrow: 1 }}>
                     📊 CRM Система
                 </Typography>
                 
+                {/* Кнопка уведомлений */}
+                <IconButton color="inherit" onClick={handleNotifOpen}>
+                    <Badge badgeContent={unreadCount} color="error">
+                        <Notifications />
+                    </Badge>
+                </IconButton>
+                <Menu
+                    anchorEl={notifAnchorEl}
+                    open={Boolean(notifAnchorEl)}
+                    onClose={handleNotifClose}
+                    sx={{ mt: 2 }}
+                >
+                    {notifications.length === 0 ? (
+                        <MenuItem disabled>Нет уведомлений</MenuItem>
+                    ) : (
+                        <>
+                            {notifications.slice(0, 5).map((notif) => (
+                                <MenuItem key={notif.id} onClick={() => markAsRead(notif.id)}>
+                                    <Box sx={{ maxWidth: 300 }}>
+                                        <Typography variant="body2">{notif.message}</Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {new Date(notif.timestamp).toLocaleString('ru-RU')}
+                                        </Typography>
+                                    </Box>
+                                </MenuItem>
+                            ))}
+                            <Divider />
+                            <MenuItem onClick={() => { navigate('/settings'); handleNotifClose(); }}>
+                                Все уведомления
+                            </MenuItem>
+                        </>
+                    )}
+                </Menu>
+                
                 {user && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Typography variant="body2" color="text.secondary">
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2 }}>
+                        <Typography variant="body2">
                             {user.username} ({getRoleName(user.role)})
                         </Typography>
-                        <IconButton
-                            onClick={handleMenu}
-                            size="small"
-                            sx={{ p: 0 }}
-                        >
-                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+                        <IconButton onClick={handleMenu} size="small">
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
                                 {user.username[0].toUpperCase()}
                             </Avatar>
                         </IconButton>
-                        <Menu
-                            anchorEl={anchorEl}
-                            open={Boolean(anchorEl)}
-                            onClose={handleClose}
-                            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                        >
+                        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+                            <MenuItem onClick={() => { navigate('/settings'); handleClose(); }}>
+                                Настройки
+                            </MenuItem>
                             <MenuItem onClick={handleLogout}>Выйти</MenuItem>
                         </Menu>
                     </Box>
