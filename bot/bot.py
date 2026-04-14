@@ -299,54 +299,37 @@ async def cmd_start(event: MessageCreated):
 @dp.message_created(Command('connect'))
 async def cmd_connect(event: MessageCreated):
     """Привязка MAX аккаунта к CRM"""
-    import logging
-    logger = logging.getLogger(__name__)
-    
     user_id = event.message.sender.user_id
-    chat_id = str(event.message.recipient.chat_id)  # <-- ПРЕОБРАЗОВАТЬ В СТРОКУ
+    chat_id = str(event.message.recipient.chat_id)
+    user_email = event.message.sender.email or f"user_{user_id}@max.ru"  # email пользователя
     user_name = event.message.sender.first_name or 'Пользователь'
     
-    logger.info(f"🔐 Команда /connect от пользователя {user_id}, чат {chat_id}")
-    
-    # Генерируем 6-значный код
     verification_code = ''.join(random.choices(string.digits, k=6))
-    logger.info(f"🔐 Сгенерирован код: {verification_code}")
     
-    # Отправляем код в CRM
     try:
-        logger.info(f"📤 Отправка кода в бэкенд...")
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 "http://backend:8000/api/bot/store-verification-code",
                 json={
-                    "user_id": user_id,
+                    "email": user_email,  # <-- использовать email
                     "code": verification_code,
                     "chat_id": chat_id
                 }
             ) as resp:
-                response_text = await resp.text()
-                logger.info(f"📥 Ответ бэкенда: статус {resp.status}, тело: {response_text}")
                 if resp.status == 200:
-                    logger.info(f"✅ Код {verification_code} успешно сохранен в CRM")
+                    logger.info(f"✅ Код {verification_code} сохранен для {user_email}")
                 else:
-                    logger.error(f"❌ Ошибка сохранения кода: {resp.status} - {response_text}")
+                    text = await resp.text()
+                    logger.error(f"❌ Ошибка: {resp.status} - {text}")
     except Exception as e:
-        logger.error(f"❌ Ошибка отправки кода в CRM: {e}", exc_info=True)
+        logger.error(f"❌ Ошибка отправки: {e}")
     
-    # Отправляем код пользователю
     await event.message.answer(
-        f"🔗 **Привязка к CRM системе**\n\n"
-        f"Ваш код подтверждения:\n"
-        f"```\n{verification_code}\n```\n\n"
+        f"🔗 **Ваш код подтверждения:**\n```\n{verification_code}\n```\n\n"
         f"Введите этот код в настройках CRM.\n"
-        f"Код действителен 5 минут.\n\n"
-        f"После привязки вы будете получать уведомления о:\n"
-        f"• Новых сообщениях\n"
-        f"• Назначенных задачах\n"
-        f"• Изменении статусов",
+        f"Код действителен 5 минут.",
         format=ParseMode.MARKDOWN
     )
-    logger.info(f"✅ Код отправлен пользователю {user_id}")
 
 
 @dp.message_created(Command('disconnect'))

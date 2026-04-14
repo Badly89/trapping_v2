@@ -12,37 +12,35 @@ redis_client = redis.Redis(
     decode_responses=True
 )
 
-def store_verification_code(user_id: int, code: str, chat_id: str, expires_in: int = 300):
-    """Сохранить код верификации в Redis (на 5 минут)"""
-    key = f"verification:{user_id}"
+def store_verification_code(email: str, code: str, chat_id: str, expires_in: int = 300):
+    """Сохранить код верификации в Redis по email"""
+    key = f"verification:{email}"
     data = {
         "code": code,
         "chat_id": chat_id,
-        "user_id": user_id
+        "email": email
     }
     redis_client.setex(key, expires_in, json.dumps(data))
-    print(f"✅ Код {code} сохранен в Redis для пользователя {user_id}")
+    print(f"✅ Код сохранен в Redis для {email}")
     return True
 
-def verify_code(user_id: int, code: str):
-    """Проверить код верификации в Redis"""
-    key = f"verification:{user_id}"
+def verify_code(email: str, code: str):
+    """Проверить код верификации в Redis по email"""
+    key = f"verification:{email}"
     data = redis_client.get(key)
     
-    print(f"🔍 Redis ключ: {key}")
-    print(f"🔍 Данные в Redis: {data}")
+    print(f"🔍 Поиск ключа: {key}")
     
     if data:
         stored = json.loads(data)
-        print(f"🔍 Хранимый код: {stored.get('code')}, полученный: {code}")
         if stored.get("code") == code:
             chat_id = stored.get("chat_id")
             redis_client.delete(key)
-            print(f"✅ Код верный, удаляем из Redis")
+            print(f"✅ Код верный для {email}")
             return True, chat_id
         else:
-            print(f"❌ Код не совпадает")
+            print(f"❌ Код не совпадает для {email}")
     else:
-        print(f"❌ Ключ {key} не найден в Redis")
+        print(f"❌ Ключ {key} не найден")
     
     return False, None
