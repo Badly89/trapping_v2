@@ -7,6 +7,7 @@ from sqlalchemy import func, and_
 from typing import List, Optional
 from datetime import datetime, timedelta
 from max_notifications import notify_new_message, notify_task_assigned, notify_task_completed, notify_status_changed
+from pydantic import BaseModel
 import mimetypes
 import shutil
 import os
@@ -363,7 +364,7 @@ def create_task(
             "title": db_task.title,
             "description": db_task.description
         }, task.assigned_to_id))
-        
+
     return db_task
 
 @app.get("/api/tasks", response_model=List[TaskResponse])
@@ -471,17 +472,21 @@ def get_reports(
     return reports
 
 
+class MaxConnectRequest(BaseModel):
+    max_user_id: str
+    max_chat_id: str
+
 # ========== MAX Notifications ==========
 @app.post("/api/user/connect-max")
 def connect_max_account(
-    max_user_id: str,
-    max_chat_id: str,
+    data: MaxConnectRequest,
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """Привязка MAX аккаунта к пользователю CRM"""
-    current_user.max_user_id = max_user_id
-    current_user.max_chat_id = max_chat_id
+    current_user.max_user_id = data.max_user_id
+    current_user.max_chat_id = data.max_chat_id
+    current_user.notifications_enabled = True
     db.commit()
     return {"status": "success", "message": "MAX аккаунт привязан"}
 
@@ -493,8 +498,34 @@ def disconnect_max_account(
     """Отвязка MAX аккаунта"""
     current_user.max_user_id = None
     current_user.max_chat_id = None
+    current_user.notifications_enabled = False
     db.commit()
     return {"status": "success", "message": "MAX аккаунт отвязан"}
+
+@app.patch("/api/user/notifications-toggle")
+def toggle_notifications(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Включить/отключить уведомления в MAX"""
+    current_user.notifications_enabled = not current_user.notifications_enabled
+    db.commit()
+    return {"status": "success", "notifications_enabled": current_user.notifications_enabled}
+
+
+@app.get("/api/user/max-status")
+def get_max_status(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Получить статус привязки MAX аккаунта"""
+    return {
+        "connected": current_user.max_chat_id is not None,
+        "notifications_enabled": current_user.notifications_enabled,
+        "max_user_id": current_user.max_user_id,
+        "max_chat_id": current_user.max_chat_id
+    }
+
 
 @app.patch("/api/user/notifications-toggle")
 def toggle_notifications(
@@ -649,6 +680,7 @@ def root():
             "health": "/health"
         }
     }
+
 
 if __name__ == "__main__":
     import uvicorn
