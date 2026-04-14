@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 from typing import List, Optional
 from datetime import datetime, timedelta
+import mimetypes
 import shutil
 import os
 import logging
@@ -246,7 +247,6 @@ def create_message(message: MessageCreate, db: Session = Depends(get_db)):
     return db_message
 
 @app.get("/api/messages", response_model=List[MessageResponse])
-@app.get("/api/messages", response_model=List[MessageResponse])
 def get_messages(
     response: Response,  # <-- Первым параметром (без значения по умолчанию)
     status: Optional[str] = None,
@@ -365,7 +365,7 @@ def get_tasks(
     if current_user.role == UserRole.EXECUTOR:
         query = query.filter(Task.assigned_to_id == current_user.id)
     
-    tasks = query.order_by(Task.created_at.desc()).offset(offset).limit(limit).all()
+    tasks = query.order_by(Task.created_at.asc()).offset(offset).limit(limit).all()
     return tasks
 
 @app.patch("/api/tasks/{task_id}", response_model=TaskResponse)
@@ -446,7 +446,7 @@ def get_reports(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    reports = db.query(Report).filter(Report.message_id == message_id).order_by(Report.created_at.desc()).all()
+    reports = db.query(Report).filter(Report.message_id == message_id).order_by(Report.created_at.asc()).all()
     return reports
 
 # ========== Statistics ==========
@@ -516,7 +516,7 @@ def debug_time(db: Session = Depends(get_db)):
     now_utc = datetime.utcnow()
     now_yekat = now_utc + YEKATERINBURG_OFFSET
     
-    last_messages = db.query(Message).order_by(Message.id.desc()).limit(5).all()
+    last_messages = db.query(Message).order_by(Message.id.asc()).limit(5).all()
     
     messages_data = []
     for msg in last_messages:
@@ -542,10 +542,39 @@ def debug_time(db: Session = Depends(get_db)):
 # ========== Uploads ==========
 @app.get("/uploads/{filename}")
 def get_upload(filename: str):
+    # Безопасность: проверяем, что filename не содержит пути
+    if '..' in filename or '/' in filename or '\\' in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    
     file_path = os.path.join(UPLOAD_DIR, filename)
-    if os.path.exists(file_path):
-        return FileResponse(file_path)
-    raise HTTPException(status_code=404, detail="File not found")
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail=f"File not found: {filename}")
+    
+    # Определяем MIME тип
+    mime_type, _ = mimetypes.guess_type(file_path)
+    if not mime_type:
+        mime_type = 'application/octet-stream'
+    
+    # Возвращаем файл
+    return FileResponse(
+        file_path,
+        media_type=mime_type,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "public, max-age=31536000",
+        }
+    )
+
+# @app.get("/uploads/{filename}")
+# def get_upload(filename: str):
+#     file_path = os.path.join(UPLOAD_DIR, filename)
+#     print(f"Looking for: {file_path}")
+#     print(f"File exists: {os.path.exists(file_path)}")
+    
+#     if os.path.exists(file_path):
+#         return FileResponse(file_path)
+#     raise HTTPException(status_code=404, detail=f"File not found: {filename}")
 
 # ========== Health Check ==========
 @app.get("/health")
