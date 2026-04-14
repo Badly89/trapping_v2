@@ -1,4 +1,4 @@
-# bot.py - Адаптированная версия с поддержкой составных сообщений
+import aiohttp
 import random
 import string
 import os
