@@ -301,7 +301,12 @@ async def cmd_connect(event: MessageCreated):
     """Привязка MAX аккаунта к CRM"""
     user_id = event.message.sender.user_id
     chat_id = str(event.message.recipient.chat_id)
-    username = event.message.sender.username or f"max_user_{user_id}"  # используем username
+    username = event.message.sender.username  # <-- используем username (никнейм)
+    
+    # Если username не задан, используем user_id
+    if not username:
+        username = f"max_user_{user_id}"
+        logger.warning(f"У пользователя {user_id} нет username, используем {username}")
     
     verification_code = ''.join(random.choices(string.digits, k=6))
     
@@ -310,7 +315,7 @@ async def cmd_connect(event: MessageCreated):
             async with session.post(
                 "http://backend:8000/api/bot/store-verification-code",
                 json={
-                    "username": username,  # <-- используем username
+                    "username": username,
                     "code": verification_code,
                     "chat_id": chat_id
                 }
@@ -324,9 +329,12 @@ async def cmd_connect(event: MessageCreated):
         logger.error(f"❌ Ошибка отправки: {e}")
     
     await event.message.answer(
-        f"🔗 **Ваш код подтверждения:**\n```\n{verification_code}\n```\n\n"
+        f"🔗 **Привязка к CRM системе**\n\n"
+        f"Ваш код подтверждения:\n```\n{verification_code}\n```\n\n"
         f"Введите этот код в настройках CRM.\n"
-        f"Код действителен 5 минут.",
+        f"Код действителен 5 минут.\n\n"
+        f"**Важно:** Ваш username в MAX: `{username}`\n"
+        f"Он должен совпадать с username в CRM.",
         format=ParseMode.MARKDOWN
     )
 

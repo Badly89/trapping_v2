@@ -567,7 +567,7 @@ def verify_max_code(
     from redis_client import verify_code
     
     code = request.code
-    username = current_user.username  # <-- используем username из CRM
+    username = current_user.username  # username из CRM
     
     print(f"🔐 Проверка кода для username: {username}")
     
@@ -578,7 +578,6 @@ def verify_max_code(
         current_user.max_chat_id = chat_id
         current_user.notifications_enabled = True
         db.commit()
-        print(f"✅ Пользователь {username} привязан к чату {chat_id}")
         return {"status": "success", "verified": True, "message": "Аккаунт успешно привязан"}
     else:
         return {"status": "error", "verified": False, "message": "Неверный или истекший код"}
