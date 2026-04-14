@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 from typing import List, Optional
 from datetime import datetime, timedelta
+from max_notifications import notify_new_message, notify_task_assigned, notify_task_completed, notify_status_changed
 import mimetypes
 import shutil
 import os
@@ -249,6 +250,13 @@ def create_message(message: MessageCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_message)
     
+    # Отправляем уведомление
+    asyncio.create_task(notify_new_message({
+        "id": db_message.id,
+        "user_name": db_message.user_name,
+        "text": db_message.text
+    }))
+
     logger.info(f"📨 Сообщение #{db_message.id} создано")
     return db_message
 
@@ -349,6 +357,13 @@ def create_task(
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
+    if task.assigned_to_id:
+        asyncio.create_task(notify_task_assigned({
+            "id": db_task.id,
+            "title": db_task.title,
+            "description": db_task.description
+        }, task.assigned_to_id))
+        
     return db_task
 
 @app.get("/api/tasks", response_model=List[TaskResponse])
@@ -454,6 +469,42 @@ def get_reports(
 ):
     reports = db.query(Report).filter(Report.message_id == message_id).order_by(Report.created_at.desc()).all()
     return reports
+
+
+# ========== MAX Notifications ==========
+@app.post("/api/user/connect-max")
+def connect_max_account(
+    max_user_id: str,
+    max_chat_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Привязка MAX аккаунта к пользователю CRM"""
+    current_user.max_user_id = max_user_id
+    current_user.max_chat_id = max_chat_id
+    db.commit()
+    return {"status": "success", "message": "MAX аккаунт привязан"}
+
+@app.post("/api/user/disconnect-max")
+def disconnect_max_account(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Отвязка MAX аккаунта"""
+    current_user.max_user_id = None
+    current_user.max_chat_id = None
+    db.commit()
+    return {"status": "success", "message": "MAX аккаунт отвязан"}
+
+@app.patch("/api/user/notifications-toggle")
+def toggle_notifications(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Включить/отключить уведомления в MAX"""
+    current_user.notifications_enabled = not current_user.notifications_enabled
+    db.commit()
+    return {"status": "success", "notifications_enabled": current_user.notifications_enabled}
 
 # ========== Statistics ==========
 @app.get("/api/statistics")

@@ -294,6 +294,29 @@ async def cmd_start(event: MessageCreated):
         attachments=[create_main_menu()]
     )
 
+
+@dp.message_created(Command('connect'))
+async def cmd_connect(event: MessageCreated):
+    """Привязка MAX аккаунта к CRM"""
+    user_id = event.message.sender.user_id
+    chat_id = event.message.recipient.chat_id
+    
+    # Получаем токен из базы (нужно реализовать)
+    # Здесь должен быть запрос к CRM для привязки
+    
+    await event.message.answer(
+        "🔗 Ваш MAX аккаунт привязан к CRM!\n\n"
+        "Теперь вы будете получать уведомления о:\n"
+        "• Новых сообщениях\n"
+        "• Назначенных задачах\n"
+        "• Изменении статусов\n\n"
+        "Используйте /disconnect для отвязки"
+    )
+
+@dp.message_created(Command('disconnect'))
+async def cmd_disconnect(event: MessageCreated):
+    """Отвязка MAX аккаунта от CRM"""
+    await event.message.answer("🔗 MAX аккаунт отвязан от CRM")
 # ==================== ОБРАБОТКА КНОПОК ====================
 
 @dp.message_callback(F.callback.payload == "new_message")

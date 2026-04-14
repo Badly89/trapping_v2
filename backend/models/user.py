@@ -23,6 +23,11 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Новые поля для уведомлений в MAX
+    max_user_id = Column(String(100), nullable=True)  # ID пользователя в MAX
+    max_chat_id = Column(String(100), nullable=True) # ID чата для уведомлений
+    notifications_enabled = Column(Boolean, default=True)  # Включены ли уведомления
+
     # Отношения
     assigned_messages = relationship("Message", foreign_keys="Message.assigned_to_id", back_populates="assignee")
     created_tasks = relationship("Task", foreign_keys="Task.created_by_id", back_populates="creator")
