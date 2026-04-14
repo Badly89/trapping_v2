@@ -303,7 +303,7 @@ async def cmd_connect(event: MessageCreated):
     logger = logging.getLogger(__name__)
     
     user_id = event.message.sender.user_id
-    chat_id = event.message.recipient.chat_id
+    chat_id = str(event.message.recipient.chat_id)  # <-- ПРЕОБРАЗОВАТЬ В СТРОКУ
     user_name = event.message.sender.first_name or 'Пользователь'
     
     logger.info(f"🔐 Команда /connect от пользователя {user_id}, чат {chat_id}")
@@ -348,7 +348,7 @@ async def cmd_connect(event: MessageCreated):
     )
     logger.info(f"✅ Код отправлен пользователю {user_id}")
 
-    
+
 @dp.message_created(Command('disconnect'))
 async def cmd_disconnect(event: MessageCreated):
     """Отвязка MAX аккаунта от CRM"""
