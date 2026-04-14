@@ -333,7 +333,7 @@ async def cmd_connect(event: MessageCreated):
         f"• Новых сообщениях\n"
         f"• Назначенных задачах\n"
         f"• Изменении статусов",
-        parse_mode=ParseMode.MARKDOWN
+        format=ParseMode.MARKDOWN
     )
     
     # Также отправляем в CRM для сохранения
@@ -358,7 +358,7 @@ async def cmd_disconnect(event: MessageCreated):
         "🔓 **Аккаунт отвязан от CRM**\n\n"
         "Вы больше не будете получать уведомления.\n\n"
         "Чтобы снова привязать аккаунт, используйте /connect",
-        parse_mode=ParseMode.MARKDOWN
+        format=ParseMode.MARKDOWN
     )
 
 @dp.message_created(Command('code'))
@@ -372,7 +372,7 @@ async def cmd_code(event: MessageCreated):
             await event.message.answer(
                 f"🔑 Ваш код подтверждения: `{code_data['code']}`\n\n"
                 f"Действителен до: {code_data['expires_at'].strftime('%H:%M:%S')}",
-                parse_mode=ParseMode.MARKDOWN
+                format=ParseMode.MARKDOWN
             )
         else:
             await event.message.answer(
@@ -549,7 +549,7 @@ async def callback_rules(event: MessageCallback):
              "1. Отправляйте только четкие фото\n"
              "2. Указывайте адрес или геолокацию\n"
              "3. Данные конфиденциальны",
-        parse_mode=ParseMode.MARKDOWN
+        format=ParseMode.MARKDOWN
     )
 
 @dp.message_callback(F.callback.payload == "help")
@@ -564,7 +564,7 @@ async def callback_help(event: MessageCallback):
         chat_id=event.message.recipient.chat_id,
         text=help_text,
         attachments=[create_main_menu()],
-        parse_mode=ParseMode.MARKDOWN
+        format=ParseMode.MARKDOWN
     )
 
 # ==================== ОБРАБОТКА ВХОДЯЩИХ СООБЩЕНИЙ ====================
