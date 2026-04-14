@@ -567,15 +567,23 @@ def verify_max_code(
     from redis_client import verify_code
     
     code = request.code
-    is_valid, chat_id = verify_code(current_user.id, code)
+    user_id = current_user.id
+    
+    print(f"🔐 ПРОВЕРКА КОДА: user_id={user_id}, code={code}")
+    
+    is_valid, chat_id = verify_code(user_id, code)
+    
+    print(f"🔐 РЕЗУЛЬТАТ: is_valid={is_valid}, chat_id={chat_id}")
     
     if is_valid and chat_id:
-        current_user.max_user_id = str(current_user.id)
+        current_user.max_user_id = str(user_id)
         current_user.max_chat_id = chat_id
         current_user.notifications_enabled = True
         db.commit()
+        print(f"✅ Пользователь {user_id} привязан к чату {chat_id}")
         return {"status": "success", "verified": True, "message": "Аккаунт успешно привязан"}
     else:
+        print(f"❌ Неверный или истекший код для пользователя {user_id}")
         return {"status": "error", "verified": False, "message": "Неверный или истекший код"}
 
 # Эндпоинт для бота (исправленный)
