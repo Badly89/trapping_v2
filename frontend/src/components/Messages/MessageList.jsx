@@ -410,7 +410,7 @@ const MessageList = () => {
                             <TableCell sx={{ fontWeight: 'bold' }}>
                                 <TableSortLabel
                                     active={orderBy === 'id'}
-                                    direction={orderBy === 'id' ? order : 'desc'}
+                                    direction={orderBy === 'id' ? order : 'asc'}
                                     onClick={() => handleSort('id')}
                                 >
                                     ID
