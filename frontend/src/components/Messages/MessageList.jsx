@@ -109,7 +109,7 @@ const MessageList = () => {
     
     // Состояние для сортировки
     const [orderBy, setOrderBy] = useState('id');
-    const [order, setOrder] = useState('asc');
+    const [order, setOrder] = useState('desc');
     
     const [taskDialogOpen, setTaskDialogOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
@@ -285,7 +285,7 @@ const MessageList = () => {
     // Обработчик сортировки
     const handleSort = (property) => {
         const isAsc = orderBy === property && order === 'desc';
-        setOrder(isAsc ? 'desc' : 'asc');
+        setOrder(isAsc ? 'asc' : 'desc');
         setOrderBy(property);
         setPage(0);
         fetchMessages(true);
