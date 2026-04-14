@@ -11,3 +11,4 @@ gunicorn==21.2.0
 pytz==2023.3
 bcrypt==4.0.1
 aiohttp>=3.8.0
+redis>=5.0.0

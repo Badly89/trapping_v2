@@ -7,6 +7,7 @@ from sqlalchemy import func, and_
 from typing import List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel
+from redis_client import store_verification_code, verify_code
 import mimetypes
 import shutil
 import os
@@ -565,18 +566,16 @@ def verify_max_code(
     db: Session = Depends(get_db)
 ):
     """Проверка кода привязки MAX аккаунта"""
-    from max_notifications import verify_code
+    from redis_client import verify_code
     
     code = request.code
     is_valid, chat_id = verify_code(current_user.id, code)
     
     if is_valid and chat_id:
-        # Сохраняем привязку
         current_user.max_user_id = str(current_user.id)
         current_user.max_chat_id = chat_id
         current_user.notifications_enabled = True
         db.commit()
-        
         return {"status": "success", "verified": True, "message": "Аккаунт успешно привязан"}
     else:
         return {"status": "error", "verified": False, "message": "Неверный или истекший код"}
@@ -589,12 +588,14 @@ class StoreCodeRequest(BaseModel):
 
 @app.post("/api/bot/store-verification-code")
 def store_verification_code(
-    request: StoreCodeRequest,
+    user_id: int,
+    code: str,
+    chat_id: str,
     db: Session = Depends(get_db)
 ):
     """Сохранение кода верификации от бота"""
-    from max_notifications import store_verification_code
-    store_verification_code(request.user_id, request.code, request.chat_id)
+    from redis_client import store_verification_code as store_code
+    store_code(user_id, code, chat_id)
     return {"status": "success"}
 
 
