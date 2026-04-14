@@ -572,16 +572,6 @@ def get_upload(filename: str):
         }
     )
 
-# @app.get("/uploads/{filename}")
-# def get_upload(filename: str):
-#     file_path = os.path.join(UPLOAD_DIR, filename)
-#     print(f"Looking for: {file_path}")
-#     print(f"File exists: {os.path.exists(file_path)}")
-    
-#     if os.path.exists(file_path):
-#         return FileResponse(file_path)
-#     raise HTTPException(status_code=404, detail=f"File not found: {filename}")
-
 # ========== Health Check ==========
 @app.get("/health")
 def health_check():
@@ -605,7 +595,6 @@ def root():
             "tasks": "/api/tasks",
             "reports": "/api/reports",
             "statistics": "/api/statistics",
-            "docs": "/docs",
             "health": "/health"
         }
     }
@@ -613,16 +602,10 @@ def root():
 if __name__ == "__main__":
     import uvicorn
     print("=" * 60)
-    print("🚀 ЗАПУСК CRM SERVER")
+    print("🚀 ЗАПУСК SERVER")
     print("=" * 60)
     print(f"📁 Директория загрузок: {UPLOAD_DIR}")
-    print(f"🔗 API Docs: http://localhost:6005/docs")
     print(f"🏠 Health Check: http://localhost:6005/health")
-    print("=" * 60)
-    print("\n👤 Тестовые пользователи:")
-    print("   Администратор: admin / admin123")
-    print("   Оператор: operator / operator123")
-    print("   Исполнитель: executor / executor123")
     print("=" * 60 + "\n")
     
     uvicorn.run(
