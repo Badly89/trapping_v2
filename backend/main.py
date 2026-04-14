@@ -256,7 +256,7 @@ def get_messages(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     order_by: str = Query("created_at", pattern="^(id|created_at)$"),  # regex -> pattern
-    order: str = Query("desc", pattern="^(asc|desc)$"), 
+    order: str = Query("asc", pattern="^(asc|desc)$"), 
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
