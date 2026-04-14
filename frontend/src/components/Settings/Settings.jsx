@@ -108,21 +108,23 @@ const Settings = () => {
     };
 
     const handleConnectMax = async () => {
-        if (!verificationCode) {
-            handleNotification('Введите код подтверждения', 'error');
-            return;
-        }
-        
-        setLoading(true);
-        try {
-        // Отправляем код на проверку в бэкенд
-        const response = await api.post('/user/verify-max-code', { code: verificationCode });
+    if (!verificationCode) {
+        handleNotification('Введите код подтверждения', 'error');
+        return;
+    }
+    
+    setLoading(true);
+    try {
+        // Отправляем код в правильном формате
+        const response = await api.post('/user/verify-max-code', { 
+            code: verificationCode 
+        });
         
         if (response.data.verified) {
-            // Если код верный, привязываем аккаунт
+            // Временная привязка (пока без реальных данных)
             const connectResponse = await api.post('/user/connect-max', {
-                max_user_id: 'temp_' + Date.now(),
-                max_chat_id: 'temp_' + Date.now()
+                max_user_id: String(user?.id),
+                max_chat_id: String(user?.id)
             });
             handleNotification('MAX аккаунт успешно привязан!', 'success');
             fetchMaxStatus();
@@ -132,11 +134,12 @@ const Settings = () => {
             handleNotification('Неверный код. Попробуйте снова.', 'error');
         }
     } catch (error) {
-        handleNotification('Ошибка привязки. Проверьте код.', 'error');
+        console.error('Ошибка привязки:', error);
+        handleNotification(error.response?.data?.detail || 'Ошибка привязки. Проверьте код.', 'error');
     } finally {
         setLoading(false);
     }
-    };
+};
 
     const handleDisconnectMax = async () => {
         setLoading(true);
