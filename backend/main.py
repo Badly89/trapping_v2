@@ -412,10 +412,15 @@ async def create_report(
     photo_urls = []
     for file in files:
         timestamp = int(datetime.utcnow().timestamp())
-        file_path = os.path.join(UPLOAD_DIR, f"{timestamp}_{file.filename}")
+        filename = f"{timestamp}_{file.filename}"
+        file_path = os.path.join(UPLOAD_DIR, filename)
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
-        photo_urls.append(f"/uploads/{os.path.basename(file_path)}")
+        
+        # Сохраняем полный URL
+        photo_url = f"http://10.87.0.59:6005/uploads/{filename}"
+        # или если через nginx: photo_url = f"http://10.87.0.59:85/uploads/{filename}"
+        photo_urls.append(photo_url)
     
     report = Report(
         message_id=message_id,
