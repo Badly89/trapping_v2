@@ -301,8 +301,7 @@ async def cmd_connect(event: MessageCreated):
     """Привязка MAX аккаунта к CRM"""
     user_id = event.message.sender.user_id
     chat_id = str(event.message.recipient.chat_id)
-    user_email = event.message.sender.email or f"user_{user_id}@max.ru"  # email пользователя
-    user_name = event.message.sender.first_name or 'Пользователь'
+    username = event.message.sender.username or f"max_user_{user_id}"  # используем username
     
     verification_code = ''.join(random.choices(string.digits, k=6))
     
@@ -311,13 +310,13 @@ async def cmd_connect(event: MessageCreated):
             async with session.post(
                 "http://backend:8000/api/bot/store-verification-code",
                 json={
-                    "email": user_email,  # <-- использовать email
+                    "username": username,  # <-- используем username
                     "code": verification_code,
                     "chat_id": chat_id
                 }
             ) as resp:
                 if resp.status == 200:
-                    logger.info(f"✅ Код {verification_code} сохранен для {user_email}")
+                    logger.info(f"✅ Код {verification_code} сохранен для {username}")
                 else:
                     text = await resp.text()
                     logger.error(f"❌ Ошибка: {resp.status} - {text}")
@@ -330,7 +329,6 @@ async def cmd_connect(event: MessageCreated):
         f"Код действителен 5 минут.",
         format=ParseMode.MARKDOWN
     )
-
 
 @dp.message_created(Command('disconnect'))
 async def cmd_disconnect(event: MessageCreated):
