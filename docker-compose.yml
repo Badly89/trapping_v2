@@ -30,6 +30,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:           # ← ДОБАВИТЬ
+        condition: service_healthy  
     volumes:
       - backend_uploads:/app/uploads
     networks:
@@ -62,10 +64,28 @@ services:
     networks:
       - crm-network
 
+  # ========== ДОБАВИТЬ REDIS ЗДЕСЬ ==========
+  redis:
+    image: redis:7-alpine
+    container_name: crm_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - crm-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 networks:
   crm-network:
     driver: bridge
 
 volumes:
   db_data:
-  backend_uploads:    # ← ДОБАВЛЕНО
+  backend_uploads:
+  redis_data:    # ← ДОБАВИТЬ НОВЫЙ VOLUME

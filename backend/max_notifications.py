@@ -3,6 +3,8 @@ import aiohttp
 import os
 from typing import Optional
 from datetime import datetime, timedelta
+from redis_client import store_verification_code as redis_store_code, verify_code as redis_verify_code
+
 
 MAX_BOT_TOKEN = os.getenv("MAX_BOT_TOKEN")
 MAX_API_URL = "https://platform-api.max.ru"
@@ -130,21 +132,3 @@ async def notify_status_changed(message_id: int, old_status: str, new_status: st
         print(f"❌ Ошибка в notify_status_changed: {e}")
     finally:
         db.close()
-
-
-def store_verification_code(user_id: int, code: str, chat_id: str):
-    """Сохранить код верификации"""
-    verification_storage[user_id] = {
-        "code": code,
-        "chat_id": chat_id,
-        "expires_at": datetime.now() + timedelta(minutes=5)
-    }
-    print(f"✅ Код {code} сохранен для пользователя {user_id}")
-
-def verify_code(user_id: int, code: str) -> tuple:
-    """Проверить код верификации"""
-    if user_id in verification_storage:
-        stored = verification_storage[user_id]
-        if stored["code"] == code and stored["expires_at"] > datetime.now():
-            return True, stored["chat_id"]
-    return False, None
