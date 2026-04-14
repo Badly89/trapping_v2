@@ -559,9 +559,40 @@ def verify_max_code(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
+    """Проверка кода привязки MAX аккаунта"""
+    from max_notifications import verify_code
+    
     code = request.code
-    # TODO: Реальная проверка кода через API бота
-    return {"status": "success", "verified": True}
+    is_valid, chat_id = verify_code(current_user.id, code)
+    
+    if is_valid and chat_id:
+        # Сохраняем привязку
+        current_user.max_user_id = str(current_user.id)
+        current_user.max_chat_id = chat_id
+        current_user.notifications_enabled = True
+        db.commit()
+        
+        return {"status": "success", "verified": True, "message": "Аккаунт успешно привязан"}
+    else:
+        return {"status": "error", "verified": False, "message": "Неверный или истекший код"}
+    
+
+class StoreCodeRequest(BaseModel):
+    user_id: int
+    code: str
+    chat_id: str
+
+@app.post("/api/bot/store-verification-code")
+def store_verification_code(
+    request: StoreCodeRequest,
+    db: Session = Depends(get_db)
+):
+    """Сохранение кода верификации от бота"""
+    from max_notifications import store_verification_code
+    store_verification_code(request.user_id, request.code, request.chat_id)
+    return {"status": "success"}
+
+
 
 # ========== Statistics ==========
 @app.get("/api/statistics")

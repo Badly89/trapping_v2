@@ -302,37 +302,34 @@ async def cmd_start(event: MessageCreated):
 
 @dp.message_created(Command('connect'))
 async def cmd_connect(event: MessageCreated):
-    """Привязка MAX аккаунта к CRM"""
     user_id = event.message.sender.user_id
     chat_id = event.message.recipient.chat_id
-    # user_name = event.message.sender.name or 'Пользователь'
     
-    # Исправление: используем first_name или full_name
-    user = event.message.sender
-    user_name = getattr(user, 'first_name', None) or getattr(user, 'full_name', None) or 'Пользователь'
-
-    # Генерируем 6-значный код
+    # Генерируем код
+    import random
+    import string
     verification_code = ''.join(random.choices(string.digits, k=6))
     
-    # Сохраняем код с временем жизни 5 минут
-    verification_codes[user_id] = {
-        'code': verification_code,
-        'chat_id': chat_id,
-        'user_name': user_name,
-        'expires_at': datetime.now() + timedelta(minutes=5)
-    }
+    # Отправляем код в CRM
+    async with aiohttp.ClientSession() as session:
+        try:
+            await session.post(
+                "http://backend:8000/api/bot/store-verification-code",
+                json={
+                    "user_id": user_id,
+                    "code": verification_code,
+                    "chat_id": chat_id
+                }
+            )
+        except Exception as e:
+            print(f"Ошибка отправки кода в CRM: {e}")
     
     # Отправляем код пользователю
     await event.message.answer(
-        f"🔗 **Привязка к CRM системе**\n\n"
-        f"Ваш код подтверждения:\n"
+        f"🔗 **Ваш код подтверждения:**\n"
         f"```\n{verification_code}\n```\n\n"
         f"Введите этот код в настройках CRM.\n"
-        f"Код действителен 5 минут.\n\n"
-        f"После привязки вы будете получать уведомления о:\n"
-        f"• Новых сообщениях\n"
-        f"• Назначенных задачах\n"
-        f"• Изменении статусов",
+        f"Код действителен 5 минут.",
         format=ParseMode.MARKDOWN
     )
     
@@ -382,6 +379,7 @@ async def cmd_code(event: MessageCreated):
         await event.message.answer(
             "❌ Нет активного кода. Используйте /connect для получения нового кода."
         )
+
 
 # ==================== ОБРАБОТКА КНОПОК ====================
 
