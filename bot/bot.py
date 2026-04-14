@@ -299,32 +299,39 @@ async def cmd_start(event: MessageCreated):
 @dp.message_created(Command('connect'))
 async def cmd_connect(event: MessageCreated):
     """Привязка MAX аккаунта к CRM"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     user_id = event.message.sender.user_id
     chat_id = event.message.recipient.chat_id
     user_name = event.message.sender.first_name or 'Пользователь'
     
+    logger.info(f"🔐 Команда /connect от пользователя {user_id}, чат {chat_id}")
+    
     # Генерируем 6-значный код
     verification_code = ''.join(random.choices(string.digits, k=6))
+    logger.info(f"🔐 Сгенерирован код: {verification_code}")
     
     # Отправляем код в CRM
     try:
+        logger.info(f"📤 Отправка кода в бэкенд...")
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 "http://backend:8000/api/bot/store-verification-code",
                 json={
-                     "user_id": user_id,
-                     "code": verification_code,
-                     "chat_id": chat_id
+                    "user_id": user_id,
+                    "code": verification_code,
+                    "chat_id": chat_id
                 }
             ) as resp:
-                print(f"Статус отправки кода: {resp.status}")
+                response_text = await resp.text()
+                logger.info(f"📥 Ответ бэкенда: статус {resp.status}, тело: {response_text}")
                 if resp.status == 200:
-                    print(f"✅ Код {verification_code} отправлен в CRM для пользователя {user_id}")
+                    logger.info(f"✅ Код {verification_code} успешно сохранен в CRM")
                 else:
-                    text = await resp.text()
-                    print(f"❌ Ошибка: {text}")
+                    logger.error(f"❌ Ошибка сохранения кода: {resp.status} - {response_text}")
     except Exception as e:
-        print(f"❌ Ошибка отправки кода в CRM: {e}")
+        logger.error(f"❌ Ошибка отправки кода в CRM: {e}", exc_info=True)
     
     # Отправляем код пользователю
     await event.message.answer(
@@ -339,7 +346,9 @@ async def cmd_connect(event: MessageCreated):
         f"• Изменении статусов",
         format=ParseMode.MARKDOWN
     )
+    logger.info(f"✅ Код отправлен пользователю {user_id}")
 
+    
 @dp.message_created(Command('disconnect'))
 async def cmd_disconnect(event: MessageCreated):
     """Отвязка MAX аккаунта от CRM"""
