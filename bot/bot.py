@@ -1,11 +1,10 @@
-import aiohttp
-import random
-import string
 import os
 import json
 import asyncio
 import logging
-import aiohttp
+import random
+import string
+import aiohttp  # <-- ОДИН РАЗ
 import aiofiles
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Optional, Any, List, Tuple
@@ -14,9 +13,6 @@ from dotenv import load_dotenv
 
 # Загружаем конфигурацию
 load_dotenv()
-
-# Хранилище кодов верификации
-verification_codes = {}
 
 # Настройка логирования
 logging.basicConfig(
@@ -303,11 +299,6 @@ async def cmd_start(event: MessageCreated):
 @dp.message_created(Command('connect'))
 async def cmd_connect(event: MessageCreated):
     """Привязка MAX аккаунта к CRM"""
-    import aiohttp
-    import random
-    import string
-    from datetime import datetime, timedelta
-    
     user_id = event.message.sender.user_id
     chat_id = event.message.recipient.chat_id
     user_name = event.message.sender.first_name or 'Пользователь'
@@ -354,38 +345,31 @@ async def cmd_disconnect(event: MessageCreated):
     """Отвязка MAX аккаунта от CRM"""
     user_id = event.message.sender.user_id
     
-    # Удаляем код если был
-    if user_id in verification_codes:
-        del verification_codes[user_id]
-    
-    await event.message.answer(
-        "🔓 **Аккаунт отвязан от CRM**\n\n"
-        "Вы больше не будете получать уведомления.\n\n"
-        "Чтобы снова привязать аккаунт, используйте /connect",
-        format=ParseMode.MARKDOWN
-    )
+    # Отправляем запрос в CRM для отвязки
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "http://backend:8000/api/user/disconnect-max",
+                json={"user_id": user_id}
+            ) as resp:
+                if resp.status == 200:
+                    await event.message.answer(
+                        "🔓 **Аккаунт отвязан от CRM**\n\n"
+                        "Вы больше не будете получать уведомления.\n\n"
+                        "Чтобы снова привязать аккаунт, используйте /connect",
+                        format=ParseMode.MARKDOWN
+                    )
+                else:
+                    await event.message.answer("❌ Ошибка отвязки. Попробуйте позже.")
+    except Exception as e:
+        await event.message.answer(f"❌ Ошибка: {e}")
 
 @dp.message_created(Command('code'))
 async def cmd_code(event: MessageCreated):
     """Повторно отправить код привязки"""
-    user_id = event.message.sender.user_id
-    
-    if user_id in verification_codes:
-        code_data = verification_codes[user_id]
-        if code_data['expires_at'] > datetime.now():
-            await event.message.answer(
-                f"🔑 Ваш код подтверждения: `{code_data['code']}`\n\n"
-                f"Действителен до: {code_data['expires_at'].strftime('%H:%M:%S')}",
-                format=ParseMode.MARKDOWN
-            )
-        else:
-            await event.message.answer(
-                "❌ Код истек. Используйте /connect для получения нового кода."
-            )
-    else:
-        await event.message.answer(
-            "❌ Нет активного кода. Используйте /connect для получения нового кода."
-        )
+    await event.message.answer(
+        "❌ Нет активного кода. Используйте /connect для получения нового кода."
+    )
 
 
 # ==================== ОБРАБОТКА КНОПОК ====================
