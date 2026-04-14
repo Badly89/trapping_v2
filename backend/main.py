@@ -8,6 +8,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 from max_notifications import notify_new_message, notify_task_assigned, notify_task_completed, notify_status_changed
 from pydantic import BaseModel
+import asyncio
 import mimetypes
 import shutil
 import os
