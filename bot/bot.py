@@ -301,13 +301,16 @@ async def cmd_start(event: MessageCreated):
 
 
 @dp.message_created(Command('connect'))
-@dp.message_created(Command('connect'))
 async def cmd_connect(event: MessageCreated):
     """Привязка MAX аккаунта к CRM"""
     user_id = event.message.sender.user_id
     chat_id = event.message.recipient.chat_id
-    user_name = event.message.sender.name or 'Пользователь'
+    # user_name = event.message.sender.name or 'Пользователь'
     
+    # Исправление: используем first_name или full_name
+    user = event.message.sender
+    user_name = getattr(user, 'first_name', None) or getattr(user, 'full_name', None) or 'Пользователь'
+
     # Генерируем 6-значный код
     verification_code = ''.join(random.choices(string.digits, k=6))
     
@@ -379,7 +382,7 @@ async def cmd_code(event: MessageCreated):
         await event.message.answer(
             "❌ Нет активного кода. Используйте /connect для получения нового кода."
         )
-        
+
 # ==================== ОБРАБОТКА КНОПОК ====================
 
 @dp.message_callback(F.callback.payload == "new_message")
