@@ -18,6 +18,11 @@ import {
     IconButton,
     InputAdornment,
     CircularProgress,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemIcon,
+    Badge,
 } from '@mui/material';
 import {
     Save,
@@ -30,12 +35,28 @@ import {
     LightMode,
     Notifications,
     Security,
+    NotificationsActive,
+    NotificationsOff,
+    Delete,
+    CheckCircle,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useNotification } from '../../contexts/NotificationContext';
 import { auth } from '../../services/api';
 
 const Settings = () => {
     const { user } = useAuth();
+    const { darkMode, toggleTheme } = useTheme();
+    const { 
+        notifications, 
+        showNotification, 
+        markAsRead, 
+        clearAll,
+        settings: notifSettings,
+        updateSettings 
+    } = useNotification();
+    
     const [loading, setLoading] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     
@@ -52,56 +73,56 @@ const Settings = () => {
     });
     
     // Состояние для настроек
-    const [settings, setSettings] = useState({
-        darkMode: localStorage.getItem('theme') === 'dark',
-        notifications: true,
-        emailNotifications: true,
+    const [localSettings, setLocalSettings] = useState({
+        system: notifSettings.system,
+        email: notifSettings.email,
     });
 
-    const showNotification = (message, severity = 'success') => {
+    const handleNotification = (message, severity = 'success') => {
         setSnackbar({ open: true, message, severity });
     };
 
     const handlePasswordChange = async () => {
         if (passwordData.new_password !== passwordData.confirm_password) {
-            showNotification('Новые пароли не совпадают', 'error');
+            handleNotification('Новые пароли не совпадают', 'error');
             return;
         }
         
         if (passwordData.new_password.length < 6) {
-            showNotification('Пароль должен содержать минимум 6 символов', 'error');
+            handleNotification('Пароль должен содержать минимум 6 символов', 'error');
             return;
         }
         
         setLoading(true);
         try {
-        await auth.changePassword(passwordData.old_password, passwordData.new_password);
-        showNotification('Пароль успешно изменен', 'success');
-        setPasswordData({
-            old_password: '',
-            new_password: '',
-            confirm_password: '',
-        });
+            await auth.changePassword(passwordData.old_password, passwordData.new_password);
+            handleNotification('Пароль успешно изменен', 'success');
+            showNotification('Пароль успешно изменен', 'success', 'email');
+            setPasswordData({
+                old_password: '',
+                new_password: '',
+                confirm_password: '',
+            });
         } catch (error) {
-            showNotification(error.response?.data?.detail || 'Ошибка смены пароля', 'error');
+            handleNotification(error.response?.data?.detail || 'Ошибка смены пароля', 'error');
         } finally {
             setLoading(false);
         }
     };
 
     const handleThemeToggle = () => {
-        const newTheme = !settings.darkMode;
-        setSettings({ ...settings, darkMode: newTheme });
-        localStorage.setItem('theme', newTheme ? 'dark' : 'light');
-        // Здесь можно добавить логику смены темы через контекст
-        showNotification(`Тема изменена на ${newTheme ? 'темную' : 'светлую'}`, 'success');
+        toggleTheme();
+        handleNotification(`Тема изменена на ${!darkMode ? 'темную' : 'светлую'}`, 'success');
+        showNotification(`Тема изменена на ${!darkMode ? 'темную' : 'светлую'}`, 'info');
     };
 
     const handleSaveSettings = () => {
-        localStorage.setItem('notifications', settings.notifications);
-        localStorage.setItem('emailNotifications', settings.emailNotifications);
-        showNotification('Настройки сохранены', 'success');
+        updateSettings(localSettings);
+        handleNotification('Настройки сохранены', 'success');
+        showNotification('Настройки уведомлений обновлены', 'info', 'email');
     };
+
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
         <Box>
@@ -161,7 +182,7 @@ const Settings = () => {
                             <FormControlLabel
                                 control={
                                     <Switch
-                                        checked={settings.darkMode}
+                                        checked={darkMode}
                                         onChange={handleThemeToggle}
                                         icon={<LightMode />}
                                         checkedIcon={<DarkMode />}
@@ -169,8 +190,8 @@ const Settings = () => {
                                 }
                                 label={
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        {settings.darkMode ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}
-                                        <span>{settings.darkMode ? 'Темная тема' : 'Светлая тема'}</span>
+                                        {darkMode ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}
+                                        <span>{darkMode ? 'Темная тема' : 'Светлая тема'}</span>
                                     </Box>
                                 }
                                 sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', width: '100%' }}
@@ -179,8 +200,8 @@ const Settings = () => {
                             <FormControlLabel
                                 control={
                                     <Switch
-                                        checked={settings.notifications}
-                                        onChange={(e) => setSettings({ ...settings, notifications: e.target.checked })}
+                                        checked={localSettings.system}
+                                        onChange={(e) => setLocalSettings({ ...localSettings, system: e.target.checked })}
                                     />
                                 }
                                 label={
@@ -195,8 +216,8 @@ const Settings = () => {
                             <FormControlLabel
                                 control={
                                     <Switch
-                                        checked={settings.emailNotifications}
-                                        onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
+                                        checked={localSettings.email}
+                                        onChange={(e) => setLocalSettings({ ...localSettings, email: e.target.checked })}
                                     />
                                 }
                                 label={
@@ -220,8 +241,64 @@ const Settings = () => {
                     </Card>
                 </Grid>
 
+                {/* История уведомлений */}
+                <Grid item xs={12} md={6}>
+                    <Card>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    <Badge badgeContent={unreadCount} color="error">
+                                        <NotificationsActive />
+                                    </Badge>
+                                    {' '}Уведомления
+                                </Typography>
+                                {notifications.length > 0 && (
+                                    <Button size="small" onClick={clearAll} startIcon={<Delete />}>
+                                        Очистить все
+                                    </Button>
+                                )}
+                            </Box>
+                            <Divider sx={{ mb: 2 }} />
+                            
+                            {notifications.length === 0 ? (
+                                <Box sx={{ textAlign: 'center', py: 4 }}>
+                                    <NotificationsOff sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
+                                    <Typography color="text.secondary">
+                                        Нет уведомлений
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                <List sx={{ maxHeight: 400, overflow: 'auto' }}>
+                                    {notifications.map((notif) => (
+                                        <ListItem
+                                            key={notif.id}
+                                            sx={{
+                                                bgcolor: notif.read ? 'transparent' : 'action.hover',
+                                                borderRadius: 1,
+                                                mb: 1,
+                                                cursor: 'pointer',
+                                            }}
+                                            onClick={() => markAsRead(notif.id)}
+                                        >
+                                            <ListItemIcon>
+                                                {notif.severity === 'success' && <CheckCircle color="success" />}
+                                                {notif.severity === 'error' && <Security color="error" />}
+                                                {notif.severity === 'info' && <Notifications color="info" />}
+                                            </ListItemIcon>
+                                            <ListItemText
+                                                primary={notif.message}
+                                                secondary={new Date(notif.timestamp).toLocaleString('ru-RU')}
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            )}
+                        </CardContent>
+                    </Card>
+                </Grid>
+
                 {/* Смена пароля */}
-                <Grid item xs={12}>
+                <Grid item xs={12} md={6}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
@@ -230,69 +307,64 @@ const Settings = () => {
                             </Typography>
                             <Divider sx={{ mb: 3 }} />
                             
-                            <Grid container spacing={3}>
-                                <Grid item xs={12} md={4}>
-                                    <TextField
-                                        fullWidth
-                                        label="Текущий пароль"
-                                        type={showPassword.old ? 'text' : 'password'}
-                                        value={passwordData.old_password}
-                                        onChange={(e) => setPasswordData({ ...passwordData, old_password: e.target.value })}
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <IconButton onClick={() => setShowPassword({ ...showPassword, old: !showPassword.old })}>
-                                                        {showPassword.old ? <VisibilityOff /> : <Visibility />}
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} md={4}>
-                                    <TextField
-                                        fullWidth
-                                        label="Новый пароль"
-                                        type={showPassword.new ? 'text' : 'password'}
-                                        value={passwordData.new_password}
-                                        onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
-                                        helperText="Минимум 6 символов"
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <IconButton onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}>
-                                                        {showPassword.new ? <VisibilityOff /> : <Visibility />}
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} md={4}>
-                                    <TextField
-                                        fullWidth
-                                        label="Подтверждение пароля"
-                                        type={showPassword.confirm ? 'text' : 'password'}
-                                        value={passwordData.confirm_password}
-                                        onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
-                                        error={passwordData.new_password !== passwordData.confirm_password && passwordData.confirm_password !== ''}
-                                        helperText={
-                                            passwordData.new_password !== passwordData.confirm_password && 
-                                            passwordData.confirm_password !== '' ? 
-                                            'Пароли не совпадают' : ''
-                                        }
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <IconButton onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}>
-                                                        {showPassword.confirm ? <VisibilityOff /> : <Visibility />}
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
-                            </Grid>
+                            <TextField
+                                fullWidth
+                                label="Текущий пароль"
+                                type={showPassword.old ? 'text' : 'password'}
+                                value={passwordData.old_password}
+                                onChange={(e) => setPasswordData({ ...passwordData, old_password: e.target.value })}
+                                margin="normal"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton onClick={() => setShowPassword({ ...showPassword, old: !showPassword.old })}>
+                                                {showPassword.old ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                            <TextField
+                                fullWidth
+                                label="Новый пароль"
+                                type={showPassword.new ? 'text' : 'password'}
+                                value={passwordData.new_password}
+                                onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                                margin="normal"
+                                helperText="Минимум 6 символов"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}>
+                                                {showPassword.new ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                            <TextField
+                                fullWidth
+                                label="Подтверждение пароля"
+                                type={showPassword.confirm ? 'text' : 'password'}
+                                value={passwordData.confirm_password}
+                                onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                                margin="normal"
+                                error={passwordData.new_password !== passwordData.confirm_password && passwordData.confirm_password !== ''}
+                                helperText={
+                                    passwordData.new_password !== passwordData.confirm_password && 
+                                    passwordData.confirm_password !== '' ? 
+                                    'Пароли не совпадают' : ''
+                                }
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}>
+                                                {showPassword.confirm ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
                             
                             <Button
                                 variant="contained"
@@ -355,22 +427,6 @@ const Settings = () => {
                     </Card>
                 </Grid>
             </Grid>
-
-            {/* Уведомления */}
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={4000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            >
-                <Alert
-                    severity={snackbar.severity}
-                    onClose={() => setSnackbar({ ...snackbar, open: false })}
-                    variant="filled"
-                >
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
         </Box>
     );
 };
