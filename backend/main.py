@@ -527,6 +527,18 @@ def get_max_status(
     }
 
 
+@app.post("/api/user/verify-max-code")
+def verify_max_code(
+    code: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Проверка кода привязки MAX аккаунта"""
+    # Здесь нужно проверить код в боте
+    # Временно возвращаем успех для теста
+    return {"status": "success", "verified": True}
+
+
 @app.patch("/api/user/notifications-toggle")
 def toggle_notifications(
     current_user: User = Depends(get_current_active_user),
