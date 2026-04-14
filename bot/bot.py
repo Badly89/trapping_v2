@@ -1,4 +1,6 @@
 # bot.py - Адаптированная версия с поддержкой составных сообщений
+import random
+import string
 import os
 import json
 import asyncio
@@ -12,6 +14,9 @@ from dotenv import load_dotenv
 
 # Загружаем конфигурацию
 load_dotenv()
+
+# Хранилище кодов верификации
+verification_codes = {}
 
 # Настройка логирования
 logging.basicConfig(
@@ -296,27 +301,85 @@ async def cmd_start(event: MessageCreated):
 
 
 @dp.message_created(Command('connect'))
+@dp.message_created(Command('connect'))
 async def cmd_connect(event: MessageCreated):
     """Привязка MAX аккаунта к CRM"""
     user_id = event.message.sender.user_id
     chat_id = event.message.recipient.chat_id
+    user_name = event.message.sender.name or 'Пользователь'
     
-    # Получаем токен из базы (нужно реализовать)
-    # Здесь должен быть запрос к CRM для привязки
+    # Генерируем 6-значный код
+    verification_code = ''.join(random.choices(string.digits, k=6))
     
+    # Сохраняем код с временем жизни 5 минут
+    verification_codes[user_id] = {
+        'code': verification_code,
+        'chat_id': chat_id,
+        'user_name': user_name,
+        'expires_at': datetime.now() + timedelta(minutes=5)
+    }
+    
+    # Отправляем код пользователю
     await event.message.answer(
-        "🔗 Ваш MAX аккаунт привязан к CRM!\n\n"
-        "Теперь вы будете получать уведомления о:\n"
-        "• Новых сообщениях\n"
-        "• Назначенных задачах\n"
-        "• Изменении статусов\n\n"
-        "Используйте /disconnect для отвязки"
+        f"🔗 **Привязка к CRM системе**\n\n"
+        f"Ваш код подтверждения:\n"
+        f"```\n{verification_code}\n```\n\n"
+        f"Введите этот код в настройках CRM.\n"
+        f"Код действителен 5 минут.\n\n"
+        f"После привязки вы будете получать уведомления о:\n"
+        f"• Новых сообщениях\n"
+        f"• Назначенных задачах\n"
+        f"• Изменении статусов",
+        parse_mode=ParseMode.MARKDOWN
     )
+    
+    # Также отправляем в CRM для сохранения
+    import aiohttp
+    try:
+        async with aiohttp.ClientSession() as session:
+            # Здесь нужно отправить код в CRM
+            pass
+    except:
+        pass
 
 @dp.message_created(Command('disconnect'))
 async def cmd_disconnect(event: MessageCreated):
     """Отвязка MAX аккаунта от CRM"""
-    await event.message.answer("🔗 MAX аккаунт отвязан от CRM")
+    user_id = event.message.sender.user_id
+    
+    # Удаляем код если был
+    if user_id in verification_codes:
+        del verification_codes[user_id]
+    
+    await event.message.answer(
+        "🔓 **Аккаунт отвязан от CRM**\n\n"
+        "Вы больше не будете получать уведомления.\n\n"
+        "Чтобы снова привязать аккаунт, используйте /connect",
+        parse_mode=ParseMode.MARKDOWN
+    )
+
+@dp.message_created(Command('code'))
+async def cmd_code(event: MessageCreated):
+    """Повторно отправить код привязки"""
+    user_id = event.message.sender.user_id
+    
+    if user_id in verification_codes:
+        code_data = verification_codes[user_id]
+        if code_data['expires_at'] > datetime.now():
+            await event.message.answer(
+                f"🔑 Ваш код подтверждения: `{code_data['code']}`\n\n"
+                f"Действителен до: {code_data['expires_at'].strftime('%H:%M:%S')}",
+                parse_mode=ParseMode.MARKDOWN
+            )
+        else:
+            await event.message.answer(
+                "❌ Код истек. Используйте /connect для получения нового кода."
+            )
+    else:
+        await event.message.answer(
+            "❌ Нет активного кода. Используйте /connect для получения нового кода."
+        )
+        
 # ==================== ОБРАБОТКА КНОПОК ====================
 
 @dp.message_callback(F.callback.payload == "new_message")
