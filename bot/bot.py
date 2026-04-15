@@ -1,8 +1,10 @@
-# bot.py - Адаптированная версия с поддержкой составных сообщений
+# bot.py - Адаптированная версия с поддержкой составных сообщений и привязкой через email
 import os
 import json
 import asyncio
 import logging
+import random
+import string
 import aiohttp
 import aiofiles
 from datetime import datetime, timezone, timedelta
@@ -49,6 +51,16 @@ dp = Dispatcher()
 # Директория для сохранения фото
 PHOTOS_DIR = "downloaded_photos"
 os.makedirs(PHOTOS_DIR, exist_ok=True)
+
+# ==================== СОСТОЯНИЯ ДЛЯ ПРИВЯЗКИ ====================
+
+class ConnectState(Enum):
+    """Состояния привязки аккаунта"""
+    IDLE = "idle"
+    AWAITING_EMAIL = "awaiting_email"
+
+# Хранилище временных данных для привязки
+user_connect_data: Dict[int, Dict[str, Any]] = {}
 
 # ==================== СОСТОЯНИЯ ДЛЯ СОСТАВНЫХ СООБЩЕНИЙ ====================
 
@@ -111,7 +123,7 @@ def generate_map_links(lat: float, lon: float) -> Dict[str, str]:
     """Генерация ссылок на карты"""
     return {
         "yandex": f"https://yandex.ru/maps/?pt={lon},{lat}&z=17&l=map",
-        }
+    }
 
 async def save_to_crm(message_data: Dict[str, Any]) -> bool:
     """Сохранение сообщения в CRM"""
@@ -265,6 +277,104 @@ def create_location_keyboard() -> Attachment:
     ])
     return Attachment(type="inline_keyboard", payload=buttons)
 
+# ==================== ПРИВЯЗКА АККАУНТА ====================
+
+@dp.message_created(Command('connect'))
+async def cmd_connect(event: MessageCreated):
+    """Начало привязки MAX аккаунта к CRM - запрос email"""
+    user_id = event.message.sender.user_id
+    chat_id = event.message.recipient.chat_id
+    user_name = event.message.sender.first_name or 'Пользователь'
+    
+    # Сохраняем данные пользователя
+    user_connect_data[user_id] = {
+        'chat_id': str(chat_id),
+        'user_name': user_name,
+        'state': ConnectState.AWAITING_EMAIL
+    }
+    
+    await event.message.answer(
+        f"🔗 **Привязка к CRM системе**\n\n"
+        f"Пожалуйста, введите ваш email, который указан в CRM:\n\n"
+        f"Пример: `user@example.com`\n\n"
+        f"Email должен совпадать с email в вашем профиле CRM.",
+        format=ParseMode.MARKDOWN
+    )
+
+@dp.message_created()
+async def handle_email_input(event: MessageCreated):
+    """Обработка ввода email для привязки"""
+    user_id = event.message.sender.user_id
+    text = event.message.body.text or ''
+    
+    # Проверяем, ждем ли мы email от этого пользователя
+    if user_id not in user_connect_data:
+        return
+    
+    state_data = user_connect_data[user_id]
+    if state_data.get('state') != ConnectState.AWAITING_EMAIL:
+        return
+    
+    # Проверяем, что введен email
+    if '@' not in text or '.' not in text:
+        await event.message.answer(
+            "❌ **Неверный формат email**\n\n"
+            "Пожалуйста, введите корректный email адрес.\n"
+            "Пример: `user@example.com`",
+            format=ParseMode.MARKDOWN
+        )
+        return
+    
+    email = text.strip().lower()
+    
+    # Отправляем email в CRM для проверки и генерации кода
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "http://backend:8000/api/bot/request-verification-code",
+                json={
+                    "email": email,
+                    "chat_id": state_data['chat_id'],
+                    "user_name": state_data['user_name']
+                }
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get('exists'):
+                        verification_code = data.get('code')
+                        await event.message.answer(
+                            f"✅ **Код подтверждения отправлен!**\n\n"
+                            f"Ваш код: `{verification_code}`\n\n"
+                            f"Введите этот код в настройках CRM для завершения привязки.\n"
+                            f"Код действителен 5 минут.",
+                            format=ParseMode.MARKDOWN
+                        )
+                        # Удаляем данные после успешной отправки
+                        del user_connect_data[user_id]
+                    else:
+                        await event.message.answer(
+                            f"❌ **Email не найден в CRM**\n\n"
+                            f"Пользователь с email `{email}` не зарегистрирован в CRM.\n\n"
+                            f"Пожалуйста, используйте email, указанный в вашем профиле CRM.\n"
+                            f"Или обратитесь к администратору.",
+                            format=ParseMode.MARKDOWN
+                        )
+                else:
+                    text_error = await resp.text()
+                    logger.error(f"Ошибка сервера: {resp.status} - {text_error}")
+                    await event.message.answer(
+                        f"❌ **Ошибка сервера**\n\n"
+                        f"Попробуйте позже или обратитесь к администратору.",
+                        format=ParseMode.MARKDOWN
+                    )
+    except Exception as e:
+        logger.error(f"Ошибка при проверке email: {e}")
+        await event.message.answer(
+            f"❌ **Ошибка подключения к серверу**\n\n"
+            f"Попробуйте позже.",
+            format=ParseMode.MARKDOWN
+        )
+
 # ==================== ОБРАБОТЧИКИ ====================
 
 @dp.bot_started()
@@ -280,6 +390,7 @@ async def handle_bot_started(event: BotStarted):
              "1. Нажмите 'Новое сообщение'\n"
              "2. Добавьте фото, геолокацию и/или текст\n"
              "3. Нажмите 'Отправить всё'\n\n"
+             "🔗 **Привязка к CRM:** используйте команду /connect\n\n"
              "Спасибо за активную гражданскую позицию! 🙏",
         attachments=[create_main_menu()]
     )
@@ -304,7 +415,7 @@ async def callback_new_message(event: MessageCallback):
     compose_data = get_compose_data(user_id)
     compose_data['state'] = ComposeState.COMPOSING
     
-    await event.answer(notification="📝 Начинаем новое сообщение")  # Убрали show_alert
+    await event.answer(notification="📝 Начинаем новое сообщение")
     await event.message.edit(
         text="📝 **Составление сообщения**\n\n"
              "Добавьте содержимое с помощью кнопок ниже:\n"
@@ -322,7 +433,7 @@ async def callback_add_photo(event: MessageCallback):
     compose_data = get_compose_data(user_id)
     compose_data['state'] = ComposeState.AWAITING_PHOTO
     
-    await event.answer(notification="📸 Режим добавления фото")  # OK
+    await event.answer(notification="📸 Режим добавления фото")
     await bot.send_message(
         chat_id=event.message.recipient.chat_id,
         text="📸 Отправьте фото, которое хотите добавить к сообщению.\n\n"
@@ -364,7 +475,7 @@ async def callback_send_all(event: MessageCallback):
     text = compose_data.get('text', '')
     
     if not photos and not location and not text:
-        await event.answer(notification="❌ Нечего отправлять!")  # Убрали show_alert
+        await event.answer(notification="❌ Нечего отправлять!")
         return
     
     full_text = text or ''
@@ -391,7 +502,7 @@ async def callback_send_all(event: MessageCallback):
     
     if saved:
         clear_compose_data(user_id)
-        await event.answer(notification="✅ Сообщение отправлено!")  # Убрали show_alert
+        await event.answer(notification="✅ Сообщение отправлено!")
         await event.message.edit(
             text=f"✅ **Сообщение успешно отправлено!**\n\n"
                  f"📷 Фото: {len(photos)}\n"
@@ -402,7 +513,7 @@ async def callback_send_all(event: MessageCallback):
             attachments=[create_main_menu()]
         )
     else:
-        await event.answer(notification="❌ Ошибка отправки!")  # Убрали show_alert
+        await event.answer(notification="❌ Ошибка отправки!")
 
 @dp.message_callback(F.callback.payload == "clear_all")
 async def callback_clear_all(event: MessageCallback):
@@ -410,7 +521,7 @@ async def callback_clear_all(event: MessageCallback):
     user_id = event.callback.user.user_id
     clear_compose_data(user_id)
     
-    await event.answer(notification="🗑️ Все данные очищены")  # Убрали show_alert
+    await event.answer(notification="🗑️ Все данные очищены")
     await event.message.edit(
         text="📝 **Составление сообщения**\n\n"
              "Все данные очищены. Добавьте содержимое с помощью кнопок:",
@@ -460,7 +571,7 @@ async def callback_rules(event: MessageCallback):
              "1. Отправляйте только четкие фото\n"
              "2. Указывайте адрес или геолокацию\n"
              "3. Данные конфиденциальны",
-        parse_mode=ParseMode.MARKDOWN
+        format=ParseMode.MARKDOWN
     )
 
 @dp.message_callback(F.callback.payload == "help")
@@ -470,12 +581,13 @@ async def callback_help(event: MessageCallback):
     help_text += "1️⃣ Нажмите 'Новое сообщение'\n"
     help_text += "2️⃣ Добавьте фото, геолокацию и текст\n"
     help_text += "3️⃣ Нажмите 'Отправить всё'\n\n"
-    help_text += "💡 Можно добавлять несколько фото!"
+    help_text += "💡 Можно добавлять несколько фото!\n\n"
+    help_text += "🔗 Для привязки к CRM используйте команду /connect"
     await bot.send_message(
         chat_id=event.message.recipient.chat_id,
         text=help_text,
         attachments=[create_main_menu()],
-        parse_mode=ParseMode.MARKDOWN
+        format=ParseMode.MARKDOWN
     )
 
 # ==================== ОБРАБОТКА ВХОДЯЩИХ СООБЩЕНИЙ ====================
