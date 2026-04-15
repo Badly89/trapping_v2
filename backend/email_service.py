@@ -8,7 +8,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Глобальные настройки (будут обновляться из API)
+# Глобальные настройки
 _smtp_config = {
     "host": os.getenv("SMTP_HOST", ""),
     "port": int(os.getenv("SMTP_PORT", 465)),
@@ -52,6 +52,53 @@ def send_email(to_email: str, subject: str, body: str) -> bool:
     except Exception as e:
         logger.error(f"❌ Ошибка отправки email: {e}")
         return False
+
+def send_notification_email(to_email: str, notification_type: str, data: dict) -> bool:
+    """Отправка уведомительного email"""
+    
+    templates = {
+        "new_message": f"""
+            <h2>📨 Новое сообщение в CRM</h2>
+            <p>От: {data.get('user_name')}</p>
+            <p>Текст: {data.get('text', '')[:200]}</p>
+            <p>ID сообщения: {data.get('id')}</p>
+            <br>
+            <a href="http://10.87.0.59:85/messages">Перейти к сообщению</a>
+        """,
+        "new_task": f"""
+            <h2>📋 Новая задача</h2>
+            <p>Название: {data.get('title')}</p>
+            <p>Описание: {data.get('description', '')[:200]}</p>
+            <br>
+            <a href="http://10.87.0.59:85/tasks">Перейти к задачам</a>
+        """,
+        "task_completed": f"""
+            <h2>✅ Задача выполнена</h2>
+            <p>Название: {data.get('title')}</p>
+            <p>Исполнитель: {data.get('assignee_name')}</p>
+            <br>
+            <a href="http://10.87.0.59:85/tasks">Перейти к задачам</a>
+        """,
+        "status_changed": f"""
+            <h2>🔄 Изменен статус сообщения</h2>
+            <p>Сообщение #{data.get('message_id')}</p>
+            <p>Статус: {data.get('old_status')} → {data.get('new_status')}</p>
+            <br>
+            <a href="http://10.87.0.59:85/messages">Перейти к сообщениям</a>
+        """,
+        "new_report": f"""
+            <h2>📄 Новый отчет</h2>
+            <p>Отчет #{data.get('id')}</p>
+            <p>Текст: {data.get('text', '')[:200]}</p>
+            <br>
+            <a href="http://10.87.0.59:85/reports">Перейти к отчетам</a>
+        """,
+    }
+    
+    template = templates.get(notification_type, f"<h2>Уведомление</h2><p>{data}</p>")
+    subject = f"CRM Уведомление: {notification_type.replace('_', ' ').title()}"
+    
+    return send_email(to_email, subject, template)
 
 def test_smtp_connection(host: str, port: int, user: str, password: str) -> bool:
     """Тестирование SMTP подключения"""
