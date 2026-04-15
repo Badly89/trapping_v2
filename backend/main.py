@@ -678,24 +678,41 @@ def save_smtp_settings(
     db: Session = Depends(get_db)
 ):
     """Сохранить SMTP настройки"""
-    # Обновляем переменные окружения
-    os.environ["SMTP_HOST"] = settings.host
-    os.environ["SMTP_PORT"] = str(settings.port)
-    os.environ["SMTP_USER"] = settings.user
-    os.environ["SMTP_FROM"] = settings.from_email
-    if settings.password and settings.password != "********":
-        os.environ["SMTP_PASSWORD"] = settings.password
-    
-    # Обновляем конфигурацию в email_service
-    update_smtp_config({
-        "host": settings.host,
-        "port": settings.port,
-        "user": settings.user,
-        "password": settings.password if settings.password != "********" else os.getenv("SMTP_PASSWORD", ""),
-        "from_email": settings.from_email
-    })
-    
-    return {"status": "success", "message": "SMTP настройки сохранены"}
+    try:
+        print(f"📧 Получены SMTP настройки: host={settings.host}, port={settings.port}, user={settings.user}")
+        
+        # Валидация
+        if not settings.host:
+            raise HTTPException(status_code=400, detail="SMTP хост обязателен")
+        if not settings.port:
+            raise HTTPException(status_code=400, detail="SMTP порт обязателен")
+        if not settings.user:
+            raise HTTPException(status_code=400, detail="SMTP пользователь обязателен")
+        
+        # Обновляем переменные окружения
+        os.environ["SMTP_HOST"] = settings.host
+        os.environ["SMTP_PORT"] = str(settings.port)
+        os.environ["SMTP_USER"] = settings.user
+        os.environ["SMTP_FROM"] = settings.from_email
+        if settings.password and settings.password != "********":
+            os.environ["SMTP_PASSWORD"] = settings.password
+        
+        # Обновляем конфигурацию в email_service
+        from email_service import update_smtp_config
+        update_smtp_config({
+            "host": settings.host,
+            "port": settings.port,
+            "user": settings.user,
+            "password": settings.password if settings.password and settings.password != "********" else os.getenv("SMTP_PASSWORD", ""),
+            "from_email": settings.from_email
+        })
+        
+        return {"status": "success", "message": "SMTP настройки сохранены"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Ошибка сохранения SMTP настроек: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/notifications/test-email")
 def test_email_notification(
