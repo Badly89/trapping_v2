@@ -14,17 +14,18 @@ import {
 } from '@mui/material';
 import { Notifications } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+
 import { useNotification } from '../../contexts/NotificationContext';
 import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
     const { user, logout } = useAuth();
-    const { notifications, markAsRead, clearAll } = useNotification();
+    const { notifications, unreadCount, markAsRead } = useNotification();
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [notifAnchorEl, setNotifAnchorEl] = React.useState(null);
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    // const unreadCount = notifications.filter(n => !n.read).length;
 
     const handleMenu = (event) => {
         setAnchorEl(event.currentTarget);
@@ -81,13 +82,13 @@ const Header = () => {
                     ) : (
                         <>
                             {notifications.slice(0, 5).map((notif) => (
-                                <MenuItem key={notif.id} onClick={() => markAsRead(notif.id)}>
-                                    <Box sx={{ maxWidth: 300 }}>
-                                        <Typography variant="body2">{notif.message}</Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {new Date(notif.timestamp).toLocaleString('ru-RU')}
-                                        </Typography>
-                                    </Box>
+                                 <MenuItem key={notif.id} onClick={() => markAsRead(notif.id)}>
+                                        <Box sx={{ maxWidth: 300 }}>
+                                            <Typography variant="body2">{notif.message}</Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {new Date(notif.created_at).toLocaleString('ru-RU')}
+                                            </Typography>
+                                        </Box>
                                 </MenuItem>
                             ))}
                             <Divider />

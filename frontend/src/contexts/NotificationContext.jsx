@@ -1,5 +1,6 @@
 // src/contexts/NotificationContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Alert, Snackbar } from '@mui/material';
 import api from '../services/api';
 
 const NotificationContext = createContext();
@@ -15,11 +16,13 @@ export const useNotification = () => {
 export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
     const [settings, setSettings] = useState({
         system: localStorage.getItem('notifications') !== 'false',
         email: localStorage.getItem('emailNotifications') === 'true',
     });
 
+    // Загрузка уведомлений из API
     const fetchNotifications = async () => {
         try {
             const response = await api.get('/notifications/internal');
@@ -33,9 +36,27 @@ export const NotificationProvider = ({ children }) => {
 
     useEffect(() => {
         fetchNotifications();
+        // Обновлять каждые 30 секунд
         const interval = setInterval(fetchNotifications, 30000);
         return () => clearInterval(interval);
     }, []);
+
+    // ВНУТРЕННЕЕ УВЕДОМЛЕНИЕ (snackbar)
+    const showNotification = (message, severity = 'info', type = 'system') => {
+        // Показываем snackbar для системных уведомлений
+        if (type === 'system' && settings.system) {
+            setSnackbar({ open: true, message, severity });
+        }
+        
+        // Email уведомления
+        if (type === 'email' && settings.email) {
+            console.log('📧 Email notification:', message);
+        }
+    };
+
+    const closeSnackbar = () => {
+        setSnackbar({ ...snackbar, open: false });
+    };
 
     const markAsRead = async (id) => {
         try {
@@ -46,7 +67,7 @@ export const NotificationProvider = ({ children }) => {
                 )
             );
         } catch (error) {
-            console.error('Ошибка:', error);
+            console.error('Ошибка отметки уведомления:', error);
         }
     };
 
@@ -57,13 +78,7 @@ export const NotificationProvider = ({ children }) => {
                 prev.map(notif => ({ ...notif, is_read: true }))
             );
         } catch (error) {
-            console.error('Ошибка:', error);
-        }
-    };
-
-    const showNotification = (message, severity = 'info', type = 'system') => {
-        if (type === 'email' && settings.email) {
-            console.log('📧 Email:', message);
+            console.error('Ошибка очистки уведомлений:', error);
         }
     };
 
@@ -73,11 +88,14 @@ export const NotificationProvider = ({ children }) => {
         localStorage.setItem('emailNotifications', newSettings.email);
     };
 
+    const unreadCount = notifications.filter(n => !n.is_read).length;
+
     return (
         <NotificationContext.Provider
             value={{
                 notifications,
                 loading,
+                unreadCount,
                 showNotification,
                 markAsRead,
                 clearAll,
@@ -86,6 +104,16 @@ export const NotificationProvider = ({ children }) => {
             }}
         >
             {children}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={4000}
+                onClose={closeSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert onClose={closeSnackbar} severity={snackbar.severity} variant="filled">
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </NotificationContext.Provider>
     );
 };

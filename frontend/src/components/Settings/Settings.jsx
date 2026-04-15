@@ -377,7 +377,7 @@ const Settings = () => {
                 </Grid>
 
                 {/* История уведомлений */}
-                {/* <Grid item xs={12} md={6}>
+                <Grid item xs={12} md={6}>
                     <Card>
                         <CardContent>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -423,7 +423,7 @@ const Settings = () => {
                             )}
                         </CardContent>
                     </Card>
-                </Grid> */}
+                </Grid>
 
                 {/* Смена пароля */}
                 <Grid item xs={12} md={6}>
@@ -505,7 +505,7 @@ const Settings = () => {
                 </Grid>
 
                 {/* Информация о системе */}
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
