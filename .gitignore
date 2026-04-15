@@ -44,3 +44,4 @@ Thumbs.db
 /backend/.env
 /frontend/.env
 /bot/.env
+/deploy.sh

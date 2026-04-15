@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # deploy.sh - оптимизированный скрипт деплоя (пересборка только измененных сервисов)
+# .env файлы НЕ перезаписываются из Git
 
 set -e
 
@@ -39,6 +40,9 @@ GIT_BRANCH="main"
 BACKUP_DIR="/opt/crm_backups"
 LOG_FILE="/var/log/crm-deploy.log"
 
+# Список файлов, которые НЕ нужно перезаписывать из Git
+PROTECTED_FILES=(".env" "backend/.env" "bot/.env" "frontend/.env")
+
 # Создание необходимых директорий
 mkdir -p $PROJECT_DIR
 mkdir -p $BACKUP_DIR
@@ -76,38 +80,46 @@ check_git() {
     return 0
 }
 
-# Функция получения измененных файлов
-get_changed_files() {
-    cd $PROJECT_DIR
-    git diff --name-only $CURRENT_COMMIT..$LATEST_COMMIT
-}
-
-# Функция определения, какие сервисы изменились
-get_changed_services() {
-    local changed_files=$(get_changed_files)
-    local services=""
+# Функция сохранения .env файлов перед обновлением
+backup_env_files() {
+    print_info "Сохранение .env файлов перед обновлением..."
     
-    echo "$changed_files" | while read -r file; do
-        case "$file" in
-            backend/*|requirements.txt|auth.py|models.py|schemas.py)
-                echo "backend"
-                ;;
-            frontend/*|package.json|package-lock.json)
-                echo "frontend"
-                ;;
-            bot/*)
-                echo "bot"
-                ;;
-            docker-compose.yml|.env)
-                echo "all"
-                ;;
-        esac
-    done | sort | uniq
+    for env_file in "${PROTECTED_FILES[@]}"; do
+        local full_path="$PROJECT_DIR/$env_file"
+        if [ -f "$full_path" ]; then
+            local backup_name="${env_file}.backup"
+            cp "$full_path" "$PROJECT_DIR/$backup_name"
+            print_info "  Сохранен: $env_file"
+        fi
+    done
 }
 
-# Функция клонирования или обновления репозитория
+# Функция восстановления .env файлов после обновления
+restore_env_files() {
+    print_info "Восстановление .env файлов..."
+    
+    for env_file in "${PROTECTED_FILES[@]}"; do
+        local full_path="$PROJECT_DIR/$env_file"
+        local backup_name="${env_file}.backup"
+        
+        # Если есть бэкап и файл из Git существует, восстанавливаем бэкап
+        if [ -f "$PROJECT_DIR/$backup_name" ]; then
+            # Удаляем файл из Git (если он есть)
+            rm -f "$full_path" 2>/dev/null || true
+            # Восстанавливаем из бэкапа
+            cp "$PROJECT_DIR/$backup_name" "$full_path"
+            rm -f "$PROJECT_DIR/$backup_name"
+            print_info "  Восстановлен: $env_file"
+        fi
+    done
+}
+
+# Функция клонирования или обновления репозитория (без перезаписи .env)
 clone_or_update_repo() {
     print_info "Работа с Git репозиторием..."
+    
+    # Сохраняем .env файлы перед обновлением
+    backup_env_files
     
     if [ -d "$PROJECT_DIR/.git" ]; then
         cd $PROJECT_DIR
@@ -140,7 +152,10 @@ clone_or_update_repo() {
         # Pull последних изменений
         git pull origin $GIT_BRANCH
         
-        print_success "Код обновлен"
+        # Восстанавливаем .env файлы
+        restore_env_files
+        
+        print_success "Код обновлен (без перезаписи .env файлов)"
         log "Code updated from ${CURRENT_COMMIT:0:8} to ${LATEST_COMMIT:0:8}"
         
         # Экспортируем коммиты для других функций
@@ -149,12 +164,27 @@ clone_or_update_repo() {
         return 0
     else
         print_info "Клонирование репозитория..."
-        rm -rf $PROJECT_DIR
-        git clone $GIT_REPO_URL $PROJECT_DIR
-        cd $PROJECT_DIR
+        
+        # Клонируем во временную директорию
+        TEMP_DIR="/tmp/crm_temp_$$"
+        git clone $GIT_REPO_URL $TEMP_DIR
+        cd $TEMP_DIR
         git checkout $GIT_BRANCH
-        print_success "Репозиторий склонирован"
-        log "Repository cloned"
+        
+        # Удаляем .env файлы из клона (чтобы не перезаписывать существующие)
+        for env_file in "${PROTECTED_FILES[@]}"; do
+            rm -f "$TEMP_DIR/$env_file" 2>/dev/null || true
+        done
+        
+        # Копируем все файлы, кроме .env
+        cp -r $TEMP_DIR/* $PROJECT_DIR/ 2>/dev/null || true
+        cp -r $TEMP_DIR/.[!.]* $PROJECT_DIR/ 2>/dev/null || true
+        
+        # Очищаем
+        rm -rf $TEMP_DIR
+        
+        print_success "Репозиторий склонирован (.env файлы не перезаписаны)"
+        log "Repository cloned (env files preserved)"
         return 0
     fi
 }
@@ -167,10 +197,17 @@ create_backup() {
     
     mkdir -p $backup_path
     
-    if [ -f "$PROJECT_DIR/.env" ]; then
-        cp "$PROJECT_DIR/.env" "$backup_path/.env"
-    fi
+    # Бэкапим .env файлы
+    for env_file in "${PROTECTED_FILES[@]}"; do
+        if [ -f "$PROJECT_DIR/$env_file" ]; then
+            # Создаем поддиректорию если нужно
+            local backup_subdir=$(dirname "$backup_path/$env_file")
+            mkdir -p "$backup_subdir"
+            cp "$PROJECT_DIR/$env_file" "$backup_path/$env_file"
+        fi
+    done
     
+    # Бэкап загруженных файлов
     if [ -d "$PROJECT_DIR/backend/uploads" ]; then
         cp -r "$PROJECT_DIR/backend/uploads" "$backup_path/uploads" 2>/dev/null || true
     fi
@@ -185,6 +222,7 @@ check_env() {
     
     if [ ! -f "$PROJECT_DIR/.env" ]; then
         print_error ".env файл не найден!"
+        print_info "Создайте .env файл в корне проекта"
         return 1
     fi
     
@@ -225,6 +263,40 @@ rebuild_service() {
     esac
     
     print_success "$service пересобран"
+}
+
+# Функция получения измененных файлов
+get_changed_files() {
+    cd $PROJECT_DIR
+    git diff --name-only $CURRENT_COMMIT..$LATEST_COMMIT 2>/dev/null || echo ""
+}
+
+# Функция определения, какие сервисы изменились (игнорируя .env)
+get_changed_services() {
+    local changed_files=$(get_changed_files)
+    local services=""
+    
+    echo "$changed_files" | while read -r file; do
+        # Пропускаем .env файлы
+        if [[ "$file" == *.env* ]]; then
+            continue
+        fi
+        
+        case "$file" in
+            backend/*|requirements.txt|auth.py|models.py|schemas.py)
+                echo "backend"
+                ;;
+            frontend/*|package.json|package-lock.json)
+                echo "frontend"
+                ;;
+            bot/*)
+                echo "bot"
+                ;;
+            docker-compose.yml)
+                echo "all"
+                ;;
+        esac
+    done | sort | uniq
 }
 
 # Функция сборки и запуска (только измененных сервисов)
@@ -311,6 +383,7 @@ cleanup_old_backups() {
 main() {
     print_separator
     print_info "НАЧАЛО ОПТИМИЗИРОВАННОГО ДЕПЛОЯ"
+    print_info "⚠️  .env файлы НЕ будут перезаписаны из Git"
     print_separator
     
     # Проверка зависимостей
@@ -343,7 +416,7 @@ main() {
         print_info "📚 API Docs: http://10.87.0.59:6005/docs"
         print_info "🏥 Health: http://10.87.0.59:6005/health"
         print_separator
-        print_info "👤 Логин: admin"
+        print_info "👤 Логин: admin / admin123"
         print_separator
         
         log "Deploy completed successfully"
