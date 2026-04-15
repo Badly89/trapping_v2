@@ -52,7 +52,7 @@ import { auth } from '../../services/api';
 import api from '../../services/api';
 
 const Settings = () => {
-    const { user, updateUser } = useAuth(); // добавим updateUser если есть
+    const { user, updateUser } = useAuth();
     const { darkMode, toggleTheme } = useTheme();
     const { 
         notifications, 
@@ -63,10 +63,6 @@ const Settings = () => {
         updateSettings 
     } = useNotification();
     
-    const [userSettings, setUserSettings] = useState({
-        notifications_enabled: true,
-        notification_email: '',
-    });
     const [loading, setLoading] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [emailLoading, setEmailLoading] = useState(false);
@@ -83,17 +79,14 @@ const Settings = () => {
         confirm: false,
     });
     
-    // Состояние для настроек
-    const [localSettings, setLocalSettings] = useState({
-        system: notifSettings.system,
-        email: notifSettings.email,
-    });
-    
     // Состояние для редактирования email профиля
     const [editEmail, setEditEmail] = useState(false);
     const [newEmail, setNewEmail] = useState(user?.email || '');
     
-    // Состояние для SMTP диалога
+    // Состояние для настроек уведомлений пользователя
+    const [userNotificationsEnabled, setUserNotificationsEnabled] = useState(true);
+    
+    // Состояние для SMTP диалога (глобальные настройки)
     const [smtpDialogOpen, setSmtpDialogOpen] = useState(false);
     const [smtpSettings, setSmtpSettings] = useState({
         host: '',
@@ -105,7 +98,17 @@ const Settings = () => {
     const [smtpLoading, setSmtpLoading] = useState(false);
     const [testLoading, setTestLoading] = useState(false);
     
-    // Загрузка SMTP настроек
+    // Загрузка настроек пользователя
+    const fetchUserSettings = async () => {
+        try {
+            const response = await api.get('/user/notification-settings');
+            setUserNotificationsEnabled(response.data.notifications_enabled);
+        } catch (error) {
+            console.error('Ошибка загрузки настроек:', error);
+        }
+    };
+    
+    // Загрузка SMTP настроек (глобальных)
     const fetchSmtpSettings = async () => {
         try {
             const response = await api.get('/notifications/smtp-settings');
@@ -121,7 +124,20 @@ const Settings = () => {
         }
     };
     
-    // Сохранение SMTP настроек
+    // Сохранение настроек пользователя
+    const saveUserSettings = async () => {
+        try {
+            await api.post('/user/notification-settings', {
+                notifications_enabled: userNotificationsEnabled,
+                notification_email: user?.email || null
+            });
+            showNotification('Настройки уведомлений сохранены', 'success');
+        } catch (error) {
+            showNotification('Ошибка сохранения настроек', 'error');
+        }
+    };
+    
+    // Сохранение SMTP настроек (глобальных)
     const saveSmtpSettings = async () => {
         setSmtpLoading(true);
         try {
@@ -135,8 +151,8 @@ const Settings = () => {
             await api.post('/notifications/smtp-settings', payload);
             showNotification('SMTP настройки сохранены', 'success');
             setSmtpDialogOpen(false);
-            setLocalSettings({ ...localSettings, email: true });
-            updateSettings({ ...localSettings, email: true });
+            setUserNotificationsEnabled(true);
+            await saveUserSettings();
         } catch (error) {
             showNotification(error.response?.data?.detail || 'Ошибка сохранения SMTP настроек', 'error');
         } finally {
@@ -173,10 +189,7 @@ const Settings = () => {
         setEmailLoading(true);
         try {
             await api.patch('/user/update-email', { email: newEmail });
-            
-            // Обновляем контекст
             updateUser({ email: newEmail });
-            
             showNotification('Email успешно обновлен', 'success');
             setEditEmail(false);
         } catch (error) {
@@ -194,8 +207,8 @@ const Settings = () => {
             fetchSmtpSettings();
             setSmtpDialogOpen(true);
         } else {
-            setLocalSettings({ ...localSettings, email: false });
-            updateSettings({ ...localSettings, email: false });
+            setUserNotificationsEnabled(false);
+            saveUserSettings();
         }
     };
     
@@ -240,46 +253,13 @@ const Settings = () => {
         showNotification(`Тема изменена на ${!darkMode ? 'темную' : 'светлую'}`, 'info');
     };
 
-    const handleSaveSettings = () => {
-        updateSettings(localSettings);
-        handleNotification('Настройки сохранены', 'success');
-        showNotification('Настройки уведомлений обновлены', 'info');
-    };
-
-    // Загрузка настроек пользователя
-    const fetchUserSettings = async () => {
-        try {
-            const response = await api.get('/user/notification-settings');
-            setUserSettings(response.data);
-            setLocalSettings({ ...localSettings, email: response.data.notifications_enabled });
-            setNotificationEmail(response.data.notification_email || user?.email || '');
-        } catch (error) {
-            console.error('Ошибка загрузки настроек:', error);
-        }
-    };
-
-    // Сохранение настроек пользователя
-    const saveUserSettings = async () => {
-        try {
-            await api.post('/user/notification-settings', {
-                notifications_enabled: localSettings.email,
-                notification_email: notificationEmail
-            });
-            showNotification('Настройки сохранены', 'success');
-        } catch (error) {
-            showNotification('Ошибка сохранения настроек', 'error');
-        }
-    };
-
     const unreadCount = notifications.filter(n => !n.read).length;
-
     const handleCloseSnackbar = () => {
         setSnackbar({ ...snackbar, open: false });
     };
 
     useEffect(() => {
         fetchUserSettings();
-        fetchSmtpSettings();
     }, []);
 
     return (
@@ -297,14 +277,7 @@ const Settings = () => {
                     <Card>
                         <CardContent>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                                <Avatar
-                                    sx={{
-                                        width: 64,
-                                        height: 64,
-                                        bgcolor: 'primary.main',
-                                        fontSize: 32,
-                                    }}
-                                >
+                                <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main', fontSize: 32 }}>
                                     {user?.username?.[0]?.toUpperCase() || 'U'}
                                 </Avatar>
                                 <Box>
@@ -316,7 +289,7 @@ const Settings = () => {
                                 </Box>
                             </Box>
                             <Divider sx={{ my: 2 }} />
-                           
+                            
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                 <Email fontSize="small" color="action" />
                                 {editEmail ? (
@@ -348,6 +321,7 @@ const Settings = () => {
                                     </Box>
                                 )}
                             </Box>
+                            
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Person fontSize="small" color="action" />
                                 <Typography variant="body2">ID: {user?.id}</Typography>
@@ -356,63 +330,7 @@ const Settings = () => {
                     </Card>
                 </Grid>
 
-                {/* Настройки системы */}
-                <Grid item xs={12} md={6}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Настройки системы
-                            </Typography>
-                            <Divider sx={{ mb: 2 }} />
-                            
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={darkMode}
-                                        onChange={handleThemeToggle}
-                                        icon={<LightMode />}
-                                        checkedIcon={<DarkMode />}
-                                    />
-                                }
-                                label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        {darkMode ? <DarkMode fontSize="small" /> : <LightMode fontSize="small" />}
-                                        <span>{darkMode ? 'Темная тема' : 'Светлая тема'}</span>
-                                    </Box>
-                                }
-                                sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                            />
-                            
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={localSettings.system}
-                                        onChange={(e) => setLocalSettings({ ...localSettings, system: e.target.checked })}
-                                    />
-                                }
-                                label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Notifications fontSize="small" />
-                                        <span>Уведомления в системе</span>
-                                    </Box>
-                                }
-                                sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                            />
-                            
-                            <Button
-                                variant="contained"
-                                startIcon={<Save />}
-                                onClick={handleSaveSettings}
-                                sx={{ mt: 2 }}
-                            >
-                                Сохранить настройки
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
                 {/* Email уведомления */}
-                
                 <Grid item xs={12} md={6}>
                     <Card>
                         <CardContent>
@@ -425,20 +343,19 @@ const Settings = () => {
                             <FormControlLabel
                                 control={
                                     <Switch
-                                        checked={localSettings.email}
+                                        checked={userNotificationsEnabled}
                                         onChange={handleEmailToggle}
                                     />
                                 }
                                 label="Получать уведомления на email"
                                 sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                            />                           
-                            
-                            
+                            />
+                                                      
                             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
                                 <Button
                                     variant="contained"
                                     startIcon={<Save />}
-                                    onClick={handleSaveSettings}
+                                    onClick={saveUserSettings}
                                     sx={{ flex: 1 }}
                                 >
                                     Сохранить
@@ -447,13 +364,14 @@ const Settings = () => {
                                     variant="outlined"
                                     startIcon={testLoading ? <CircularProgress size={20} /> : <SendIcon />}
                                     onClick={sendTestEmail}
-                                    disabled={testLoading || !localSettings.email || !user?.email}
+                                    disabled={testLoading || !userNotificationsEnabled || !user?.email}
                                     sx={{ flex: 1 }}
                                 >
                                     {testLoading ? 'Отправка...' : 'Тест'}
                                 </Button>
                             </Box>
                             
+                           
                         </CardContent>
                     </Card>
                 </Grid>
@@ -480,21 +398,14 @@ const Settings = () => {
                             {notifications.length === 0 ? (
                                 <Box sx={{ textAlign: 'center', py: 4 }}>
                                     <NotificationsOff sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
-                                    <Typography color="text.secondary">
-                                        Нет уведомлений
-                                    </Typography>
+                                    <Typography color="text.secondary">Нет уведомлений</Typography>
                                 </Box>
                             ) : (
                                 <List sx={{ maxHeight: 400, overflow: 'auto' }}>
                                     {notifications.map((notif) => (
                                         <ListItem
                                             key={notif.id}
-                                            sx={{
-                                                bgcolor: notif.read ? 'transparent' : 'action.hover',
-                                                borderRadius: 1,
-                                                mb: 1,
-                                                cursor: 'pointer',
-                                            }}
+                                            sx={{ bgcolor: notif.read ? 'transparent' : 'action.hover', borderRadius: 1, mb: 1, cursor: 'pointer' }}
                                             onClick={() => markAsRead(notif.id)}
                                         >
                                             <ListItemIcon>
@@ -567,11 +478,7 @@ const Settings = () => {
                                 onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
                                 margin="normal"
                                 error={passwordData.new_password !== passwordData.confirm_password && passwordData.confirm_password !== ''}
-                                helperText={
-                                    passwordData.new_password !== passwordData.confirm_password && 
-                                    passwordData.confirm_password !== '' ? 
-                                    'Пароли не совпадают' : ''
-                                }
+                                helperText={passwordData.new_password !== passwordData.confirm_password && passwordData.confirm_password !== '' ? 'Пароли не совпадают' : ''}
                                 InputProps={{
                                     endAdornment: (
                                         <InputAdornment position="end">
@@ -608,36 +515,20 @@ const Settings = () => {
                             <Divider sx={{ mb: 2 }} />
                             <Grid container spacing={2}>
                                 <Grid item xs={12} sm={6} md={3}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Версия CRM
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight="bold">
-                                        3.0.0
-                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">Версия CRM</Typography>
+                                    <Typography variant="body1" fontWeight="bold">3.0.0</Typography>
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={3}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        API версия
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight="bold">
-                                        v3
-                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">API версия</Typography>
+                                    <Typography variant="body1" fontWeight="bold">v3</Typography>
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={3}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Бот MAX
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight="bold">
-                                        Активен
-                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">Бот MAX</Typography>
+                                    <Typography variant="body1" fontWeight="bold">Активен</Typography>
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={3}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Поддержка
-                                    </Typography>
-                                    <Typography variant="body1" fontWeight="bold">
-                                        MAX
-                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">Поддержка</Typography>
+                                    <Typography variant="body1" fontWeight="bold">MAX</Typography>
                                 </Grid>
                             </Grid>
                         </CardContent>
@@ -654,20 +545,7 @@ const Settings = () => {
                     </Box>
                 </DialogTitle>
                 <DialogContent>
-                    <Alert severity="info" sx={{ mb: 2, mt: 1 }}>
-                        Для получения email уведомлений необходимо настроить SMTP сервер.
-                        <br />
-                        <strong>Пример для Яндекс.Почты:</strong>
-                        <br />
-                        Хост: smtp.yandex.ru
-                        <br />
-                        Порт: 465
-                        <br />
-                        Пользователь: ваш_email@yandex.ru
-                        <br />
-                        Пароль: пароль_приложения
-                    </Alert>
-                    
+                                       
                     <TextField
                         fullWidth
                         label="SMTP Хост"
@@ -676,7 +554,6 @@ const Settings = () => {
                         margin="normal"
                         placeholder="smtp.yandex.ru"
                     />
-                    
                     <TextField
                         fullWidth
                         label="SMTP Порт"
@@ -686,7 +563,6 @@ const Settings = () => {
                         margin="normal"
                         placeholder="465"
                     />
-                    
                     <TextField
                         fullWidth
                         label="SMTP Пользователь"
@@ -696,7 +572,6 @@ const Settings = () => {
                         margin="normal"
                         placeholder="your-email@example.com"
                     />
-                    
                     <TextField
                         fullWidth
                         label="SMTP Пароль"
@@ -704,9 +579,8 @@ const Settings = () => {
                         value={smtpSettings.password}
                         onChange={(e) => setSmtpSettings({ ...smtpSettings, password: e.target.value })}
                         margin="normal"
-                        helperText="Для Яндекс и Gmail используйте пароль приложения"
+                        
                     />
-                    
                     <TextField
                         fullWidth
                         label="Email отправителя"
@@ -743,11 +617,7 @@ const Settings = () => {
                 onClose={handleCloseSnackbar}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
-                <Alert
-                    severity={snackbar.severity}
-                    onClose={handleCloseSnackbar}
-                    variant="filled"
-                >
+                <Alert severity={snackbar.severity} onClose={handleCloseSnackbar} variant="filled">
                     {snackbar.message}
                 </Alert>
             </Snackbar>
