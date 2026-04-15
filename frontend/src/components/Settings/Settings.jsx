@@ -457,6 +457,72 @@ const Settings = () => {
                     </Card>
                 </Grid>
 
+                <Grid item xs={12} md={6}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="h6" gutterBottom>
+                                <Notifications sx={{ mr: 1, verticalAlign: 'middle' }} />
+                                Канал уведомлений в MAX
+                            </Typography>
+                            <Divider sx={{ mb: 2 }} />
+                            
+                            <Box sx={{ mb: 2 }}>
+                                <Typography variant="body2" color="text.secondary" gutterBottom>
+                                    Настройте канал в MAX для получения уведомлений о:
+                                </Typography>
+                                <ul style={{ margin: 0, paddingLeft: 20 }}>
+                                    <li>Новых сообщениях</li>
+                                    <li>Назначенных задачах</li>
+                                    <li>Завершенных задачах</li>
+                                    <li>Изменении статусов</li>
+                                    <li>Новых отчетах</li>
+                                </ul>
+                            </Box>
+                            
+                            <TextField
+                                fullWidth
+                                label="ID канала в MAX"
+                                value={channelId}
+                                onChange={(e) => setChannelId(e.target.value)}
+                                margin="normal"
+                                helperText="Создайте канал в MAX и вставьте его ID"
+                            />
+                            
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={notificationsEnabled}
+                                        onChange={(e) => setNotificationsEnabled(e.target.checked)}
+                                    />
+                                }
+                                label="Включить уведомления в канал"
+                                sx={{ mt: 1, display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                            />
+                            
+                            <Button
+                                variant="contained"
+                                startIcon={<Save />}
+                                onClick={saveChannelSettings}
+                                sx={{ mt: 2 }}
+                                fullWidth
+                            >
+                                Сохранить настройки
+                            </Button>
+                            
+                            <Alert severity="info" sx={{ mt: 2 }}>
+                                <strong>Как настроить канал:</strong>
+                                <ol style={{ margin: '8px 0 0 20px', padding: 0 }}>
+                                    <li>Создайте канал в MAX</li>
+                                    <li>Добавьте бота в канал</li>
+                                    <li>Отправьте боту команду /channel_id в канале</li>
+                                    <li>Скопируйте полученный ID</li>
+                                    <li>Вставьте ID выше и сохраните</li>
+                                </ol>
+                            </Alert>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
                 {/* История уведомлений */}
                 <Grid item xs={12} md={6}>
                     <Card>

@@ -772,6 +772,40 @@ def get_upload(filename: str):
         }
     )
 
+
+class ChannelSettings(BaseModel):
+    channel_id: str
+    enabled: bool = True
+
+# Хранение настроек канала (можно перенести в БД)
+channel_settings = {
+    "enabled": True,
+    "channel_id": os.getenv("NOTIFICATION_CHANNEL_ID", "")
+}
+
+@app.get("/api/notifications/channel")
+def get_channel_settings(
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    db: Session = Depends(get_db)
+):
+    """Получить настройки канала уведомлений"""
+    return channel_settings
+
+@app.post("/api/notifications/channel")
+def set_channel_settings(
+    settings: ChannelSettings,
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    db: Session = Depends(get_db)
+):
+    """Установить настройки канала уведомлений"""
+    global channel_settings
+    channel_settings = {
+        "enabled": settings.enabled,
+        "channel_id": settings.channel_id
+    }
+    os.environ["NOTIFICATION_CHANNEL_ID"] = settings.channel_id
+    return {"status": "success", "settings": channel_settings}
+
 # ========== Health Check ==========
 @app.get("/health")
 def health_check():

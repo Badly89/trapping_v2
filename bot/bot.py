@@ -294,6 +294,21 @@ async def cmd_start(event: MessageCreated):
         attachments=[create_main_menu()]
     )
 
+
+@dp.message_created(Command('channel_id'))
+async def cmd_channel_id(event: MessageCreated):
+    """Получить ID текущего чата (для настройки канала)"""
+    chat_id = event.message.recipient.chat_id
+    chat_title = getattr(event.message.recipient, 'title', 'личный чат')
+    
+    await event.message.answer(
+        f"📢 **Информация о чате**\n\n"
+        f"Название: {chat_title}\n"
+        f"ID чата: `{chat_id}`\n\n"
+        f"Используйте этот ID в настройках CRM для получения уведомлений.",
+        format=ParseMode.MARKDOWN
+    )
+    
 # ==================== ОБРАБОТКА КНОПОК ====================
 
 @dp.message_callback(F.callback.payload == "new_message")
