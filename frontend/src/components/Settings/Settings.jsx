@@ -271,64 +271,7 @@ const sendTestEmail = async () => {
                     </Card>
                 </Grid>
 
-                {/* История уведомлений */}
-                <Grid item xs={12} md={6}>
-                    <Card>
-                        <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                <Typography variant="h6" gutterBottom>
-                                    <Badge badgeContent={unreadCount} color="error">
-                                        <NotificationsActive />
-                                    </Badge>
-                                    {' '}Уведомления
-                                </Typography>
-                                {notifications.length > 0 && (
-                                    <Button size="small" onClick={clearAll} startIcon={<Delete />}>
-                                        Очистить все
-                                    </Button>
-                                )}
-                            </Box>
-                            <Divider sx={{ mb: 2 }} />
-                            
-                            {notifications.length === 0 ? (
-                                <Box sx={{ textAlign: 'center', py: 4 }}>
-                                    <NotificationsOff sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
-                                    <Typography color="text.secondary">
-                                        Нет уведомлений
-                                    </Typography>
-                                </Box>
-                            ) : (
-                                <List sx={{ maxHeight: 400, overflow: 'auto' }}>
-                                    {notifications.map((notif) => (
-                                        <ListItem
-                                            key={notif.id}
-                                            sx={{
-                                                bgcolor: notif.read ? 'transparent' : 'action.hover',
-                                                borderRadius: 1,
-                                                mb: 1,
-                                                cursor: 'pointer',
-                                            }}
-                                            onClick={() => markAsRead(notif.id)}
-                                        >
-                                            <ListItemIcon>
-                                                {notif.severity === 'success' && <CheckCircle color="success" />}
-                                                {notif.severity === 'error' && <Security color="error" />}
-                                                {notif.severity === 'info' && <Notifications color="info" />}
-                                            </ListItemIcon>
-                                            <ListItemText
-                                                primary={notif.message}
-                                                secondary={new Date(notif.timestamp).toLocaleString('ru-RU')}
-                                            />
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            )}
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                // Email уведомления
-                <Grid item xs={12} md={6}>
+ <Grid item xs={12} md={6}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
@@ -392,6 +335,65 @@ const sendTestEmail = async () => {
                         </CardContent>
                     </Card>
                 </Grid>
+
+                {/* История уведомлений */}
+                <Grid item xs={12} md={6}>
+                    <Card>
+                        <CardContent>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    <Badge badgeContent={unreadCount} color="error">
+                                        <NotificationsActive />
+                                    </Badge>
+                                    {' '}Уведомления
+                                </Typography>
+                                {notifications.length > 0 && (
+                                    <Button size="small" onClick={clearAll} startIcon={<Delete />}>
+                                        Очистить все
+                                    </Button>
+                                )}
+                            </Box>
+                            <Divider sx={{ mb: 2 }} />
+                            
+                            {notifications.length === 0 ? (
+                                <Box sx={{ textAlign: 'center', py: 4 }}>
+                                    <NotificationsOff sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
+                                    <Typography color="text.secondary">
+                                        Нет уведомлений
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                <List sx={{ maxHeight: 400, overflow: 'auto' }}>
+                                    {notifications.map((notif) => (
+                                        <ListItem
+                                            key={notif.id}
+                                            sx={{
+                                                bgcolor: notif.read ? 'transparent' : 'action.hover',
+                                                borderRadius: 1,
+                                                mb: 1,
+                                                cursor: 'pointer',
+                                            }}
+                                            onClick={() => markAsRead(notif.id)}
+                                        >
+                                            <ListItemIcon>
+                                                {notif.severity === 'success' && <CheckCircle color="success" />}
+                                                {notif.severity === 'error' && <Security color="error" />}
+                                                {notif.severity === 'info' && <Notifications color="info" />}
+                                            </ListItemIcon>
+                                            <ListItemText
+                                                primary={notif.message}
+                                                secondary={new Date(notif.timestamp).toLocaleString('ru-RU')}
+                                            />
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            )}
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                
+               
                 {/* Смена пароля */}
                 <Grid item xs={12} md={6}>
                     <Card>
