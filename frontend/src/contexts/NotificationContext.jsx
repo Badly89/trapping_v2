@@ -1,6 +1,6 @@
 // src/contexts/NotificationContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Alert, Snackbar } from '@mui/material';
+import api from '../services/api';
 
 const NotificationContext = createContext();
 
@@ -14,72 +14,70 @@ export const useNotification = () => {
 
 export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
-    const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
-
-    // Загрузка настроек уведомлений
+    const [loading, setLoading] = useState(true);
     const [settings, setSettings] = useState({
         system: localStorage.getItem('notifications') !== 'false',
         email: localStorage.getItem('emailNotifications') === 'true',
     });
 
-    // Сохранение настроек
+    const fetchNotifications = async () => {
+        try {
+            const response = await api.get('/notifications/internal');
+            setNotifications(response.data);
+        } catch (error) {
+            console.error('Ошибка загрузки уведомлений:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        localStorage.setItem('notifications', settings.system);
-        localStorage.setItem('emailNotifications', settings.email);
-    }, [settings]);
+        fetchNotifications();
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
-    // Показать уведомление
+    const markAsRead = async (id) => {
+        try {
+            await api.patch(`/notifications/internal/${id}/read`);
+            setNotifications(prev =>
+                prev.map(notif =>
+                    notif.id === id ? { ...notif, is_read: true } : notif
+                )
+            );
+        } catch (error) {
+            console.error('Ошибка:', error);
+        }
+    };
+
+    const clearAll = async () => {
+        try {
+            await api.patch('/notifications/internal/read-all');
+            setNotifications(prev =>
+                prev.map(notif => ({ ...notif, is_read: true }))
+            );
+        } catch (error) {
+            console.error('Ошибка:', error);
+        }
+    };
+
     const showNotification = (message, severity = 'info', type = 'system') => {
-        // Системное уведомление
-        if (type === 'system' && settings.system) {
-            setSnackbar({ open: true, message, severity });
-        }
-        
-        // Добавляем в список уведомлений
-        const newNotification = {
-            id: Date.now(),
-            message,
-            severity,
-            timestamp: new Date(),
-            read: false,
-        };
-        setNotifications(prev => [newNotification, ...prev]);
-        
-        // Email уведомление (имитация)
         if (type === 'email' && settings.email) {
-            console.log('📧 Email notification:', message);
-            // Здесь будет реальная отправка email
+            console.log('📧 Email:', message);
         }
     };
 
-    // Закрыть snackbar
-    const closeSnackbar = () => {
-        setSnackbar(prev => ({ ...prev, open: false }));
-    };
-
-    // Отметить как прочитанное
-    const markAsRead = (id) => {
-        setNotifications(prev =>
-            prev.map(notif =>
-                notif.id === id ? { ...notif, read: true } : notif
-            )
-        );
-    };
-
-    // Очистить все уведомления
-    const clearAll = () => {
-        setNotifications([]);
-    };
-
-    // Обновить настройки
     const updateSettings = (newSettings) => {
-        setSettings(prev => ({ ...prev, ...newSettings }));
+        setSettings(newSettings);
+        localStorage.setItem('notifications', newSettings.system);
+        localStorage.setItem('emailNotifications', newSettings.email);
     };
 
     return (
         <NotificationContext.Provider
             value={{
                 notifications,
+                loading,
                 showNotification,
                 markAsRead,
                 clearAll,
@@ -88,16 +86,6 @@ export const NotificationProvider = ({ children }) => {
             }}
         >
             {children}
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={closeSnackbar}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            >
-                <Alert onClose={closeSnackbar} severity={snackbar.severity} variant="filled">
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
         </NotificationContext.Provider>
     );
 };

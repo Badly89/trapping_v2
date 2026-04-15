@@ -38,31 +38,53 @@ async def send_notification_to_channel(message: str, parse_mode: str = "markdown
         db.close()
 
 async def notify_task_assigned(task_data: dict, assignee_id: int):
-    """Уведомление о новой задаче в канал"""
-    text = f"📋 **Новая задача!**\n\n"
-    text += f"Название: {task_data.get('title')}\n"
-    text += f"Описание: {task_data.get('description', '')[:200]}\n\n"
-    text += f"[Открыть в CRM]({CRM_URL}/tasks)"
+    """Уведомление о назначении задачи"""
+    from notification_service import add_notification
     
-    await send_notification_to_channel(text)
+    # Только исполнителю
+    add_notification(
+        assignee_id,
+        f"📋 Новая задача: {task_data.get('title')}",
+        "task_assigned",
+        {"task_id": task_data.get('id')}
+    )
+    
+    # В общий канал
+    await send_notification_to_channel(f"📋 Новая задача: {task_data.get('title')} → назначена")
 
 async def notify_task_completed(task_data: dict, creator_id: int):
-    """Уведомление о завершении задачи в канал"""
-    text = f"✅ **Задача выполнена!**\n\n"
-    text += f"Название: {task_data.get('title')}\n"
-    text += f"Исполнитель: {task_data.get('assignee_name')}\n\n"
-    text += f"[Открыть в CRM]({CRM_URL}/tasks)"
+    """Уведомление о завершении задачи"""
+    from notification_service import add_notification
     
-    await send_notification_to_channel(text)
+    # Создателю задачи
+    add_notification(
+        creator_id,
+        f"✅ Задача выполнена: {task_data.get('title')}",
+        "task_completed",
+        {"task_id": task_data.get('id')}
+    )
+    
+    await send_notification_to_channel(f"✅ Задача выполнена: {task_data.get('title')}")
 
 async def notify_status_changed(message_id: int, old_status: str, new_status: str, user_id: int):
-    """Уведомление об изменении статуса в канал"""
-    text = f"🔄 **Изменен статус сообщения**\n\n"
-    text += f"Сообщение #{message_id}\n"
-    text += f"Статус: {old_status} → {new_status}\n\n"
-    text += f"[Открыть в CRM]({CRM_URL}/messages)"
+    """Уведомление об изменении статуса"""
+    from models import SessionLocal, Message
+    from notification_service import add_notification
     
-    await send_notification_to_channel(text)
+    db = SessionLocal()
+    try:
+        message = db.query(Message).filter(Message.id == message_id).first()
+        if message and message.assigned_to_id:
+            add_notification(
+                message.assigned_to_id,
+                f"🔄 Изменен статус сообщения #{message_id}: {old_status} → {new_status}",
+                "status_changed",
+                {"message_id": message_id}
+            )
+        
+        await send_notification_to_channel(f"🔄 Статус сообщения #{message_id}: {old_status} → {new_status}")
+    finally:
+        db.close()
 
 async def notify_report_created(report_data: dict):
     """Уведомление о новом отчете в канал"""
@@ -73,29 +95,74 @@ async def notify_report_created(report_data: dict):
     
     await send_notification_to_channel(text)
 
-
-async def notify_new_message(message_data: dict, assignee_id: Optional[int] = None):
-    """Уведомление о новом сообщении"""
-    from models import SessionLocal, User
+def create_internal_notification(user_id: int, message: str, notification_type: str, data: dict):
+    """Создание внутреннего уведомления в CRM"""
+    from models import SessionLocal, InternalNotification
     db = SessionLocal()
     
     try:
-        # Отправка в канал (глобально)
-        await send_notification_to_channel(text)
+        notification = InternalNotification(
+            user_id=user_id,
+            message=message,
+            notification_type=notification_type,
+            data=data,
+            is_read=False
+        )
+        db.add(notification)
+        db.commit()
+    except Exception as e:
+        print(f"Ошибка создания уведомления: {e}")
+    finally:
+        db.close()
+
+
+async def notify_new_message(message_data: dict, assignee_id: int = None):
+    """Уведомление о новом сообщении"""
+    from models import SessionLocal, User
+    from notification_service import add_notification
+    
+    db = SessionLocal()
+    
+    try:
+        # 1. ВНУТРЕННЕЕ УВЕДОМЛЕНИЕ В CRM
+        if assignee_id:
+            # Только назначенному пользователю
+            add_notification(
+                assignee_id,
+                f"📨 Новое сообщение #{message_data.get('id')} от {message_data.get('user_name')}",
+                "new_message",
+                {"message_id": message_data.get('id')}
+            )
+        else:
+            # Всем администраторам и операторам
+            users = db.query(User).filter(
+                User.role.in_(['admin', 'operator']),
+                User.is_active == True
+            ).all()
+            for user in users:
+                add_notification(
+                    user.id,
+                    f"📨 Новое сообщение #{message_data.get('id')} от {message_data.get('user_name')}",
+                    "new_message",
+                    {"message_id": message_data.get('id')}
+                )
         
-        # Email уведомления для пользователей, у которых включены уведомления
-        users = db.query(User).filter(
+        # 2. ВНЕШНИЕ УВЕДОМЛЕНИЯ (общий канал MAX)
+        await send_notification_to_channel(f"📨 Новое сообщение #{message_data.get('id')} от {message_data.get('user_name')}")
+        
+        # 3. EMAIL УВЕДОМЛЕНИЯ (для пользователей с включенной опцией)
+        users_for_email = db.query(User).filter(
             User.role.in_(['admin', 'operator']),
             User.is_active == True,
-            User.notifications_enabled == True  # только у кого включены
+            User.notifications_enabled == True
         ).all()
         
-        for user in users:
+        for user in users_for_email:
             email = user.notification_email or user.email
             if email:
                 send_notification_email(email, "new_message", message_data)
                 
     except Exception as e:
-        print(f"Ошибка: {e}")
+        print(f"Ошибка в notify_new_message: {e}")
     finally:
-        db.close()  
+        db.close()
