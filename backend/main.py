@@ -513,7 +513,7 @@ async def create_report(
 def get_reports(
     message_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db):
+    db: Session = Depends(get_db)
 ):
     reports = db.query(Report).filter(Report.message_id == message_id).order_by(Report.created_at.desc()).all()
     return reports
