@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import {
     Box,
-    Paper,
     Typography,
     TextField,
     Button,
@@ -39,15 +38,11 @@ import {
     NotificationsOff,
     Delete,
     CheckCircle,
-    Message as MessageIcon,  // ← ДОБАВИТЬ ЭТОТ ИМПОРТ
-    Cancel,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { auth } from '../../services/api';
-import api from '../../services/api';  // ← ДОБАВИТЬ ЭТОТ ИМПОРТ
-
 
 const Settings = () => {
     const { user } = useAuth();
@@ -76,130 +71,11 @@ const Settings = () => {
         confirm: false,
     });
     
-    // Состояние для настроек
+    // Состояние для настроек уведомлений
     const [localSettings, setLocalSettings] = useState({
         system: notifSettings.system,
         email: notifSettings.email,
     });
-    
-    // Состояние для MAX уведомлений
-    const [maxStatus, setMaxStatus] = useState({
-        connected: false,
-        notifications_enabled: true,
-        max_user_id: null,
-        max_chat_id: null
-    });
-    const [verificationCode, setVerificationCode] = useState('');
-    const [showCodeInput, setShowCodeInput] = useState(false);
-    const [maxNotifications, setMaxNotifications] = useState(true);
-
-    const [channelId, setChannelId] = useState('');
-    const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-    const [channelLoading, setChannelLoading] = useState(false);
-    // Загрузка статуса MAX
-    useEffect(() => {
-        fetchMaxStatus();
-    }, []);
-    
-    useEffect(() => {
-        fetchChannelSettings();
-    }, []);
-
-    const fetchChannelSettings = async () => {
-        try {
-            const response = await api.get('/notifications/channel');
-            setChannelId(response.data.channel_id || '');
-            setNotificationsEnabled(response.data.enabled !== false);
-        } catch (error) {
-            console.error('Ошибка загрузки настроек канала:', error);
-        }
-    };
-    
-    const saveChannelSettings = async () => {
-        setChannelLoading(true);
-        try {
-            await api.post('/notifications/channel', {
-                channel_id: channelId,
-                enabled: notificationsEnabled
-            });
-            showNotification('Настройки канала сохранены', 'success');
-        } catch (error) {
-            showNotification('Ошибка сохранения настроек', 'error');
-        } finally {
-            setChannelLoading(false);
-        }
-    };
-
-
-    const fetchMaxStatus = async () => {
-        try {
-            const response = await api.get('/user/max-status');
-            setMaxStatus(response.data);
-            setMaxNotifications(response.data.notifications_enabled);
-        } catch (error) {
-            console.error('Ошибка загрузки статуса MAX:', error);
-        }
-    };
-
-    const handleConnectMax = async () => {
-    if (!verificationCode) {
-        handleNotification('Введите код подтверждения', 'error');
-        return;
-    }
-    
-    setLoading(true);
-    try {
-        // Отправляем код в правильном формате
-        const response = await api.post('/user/verify-max-code', { 
-            code: verificationCode 
-        });
-        
-        if (response.data.verified) {
-            // Временная привязка (пока без реальных данных)
-            const connectResponse = await api.post('/user/connect-max', {
-                max_user_id: String(user?.id),
-                max_chat_id: String(user?.id)
-            });
-            handleNotification('MAX аккаунт успешно привязан!', 'success');
-            fetchMaxStatus();
-            setShowCodeInput(false);
-            setVerificationCode('');
-        } else {
-            handleNotification('Неверный код. Попробуйте снова.', 'error');
-        }
-    } catch (error) {
-        console.error('Ошибка привязки:', error);
-        handleNotification(error.response?.data?.detail || 'Ошибка привязки. Проверьте код.', 'error');
-    } finally {
-        setLoading(false);
-    }
-};
-
-    const handleDisconnectMax = async () => {
-        setLoading(true);
-        try {
-            await api.post('/user/disconnect-max');
-            handleNotification('MAX аккаунт отвязан', 'success');
-            fetchMaxStatus();
-        } catch (error) {
-            handleNotification('Ошибка отвязки', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleToggleMaxNotifications = async () => {
-        try {
-            const response = await api.patch('/user/notifications-toggle');
-            setMaxNotifications(response.data.notifications_enabled);
-            handleNotification(
-                `Уведомления ${response.data.notifications_enabled ? 'включены' : 'выключены'}`,
-                'success'
-            );
-        } catch (error) {
-            handleNotification('Ошибка изменения настроек', 'error');
-        }
-    };
 
     const handleNotification = (message, severity = 'success') => {
         setSnackbar({ open: true, message, severity });
@@ -223,7 +99,7 @@ const Settings = () => {
         try {
             await auth.changePassword(passwordData.old_password, passwordData.new_password);
             handleNotification('Пароль успешно изменен', 'success');
-            showNotification('Пароль успешно изменен', 'success', 'email');
+            showNotification('Пароль успешно изменен', 'success');
             setPasswordData({
                 old_password: '',
                 new_password: '',
@@ -245,7 +121,7 @@ const Settings = () => {
     const handleSaveSettings = () => {
         updateSettings(localSettings);
         handleNotification('Настройки сохранены', 'success');
-        showNotification('Настройки уведомлений обновлены', 'info', 'email');
+        showNotification('Настройки уведомлений обновлены', 'info');
     };
 
     const unreadCount = notifications.filter(n => !n.read).length;
@@ -371,196 +247,6 @@ const Settings = () => {
                     </Card>
                 </Grid>
 
-                {/* MAX Уведомления */}
-                <Grid item xs={12} md={6}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                <MessageIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-                                Уведомления в MAX
-                            </Typography>
-                            <Divider sx={{ mb: 2 }} />
-                            
-                            {maxStatus.connected ? (
-                                <>
-                                    <Alert severity="success" sx={{ mb: 2 }}>
-                                        ✅ MAX аккаунт привязан
-                                        <Typography variant="caption" display="block">
-                                            ID: {maxStatus.max_user_id}
-                                        </Typography>
-                                    </Alert>
-                                    
-                                    <Box sx={{ mb: 2 }}>
-                                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                                            Вы будете получать уведомления о:
-                                        </Typography>
-                                        <ul style={{ margin: 0, paddingLeft: 20 }}>
-                                            <li>Новых сообщениях</li>
-                                            <li>Назначенных задачах</li>
-                                            <li>Изменении статусов</li>
-                                        </ul>
-                                    </Box>
-                                    
-                                    <FormControlLabel
-                                        control={
-                                            <Switch
-                                                checked={maxNotifications}
-                                                onChange={handleToggleMaxNotifications}
-                                            />
-                                        }
-                                        label="Получать уведомления в MAX"
-                                        sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                                    />
-                                    
-                                    <Button
-                                        variant="outlined"
-                                        color="error"
-                                        startIcon={<Cancel />}
-                                        onClick={handleDisconnectMax}
-                                        disabled={loading}
-                                    >
-                                        Отвязать MAX аккаунт
-                                    </Button>
-                                </>
-                            ) : (
-                                <>
-                                    <Alert severity="info" sx={{ mb: 2 }}>
-                                        🔗 Привяжите ваш аккаунт в мессенджере MAX
-                                    </Alert>
-                                    
-                                    <Box sx={{ mb: 2 }}>
-                                        <Typography variant="body2" gutterBottom>
-                                            <strong>Шаг 1:</strong> Отправьте боту команду <code>/connect</code>
-                                        </Typography>
-                                        <Typography variant="body2" gutterBottom>
-                                            <strong>Шаг 2:</strong> Скопируйте полученный код
-                                        </Typography>
-                                        <Typography variant="body2" gutterBottom>
-                                            <strong>Шаг 3:</strong> Введите код ниже
-                                        </Typography>
-                                    </Box>
-                                    
-                                    {!showCodeInput ? (
-                                        <Button
-                                            variant="contained"
-                                            startIcon={<MessageIcon />}
-                                            onClick={() => setShowCodeInput(true)}
-                                        >
-                                            Ввести код подтверждения
-                                        </Button>
-                                    ) : (
-                                        <Box>
-                                            <TextField
-                                                fullWidth
-                                                label="Код подтверждения"
-                                                value={verificationCode}
-                                                onChange={(e) => setVerificationCode(e.target.value)}
-                                                placeholder="Введите 6-значный код"
-                                                margin="normal"
-                                            />
-                                            <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                                                <Button
-                                                    variant="contained"
-                                                    startIcon={<CheckCircle />}
-                                                    onClick={handleConnectMax}
-                                                    disabled={loading}
-                                                >
-                                                    Подтвердить
-                                                </Button>
-                                                <Button
-                                                    variant="outlined"
-                                                    onClick={() => {
-                                                        setShowCodeInput(false);
-                                                        setVerificationCode('');
-                                                    }}
-                                                >
-                                                    Отмена
-                                                </Button>
-                                            </Box>
-                                        </Box>
-                                    )}
-                                    
-                                    <Box sx={{ mt: 2 }}>
-                                        <Typography variant="caption" color="text.secondary">
-                                            🤖 Имя бота: @trapping_crm_bot
-                                        </Typography>
-                                    </Box>
-                                </>
-                            )}
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Канал уведомлений в MAX */}
-                <Grid item xs={12} md={6}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                <Notifications sx={{ mr: 1, verticalAlign: 'middle' }} />
-                                Канал уведомлений в MAX
-                            </Typography>
-                            <Divider sx={{ mb: 2 }} />
-                            
-                            <Box sx={{ mb: 2 }}>
-                                <Typography variant="body2" color="text.secondary" gutterBottom>
-                                    Настройте канал в MAX для получения уведомлений о:
-                                </Typography>
-                                <ul style={{ margin: 0, paddingLeft: 20 }}>
-                                    <li>Новых сообщениях</li>
-                                    <li>Назначенных задачах</li>
-                                    <li>Завершенных задачах</li>
-                                    <li>Изменении статусов</li>
-                                    <li>Новых отчетах</li>
-                                </ul>
-                            </Box>
-                            
-                            <TextField
-                                fullWidth
-                                label="ID канала в MAX"
-                                value={channelId}
-                                onChange={(e) => setChannelId(e.target.value)}
-                                margin="normal"
-                                helperText="Создайте канал в MAX и вставьте его ID"
-                                disabled={channelLoading}
-                            />
-                            
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={notificationsEnabled}
-                                        onChange={(e) => setNotificationsEnabled(e.target.checked)}
-                                        disabled={channelLoading}
-                                    />
-                                }
-                                label="Включить уведомления в канал"
-                                sx={{ mt: 1, display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                            />
-                            
-                            <Button
-                                variant="contained"
-                                startIcon={channelLoading ? <CircularProgress size={20} /> : <Save />}
-                                onClick={saveChannelSettings}
-                                disabled={channelLoading}
-                                sx={{ mt: 2 }}
-                                fullWidth
-                            >
-                                {channelLoading ? 'Сохранение...' : 'Сохранить настройки'}
-                            </Button>
-                            
-                            <Alert severity="info" sx={{ mt: 2 }}>
-                                <strong>Как настроить канал:</strong>
-                                <ol style={{ margin: '8px 0 0 20px', padding: 0 }}>
-                                    <li>Создайте канал в MAX</li>
-                                    <li>Добавьте бота в канал</li>
-                                    <li>Отправьте боту команду /channel_id в канале</li>
-                                    <li>Скопируйте полученный ID</li>
-                                    <li>Вставьте ID выше и сохраните</li>
-                                </ol>
-                            </Alert>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
                 {/* История уведомлений */}
                 <Grid item xs={12} md={6}>
                     <Card>
@@ -618,7 +304,7 @@ const Settings = () => {
                 </Grid>
 
                 {/* Смена пароля */}
-                <Grid item xs={12} md={12}>
+                <Grid item xs={12} md={6}>
                     <Card>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
@@ -627,69 +313,64 @@ const Settings = () => {
                             </Typography>
                             <Divider sx={{ mb: 3 }} />
                             
-                            <Grid container spacing={3}>
-                                <Grid item xs={12} md={4}>
-                                    <TextField
-                                        fullWidth
-                                        label="Текущий пароль"
-                                        type={showPassword.old ? 'text' : 'password'}
-                                        value={passwordData.old_password}
-                                        onChange={(e) => setPasswordData({ ...passwordData, old_password: e.target.value })}
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <IconButton onClick={() => setShowPassword({ ...showPassword, old: !showPassword.old })}>
-                                                        {showPassword.old ? <VisibilityOff /> : <Visibility />}
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} md={4}>
-                                    <TextField
-                                        fullWidth
-                                        label="Новый пароль"
-                                        type={showPassword.new ? 'text' : 'password'}
-                                        value={passwordData.new_password}
-                                        onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
-                                        helperText="Минимум 6 символов"
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <IconButton onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}>
-                                                        {showPassword.new ? <VisibilityOff /> : <Visibility />}
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} md={4}>
-                                    <TextField
-                                        fullWidth
-                                        label="Подтверждение пароля"
-                                        type={showPassword.confirm ? 'text' : 'password'}
-                                        value={passwordData.confirm_password}
-                                        onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
-                                        error={passwordData.new_password !== passwordData.confirm_password && passwordData.confirm_password !== ''}
-                                        helperText={
-                                            passwordData.new_password !== passwordData.confirm_password && 
-                                            passwordData.confirm_password !== '' ? 
-                                            'Пароли не совпадают' : ''
-                                        }
-                                        InputProps={{
-                                            endAdornment: (
-                                                <InputAdornment position="end">
-                                                    <IconButton onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}>
-                                                        {showPassword.confirm ? <VisibilityOff /> : <Visibility />}
-                                                    </IconButton>
-                                                </InputAdornment>
-                                            ),
-                                        }}
-                                    />
-                                </Grid>
-                            </Grid>
+                            <TextField
+                                fullWidth
+                                label="Текущий пароль"
+                                type={showPassword.old ? 'text' : 'password'}
+                                value={passwordData.old_password}
+                                onChange={(e) => setPasswordData({ ...passwordData, old_password: e.target.value })}
+                                margin="normal"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton onClick={() => setShowPassword({ ...showPassword, old: !showPassword.old })}>
+                                                {showPassword.old ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                            <TextField
+                                fullWidth
+                                label="Новый пароль"
+                                type={showPassword.new ? 'text' : 'password'}
+                                value={passwordData.new_password}
+                                onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })}
+                                margin="normal"
+                                helperText="Минимум 6 символов"
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}>
+                                                {showPassword.new ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
+                            <TextField
+                                fullWidth
+                                label="Подтверждение пароля"
+                                type={showPassword.confirm ? 'text' : 'password'}
+                                value={passwordData.confirm_password}
+                                onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })}
+                                margin="normal"
+                                error={passwordData.new_password !== passwordData.confirm_password && passwordData.confirm_password !== ''}
+                                helperText={
+                                    passwordData.new_password !== passwordData.confirm_password && 
+                                    passwordData.confirm_password !== '' ? 
+                                    'Пароли не совпадают' : ''
+                                }
+                                InputProps={{
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton onClick={() => setShowPassword({ ...showPassword, confirm: !showPassword.confirm })}>
+                                                {showPassword.confirm ? <VisibilityOff /> : <Visibility />}
+                                            </IconButton>
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
                             
                             <Button
                                 variant="contained"
