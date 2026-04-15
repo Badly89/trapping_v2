@@ -52,3 +52,22 @@ def send_email(to_email: str, subject: str, body: str) -> bool:
     except Exception as e:
         logger.error(f"❌ Ошибка отправки email: {e}")
         return False
+
+def test_smtp_connection(host: str, port: int, user: str, password: str) -> bool:
+    """Тестирование SMTP подключения"""
+    try:
+        context = ssl.create_default_context()
+        
+        if port == 465:
+            with smtplib.SMTP_SSL(host, port, context=context) as server:
+                server.login(user, password)
+        else:
+            with smtplib.SMTP(host, port) as server:
+                server.starttls(context=context)
+                server.login(user, password)
+        
+        logger.info(f"✅ SMTP подключение успешно к {host}:{port}")
+        return True
+    except Exception as e:
+        logger.error(f"❌ Ошибка SMTP подключения: {e}")
+        return False
