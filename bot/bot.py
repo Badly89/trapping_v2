@@ -1,4 +1,4 @@
-# bot.py - Адаптированная версия с поддержкой составных сообщений и привязкой через email
+# bot.py - Полная рабочая версия
 import os
 import json
 import asyncio
@@ -227,7 +227,6 @@ def create_compose_keyboard(has_photo: bool = False, has_location: bool = False,
     """Клавиатура для составного сообщения с отображением текущего состояния"""
     buttons = []
     
-    # Статус текущего сообщения
     status_row = []
     if has_photo:
         status_row.append(CallbackButton(text="✅ Фото", payload="status_photo", intent=Intent.POSITIVE))
@@ -286,7 +285,8 @@ async def cmd_connect(event: MessageCreated):
     chat_id = event.message.recipient.chat_id
     user_name = event.message.sender.first_name or 'Пользователь'
     
-    # Сохраняем данные пользователя
+    logger.info(f"🔐 Команда /connect от пользователя {user_id}")
+    
     user_connect_data[user_id] = {
         'chat_id': str(chat_id),
         'user_name': user_name,
@@ -307,7 +307,6 @@ async def handle_email_input(event: MessageCreated):
     user_id = event.message.sender.user_id
     text = event.message.body.text or ''
     
-    # Проверяем, ждем ли мы email от этого пользователя
     if user_id not in user_connect_data:
         return
     
@@ -315,7 +314,6 @@ async def handle_email_input(event: MessageCreated):
     if state_data.get('state') != ConnectState.AWAITING_EMAIL:
         return
     
-    # Проверяем, что введен email
     if '@' not in text or '.' not in text:
         await event.message.answer(
             "❌ **Неверный формат email**\n\n"
@@ -327,7 +325,6 @@ async def handle_email_input(event: MessageCreated):
     
     email = text.strip().lower()
     
-    # Отправляем email в CRM для проверки и генерации кода
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(
@@ -349,7 +346,6 @@ async def handle_email_input(event: MessageCreated):
                             f"Код действителен 5 минут.",
                             format=ParseMode.MARKDOWN
                         )
-                        # Удаляем данные после успешной отправки
                         del user_connect_data[user_id]
                     else:
                         await event.message.answer(
@@ -375,7 +371,7 @@ async def handle_email_input(event: MessageCreated):
             format=ParseMode.MARKDOWN
         )
 
-# ==================== ОБРАБОТЧИКИ ====================
+# ==================== ОСНОВНЫЕ ОБРАБОТЧИКИ ====================
 
 @dp.bot_started()
 async def handle_bot_started(event: BotStarted):
@@ -481,7 +477,6 @@ async def callback_send_all(event: MessageCallback):
     full_text = text or ''
     if location:
         lat, lon = location
-        maps = generate_map_links(lat, lon)
         full_text += (full_text and '\n\n' or '') + f"📍 **Геолокация:**\n"
         full_text += f"📌 Координаты: {lat:.6f}, {lon:.6f}"
     
@@ -590,93 +585,90 @@ async def callback_help(event: MessageCallback):
         format=ParseMode.MARKDOWN
     )
 
-# ==================== ОБРАБОТКА ВХОДЯЩИХ СООБЩЕНИЙ ====================
+# ==================== ОБРАБОТКА ВХОДЯЩИХ СООБЩЕНИЙ ДЛЯ КОМПОЗИТА ====================
 
-@dp.message_created()
-@dp.message_created()
-async def handle_message(event: MessageCreated):
-    """Обработка всех входящих сообщений (фото, геолокация, текст)"""
+@dp.message_created(F.message.body.attachments)
+async def handle_compose_message(event: MessageCreated):
+    """Обработка фото и геолокации для составных сообщений"""
     message = event.message
     user = message.sender
     user_id = user.user_id
     chat_id = message.recipient.chat_id
     
-    text = getattr(message.body, 'text', '') or ''
+    attachments = getattr(message.body, 'attachments', [])
+    compose_data = get_compose_data(user_id)
+    state = compose_data.get('state', ComposeState.IDLE)
     
-    # Пропускаем команды
-    if text and text.startswith('/'):
+    if state == ComposeState.IDLE:
         return
     
-    attachments = getattr(message.body, 'attachments', [])
+    for att in attachments:
+        att_type = getattr(att, 'type', None)
+        
+        if att_type == 'image':
+            photo_url = await get_photo_url(att)
+            if photo_url:
+                compose_data['photos'].append(photo_url)
+                logger.info(f"📷 Добавлено фото, всего: {len(compose_data['photos'])}")
+                await bot.send_message(
+                    chat_id=chat_id,
+                    text=f"✅ Фото добавлено! Всего фото: {len(compose_data['photos'])}\n\n"
+                         "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
+                    attachments=[create_compose_keyboard(
+                        has_photo=len(compose_data['photos']) > 0,
+                        has_location=compose_data['location'] is not None,
+                        has_text=bool(compose_data['text'])
+                    )]
+                )
+                return
+        
+        elif att_type == 'location':
+            lat = getattr(att, 'lat', None) or getattr(att, 'latitude', None)
+            lon = getattr(att, 'lon', None) or getattr(att, 'longitude', None)
+            if lat and lon:
+                compose_data['location'] = (lat, lon)
+                logger.info(f"📍 Добавлена геолокация: {lat}, {lon}")
+                await bot.send_message(
+                    chat_id=chat_id,
+                    text=f"✅ Геолокация добавлена!\n\n"
+                         "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
+                    attachments=[create_compose_keyboard(
+                        has_photo=len(compose_data['photos']) > 0,
+                        has_location=True,
+                        has_text=bool(compose_data['text'])
+                    )]
+                )
+                return
+
+@dp.message_created(F.message.body.text)
+async def handle_compose_text(event: MessageCreated):
+    """Обработка текста для составных сообщений"""
+    message = event.message
+    user = message.sender
+    user_id = user.user_id
+    chat_id = message.recipient.chat_id
+    text = event.message.body.text or ''
+    
+    if text.startswith('/'):
+        return
     
     compose_data = get_compose_data(user_id)
     state = compose_data.get('state', ComposeState.IDLE)
     
-    # Обработка в режиме составления сообщения
-    if state != ComposeState.IDLE:
-        for att in attachments:
-            att_type = getattr(att, 'type', None)
-            
-            if att_type == 'image':
-                photo_url = await get_photo_url(att)
-                if photo_url:
-                    compose_data['photos'].append(photo_url)
-                    logger.info(f"📷 Добавлено фото, всего: {len(compose_data['photos'])}")
-                    await bot.send_message(
-                        chat_id=chat_id,
-                        text=f"✅ Фото добавлено! Всего фото: {len(compose_data['photos'])}\n\n"
-                             "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
-                        attachments=[create_compose_keyboard(
-                            has_photo=len(compose_data['photos']) > 0,
-                            has_location=compose_data['location'] is not None,
-                            has_text=bool(compose_data['text'])
-                        )]
-                    )
-                    return
-            
-            elif att_type == 'location':
-                lat = getattr(att, 'lat', None) or getattr(att, 'latitude', None)
-                lon = getattr(att, 'lon', None) or getattr(att, 'longitude', None)
-                if lat and lon:
-                    compose_data['location'] = (lat, lon)
-                    logger.info(f"📍 Добавлена геолокация: {lat}, {lon}")
-                    await bot.send_message(
-                        chat_id=chat_id,
-                        text=f"✅ Геолокация добавлена!\n\n"
-                             "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
-                        attachments=[create_compose_keyboard(
-                            has_photo=len(compose_data['photos']) > 0,
-                            has_location=True,
-                            has_text=bool(compose_data['text'])
-                        )]
-                    )
-                    return
-        
-        if text and state == ComposeState.AWAITING_TEXT:
-            compose_data['text'] = text
-            logger.info(f"📝 Добавлен текст: {text[:50]}...")
-            await bot.send_message(
-                chat_id=chat_id,
-                text=f"✅ Текст добавлен!\n\n"
-                     f"📝 \"{text[:100]}{'...' if len(text) > 100 else ''}\"\n\n"
-                     "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
-                attachments=[create_compose_keyboard(
-                    has_photo=len(compose_data['photos']) > 0,
-                    has_location=compose_data['location'] is not None,
-                    has_text=True
-                )]
-            )
-            return
-        
+    if state == ComposeState.AWAITING_TEXT:
+        compose_data['text'] = text
         compose_data['state'] = ComposeState.COMPOSING
-        return
-    
-    # Обычный режим - показываем меню
-    if not attachments and not text:
+        logger.info(f"📝 Добавлен текст: {text[:50]}...")
         await bot.send_message(
             chat_id=chat_id,
-            text="Используйте кнопки для взаимодействия.",
-            attachments=[create_main_menu()]
+            text=f"✅ Текст добавлен!\n\n"
+                 f"📝 \"{text[:100]}{'...' if len(text) > 100 else ''}\"\n\n"
+                 "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
+            attachments=[create_compose_keyboard(
+                has_photo=len(compose_data['photos']) > 0,
+                has_location=compose_data['location'] is not None,
+                has_text=True
+            )]
         )
 
 # ==================== ЗАПУСК ====================
@@ -693,10 +685,7 @@ async def main():
         await bot.delete_webhook()
         logger.info("✅ Бот запущен")
         
-        # Запускаем polling
         polling_task = asyncio.create_task(dp.start_polling(bot))
-        
-        # Ждем завершения
         await polling_task
         
     except asyncio.CancelledError:
@@ -704,10 +693,8 @@ async def main():
     except KeyboardInterrupt:
         logger.info("👋 Остановка пользователем")
     finally:
-        # Корректное закрытие
         logger.info("🔄 Закрытие соединений...")
         
-        # Отменяем все задачи
         for task in asyncio.all_tasks():
             if task is not asyncio.current_task():
                 task.cancel()
@@ -716,7 +703,6 @@ async def main():
                 except:
                     pass
         
-        # Закрываем сессию бота
         try:
             await bot.session.close()
             logger.info("✅ Сессия закрыта")
