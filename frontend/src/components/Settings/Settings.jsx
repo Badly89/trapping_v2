@@ -169,9 +169,10 @@ const Settings = () => {
         setEmailLoading(true);
         try {
             await api.patch('/user/update-email', { email: newEmail });
-            if (updateUser) {
-                updateUser({ ...user, email: newEmail });
-            }
+            
+            // Обновляем контекст
+            updateUser({ email: newEmail });
+            
             showNotification('Email успешно обновлен', 'success');
             setEditEmail(false);
         } catch (error) {
@@ -281,6 +282,7 @@ const Settings = () => {
                                 </Box>
                             </Box>
                             <Divider sx={{ my: 2 }} />
+                           
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                 <Email fontSize="small" color="action" />
                                 {editEmail ? (
@@ -300,8 +302,13 @@ const Settings = () => {
                                     </Box>
                                 ) : (
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
-                                        <Typography variant="body2">{user?.email || 'Email не указан'}</Typography>
-                                        <IconButton size="small" onClick={() => setEditEmail(true)}>
+                                        <Typography variant="body2">
+                                            {user?.email || 'Email не указан'}
+                                        </Typography>
+                                        <IconButton size="small" onClick={() => {
+                                            setNewEmail(user?.email || '');
+                                            setEditEmail(true);
+                                        }}>
                                             <Edit fontSize="small" />
                                         </IconButton>
                                     </Box>
@@ -371,6 +378,18 @@ const Settings = () => {
                 </Grid>
 
                 {/* Email уведомления */}
+                <Alert severity="info" sx={{ mt: 2 }}>
+                    <strong>Уведомления будут отправляться на ваш email:</strong>
+                    <Box sx={{ mt: 1, p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+                        <Email fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
+                        <strong>{user?.email || 'Email не указан в профиле'}</strong>
+                    </Box>
+                    {!user?.email && (
+                        <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                            ⚠️ Для получения уведомлений укажите email в профиле
+                        </Typography>
+                    )}
+                </Alert>
                 <Grid item xs={12} md={6}>
                     <Card>
                         <CardContent>
