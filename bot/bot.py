@@ -593,6 +593,7 @@ async def callback_help(event: MessageCallback):
 # ==================== ОБРАБОТКА ВХОДЯЩИХ СООБЩЕНИЙ ====================
 
 @dp.message_created()
+@dp.message_created()
 async def handle_message(event: MessageCreated):
     """Обработка всех входящих сообщений (фото, геолокация, текст)"""
     message = event.message
@@ -601,6 +602,11 @@ async def handle_message(event: MessageCreated):
     chat_id = message.recipient.chat_id
     
     text = getattr(message.body, 'text', '') or ''
+    
+    # Пропускаем команды
+    if text and text.startswith('/'):
+        return
+    
     attachments = getattr(message.body, 'attachments', [])
     
     compose_data = get_compose_data(user_id)
@@ -626,6 +632,7 @@ async def handle_message(event: MessageCreated):
                             has_text=bool(compose_data['text'])
                         )]
                     )
+                    return
             
             elif att_type == 'location':
                 lat = getattr(att, 'lat', None) or getattr(att, 'latitude', None)
@@ -643,6 +650,7 @@ async def handle_message(event: MessageCreated):
                             has_text=bool(compose_data['text'])
                         )]
                     )
+                    return
         
         if text and state == ComposeState.AWAITING_TEXT:
             compose_data['text'] = text
@@ -658,6 +666,7 @@ async def handle_message(event: MessageCreated):
                     has_text=True
                 )]
             )
+            return
         
         compose_data['state'] = ComposeState.COMPOSING
         return
