@@ -1,10 +1,8 @@
-# bot.py - Полная рабочая версия с привязкой через email
+# bot.py - Адаптированная версия с поддержкой составных сообщений
 import os
 import json
 import asyncio
 import logging
-import random
-import string
 import aiohttp
 import aiofiles
 from datetime import datetime, timezone, timedelta
@@ -51,17 +49,6 @@ dp = Dispatcher()
 # Директория для сохранения фото
 PHOTOS_DIR = "downloaded_photos"
 os.makedirs(PHOTOS_DIR, exist_ok=True)
-
-# ==================== СОСТОЯНИЯ ДЛЯ ПРИВЯЗКИ ====================
-
-class ConnectState(Enum):
-    """Состояния привязки аккаунта"""
-    IDLE = "idle"
-    AWAITING_EMAIL = "awaiting_email"
-    AWAITING_CODE = "awaiting_code"
-
-# Хранилище временных данных для привязки
-user_connect_data: Dict[int, Dict[str, Any]] = {}
 
 # ==================== СОСТОЯНИЯ ДЛЯ СОСТАВНЫХ СООБЩЕНИЙ ====================
 
@@ -124,7 +111,7 @@ def generate_map_links(lat: float, lon: float) -> Dict[str, str]:
     """Генерация ссылок на карты"""
     return {
         "yandex": f"https://yandex.ru/maps/?pt={lon},{lat}&z=17&l=map",
-    }
+        }
 
 async def save_to_crm(message_data: Dict[str, Any]) -> bool:
     """Сохранение сообщения в CRM"""
@@ -228,6 +215,7 @@ def create_compose_keyboard(has_photo: bool = False, has_location: bool = False,
     """Клавиатура для составного сообщения с отображением текущего состояния"""
     buttons = []
     
+    # Статус текущего сообщения
     status_row = []
     if has_photo:
         status_row.append(CallbackButton(text="✅ Фото", payload="status_photo", intent=Intent.POSITIVE))
@@ -277,178 +265,7 @@ def create_location_keyboard() -> Attachment:
     ])
     return Attachment(type="inline_keyboard", payload=buttons)
 
-# ==================== ПРИВЯЗКА АККАУНТА ====================
-
-@dp.message_created(Command('connect'))
-async def cmd_connect(event: MessageCreated):
-    """Начало привязки MAX аккаунта к CRM - запрос email"""
-    user_id = event.message.sender.user_id
-    chat_id = event.message.recipient.chat_id
-    user_name = event.message.sender.first_name or 'Пользователь'
-    
-    logger.info(f"🔐 Команда /connect от пользователя {user_id}")
-    
-    user_connect_data[user_id] = {
-        'chat_id': str(chat_id),
-        'user_name': user_name,
-        'state': ConnectState.AWAITING_EMAIL,
-        'step': 'awaiting_email'
-    }
-    
-    await event.message.answer(
-        f"🔗 **Привязка к CRM системе**\n\n"
-        f"Пожалуйста, введите ваш email, который указан в CRM.\n\n"
-        f"На этот email будет отправлен код подтверждения.\n\n"
-        f"Пример: `user@example.com`\n\n"
-        f"Для отмены используйте /cancel",
-        format=ParseMode.MARKDOWN
-    )
-
-@dp.message_created(Command('cancel'))
-async def cmd_cancel(event: MessageCreated):
-    """Отмена привязки"""
-    user_id = event.message.sender.user_id
-    if user_id in user_connect_data:
-        del user_connect_data[user_id]
-    await event.message.answer(
-        "❌ **Привязка отменена**\n\n"
-        "Вы можете начать заново с помощью команды /connect",
-        format=ParseMode.MARKDOWN
-    )
-
-@dp.message_created()
-async def handle_email_and_code(event: MessageCreated):
-    """Обработка ввода email и кода"""
-    user_id = event.message.sender.user_id
-    text = event.message.body.text or ''
-    
-    # Пропускаем команды
-    if text.startswith('/'):
-        return
-    
-    if user_id not in user_connect_data:
-        return
-    
-    state_data = user_connect_data[user_id]
-    step = state_data.get('step')
-    
-    # Шаг 1: ожидание email
-    if step == 'awaiting_email':
-        if '@' not in text or '.' not in text:
-            await event.message.answer(
-                "❌ **Неверный формат email**\n\n"
-                "Пожалуйста, введите корректный email адрес.\n"
-                "Пример: `user@example.com`",
-                format=ParseMode.MARKDOWN
-            )
-            return
-        
-        email = text.strip().lower()
-        state_data['email'] = email
-        state_data['step'] = 'awaiting_code'
-        
-        # Запрашиваем код
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    "http://backend:8000/api/bot/request-verification-code",
-                    json={
-                        "email": email,
-                        "chat_id": state_data['chat_id'],
-                        "user_name": state_data['user_name']
-                    }
-                ) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        if data.get('exists'):
-                            if data.get('email_sent'):
-                                await event.message.answer(
-                                    f"✅ **Код подтверждения отправлен на {email}**\n\n"
-                                    f"Пожалуйста, проверьте вашу почту и введите полученный код.\n\n"
-                                    f"Код действителен 5 минут.\n\n"
-                                    f"Для отмены используйте /cancel",
-                                    format=ParseMode.MARKDOWN
-                                )
-                            else:
-                                await event.message.answer(
-                                    f"⚠️ **Не удалось отправить email**\n\n"
-                                    f"Попробуйте позже или обратитесь к администратору.\n\n"
-                                    f"Для отмены используйте /cancel",
-                                    format=ParseMode.MARKDOWN
-                                )
-                        else:
-                            await event.message.answer(
-                                f"❌ **Email не найден в CRM**\n\n"
-                                f"Пользователь с email `{email}` не зарегистрирован.\n\n"
-                                f"Пожалуйста, используйте email, указанный в вашем профиле CRM.\n"
-                                f"Для отмены используйте /cancel",
-                                format=ParseMode.MARKDOWN
-                            )
-                            del user_connect_data[user_id]
-                    else:
-                        text_error = await resp.text()
-                        logger.error(f"Ошибка сервера: {resp.status} - {text_error}")
-                        await event.message.answer(
-                            f"❌ **Ошибка сервера**\n\n"
-                            f"Попробуйте позже.\n"
-                            f"Для отмены используйте /cancel",
-                            format=ParseMode.MARKDOWN
-                        )
-        except Exception as e:
-            logger.error(f"Ошибка: {e}")
-            await event.message.answer(
-                f"❌ **Ошибка подключения**\n\n"
-                f"Попробуйте позже.",
-                format=ParseMode.MARKDOWN
-            )
-    
-    # Шаг 2: ожидание кода
-    elif step == 'awaiting_code':
-        code = text.strip()
-        email = state_data.get('email')
-        
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    "http://backend:8000/api/user/verify-max-code",
-                    json={"code": code}
-                ) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        if data.get('verified'):
-                            await event.message.answer(
-                                f"✅ **Аккаунт успешно привязан!**\n\n"
-                                f"Теперь вы будете получать уведомления о:\n"
-                                f"• Новых сообщениях\n"
-                                f"• Назначенных задачах\n"
-                                f"• Изменении статусов\n\n"
-                                f"Для отвязки используйте /disconnect",
-                                format=ParseMode.MARKDOWN
-                            )
-                            del user_connect_data[user_id]
-                        else:
-                            await event.message.answer(
-                                f"❌ **Неверный код**\n\n"
-                                f"Проверьте код и попробуйте снова.\n"
-                                f"Код действителен 5 минут.\n\n"
-                                f"Для отмены используйте /cancel",
-                                format=ParseMode.MARKDOWN
-                            )
-                    else:
-                        await event.message.answer(
-                            f"❌ **Ошибка проверки кода**\n\n"
-                            f"Попробуйте позже.",
-                            format=ParseMode.MARKDOWN
-                        )
-        except Exception as e:
-            logger.error(f"Ошибка: {e}")
-            await event.message.answer(
-                f"❌ **Ошибка подключения**\n\n"
-                f"Попробуйте позже.",
-                format=ParseMode.MARKDOWN
-            )
-
-# ==================== ОСНОВНЫЕ ОБРАБОТЧИКИ ====================
+# ==================== ОБРАБОТЧИКИ ====================
 
 @dp.bot_started()
 async def handle_bot_started(event: BotStarted):
@@ -463,7 +280,6 @@ async def handle_bot_started(event: BotStarted):
              "1. Нажмите 'Новое сообщение'\n"
              "2. Добавьте фото, геолокацию и/или текст\n"
              "3. Нажмите 'Отправить всё'\n\n"
-             "🔗 **Привязка к CRM:** используйте команду /connect\n\n"
              "Спасибо за активную гражданскую позицию! 🙏",
         attachments=[create_main_menu()]
     )
@@ -478,17 +294,6 @@ async def cmd_start(event: MessageCreated):
         attachments=[create_main_menu()]
     )
 
-@dp.message_created(Command('disconnect'))
-async def cmd_disconnect(event: MessageCreated):
-    """Отвязка MAX аккаунта от CRM"""
-    user_id = event.message.sender.user_id
-    await event.message.answer(
-        "🔓 **Аккаунт отвязан от CRM**\n\n"
-        "Вы больше не будете получать уведомления.\n\n"
-        "Чтобы снова привязать аккаунт, используйте /connect",
-        format=ParseMode.MARKDOWN
-    )
-
 # ==================== ОБРАБОТКА КНОПОК ====================
 
 @dp.message_callback(F.callback.payload == "new_message")
@@ -499,7 +304,7 @@ async def callback_new_message(event: MessageCallback):
     compose_data = get_compose_data(user_id)
     compose_data['state'] = ComposeState.COMPOSING
     
-    await event.answer(notification="📝 Начинаем новое сообщение")
+    await event.answer(notification="📝 Начинаем новое сообщение")  # Убрали show_alert
     await event.message.edit(
         text="📝 **Составление сообщения**\n\n"
              "Добавьте содержимое с помощью кнопок ниже:\n"
@@ -517,7 +322,7 @@ async def callback_add_photo(event: MessageCallback):
     compose_data = get_compose_data(user_id)
     compose_data['state'] = ComposeState.AWAITING_PHOTO
     
-    await event.answer(notification="📸 Режим добавления фото")
+    await event.answer(notification="📸 Режим добавления фото")  # OK
     await bot.send_message(
         chat_id=event.message.recipient.chat_id,
         text="📸 Отправьте фото, которое хотите добавить к сообщению.\n\n"
@@ -559,12 +364,13 @@ async def callback_send_all(event: MessageCallback):
     text = compose_data.get('text', '')
     
     if not photos and not location and not text:
-        await event.answer(notification="❌ Нечего отправлять!")
+        await event.answer(notification="❌ Нечего отправлять!")  # Убрали show_alert
         return
     
     full_text = text or ''
     if location:
         lat, lon = location
+        maps = generate_map_links(lat, lon)
         full_text += (full_text and '\n\n' or '') + f"📍 **Геолокация:**\n"
         full_text += f"📌 Координаты: {lat:.6f}, {lon:.6f}"
     
@@ -585,7 +391,7 @@ async def callback_send_all(event: MessageCallback):
     
     if saved:
         clear_compose_data(user_id)
-        await event.answer(notification="✅ Сообщение отправлено!")
+        await event.answer(notification="✅ Сообщение отправлено!")  # Убрали show_alert
         await event.message.edit(
             text=f"✅ **Сообщение успешно отправлено!**\n\n"
                  f"📷 Фото: {len(photos)}\n"
@@ -596,7 +402,7 @@ async def callback_send_all(event: MessageCallback):
             attachments=[create_main_menu()]
         )
     else:
-        await event.answer(notification="❌ Ошибка отправки!")
+        await event.answer(notification="❌ Ошибка отправки!")  # Убрали show_alert
 
 @dp.message_callback(F.callback.payload == "clear_all")
 async def callback_clear_all(event: MessageCallback):
@@ -604,7 +410,7 @@ async def callback_clear_all(event: MessageCallback):
     user_id = event.callback.user.user_id
     clear_compose_data(user_id)
     
-    await event.answer(notification="🗑️ Все данные очищены")
+    await event.answer(notification="🗑️ Все данные очищены")  # Убрали show_alert
     await event.message.edit(
         text="📝 **Составление сообщения**\n\n"
              "Все данные очищены. Добавьте содержимое с помощью кнопок:",
@@ -654,7 +460,7 @@ async def callback_rules(event: MessageCallback):
              "1. Отправляйте только четкие фото\n"
              "2. Указывайте адрес или геолокацию\n"
              "3. Данные конфиденциальны",
-        format=ParseMode.MARKDOWN
+        parse_mode=ParseMode.MARKDOWN
     )
 
 @dp.message_callback(F.callback.payload == "help")
@@ -664,107 +470,88 @@ async def callback_help(event: MessageCallback):
     help_text += "1️⃣ Нажмите 'Новое сообщение'\n"
     help_text += "2️⃣ Добавьте фото, геолокацию и текст\n"
     help_text += "3️⃣ Нажмите 'Отправить всё'\n\n"
-    help_text += "💡 Можно добавлять несколько фото!\n\n"
-    help_text += "🔗 Для привязки к CRM используйте команду /connect"
+    help_text += "💡 Можно добавлять несколько фото!"
     await bot.send_message(
         chat_id=event.message.recipient.chat_id,
         text=help_text,
         attachments=[create_main_menu()],
-        format=ParseMode.MARKDOWN
+        parse_mode=ParseMode.MARKDOWN
     )
 
-# ==================== ОБРАБОТКА ВХОДЯЩИХ СООБЩЕНИЙ ДЛЯ КОМПОЗИТА ====================
+# ==================== ОБРАБОТКА ВХОДЯЩИХ СООБЩЕНИЙ ====================
 
-@dp.message_created(F.message.body.attachments)
-async def handle_compose_message(event: MessageCreated):
-    """Обработка фото и геолокации для составных сообщений"""
+@dp.message_created()
+async def handle_message(event: MessageCreated):
+    """Обработка всех входящих сообщений (фото, геолокация, текст)"""
     message = event.message
     user = message.sender
     user_id = user.user_id
     chat_id = message.recipient.chat_id
     
+    text = getattr(message.body, 'text', '') or ''
     attachments = getattr(message.body, 'attachments', [])
-    compose_data = get_compose_data(user_id)
-    state = compose_data.get('state', ComposeState.IDLE)
-    
-    if state == ComposeState.IDLE:
-        return
-    
-    for att in attachments:
-        att_type = getattr(att, 'type', None)
-        
-        if att_type == 'image':
-            photo_url = await get_photo_url(att)
-            if photo_url:
-                compose_data['photos'].append(photo_url)
-                logger.info(f"📷 Добавлено фото, всего: {len(compose_data['photos'])}")
-                await bot.send_message(
-                    chat_id=chat_id,
-                    text=f"✅ Фото добавлено! Всего фото: {len(compose_data['photos'])}\n\n"
-                         "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
-                    attachments=[create_compose_keyboard(
-                        has_photo=len(compose_data['photos']) > 0,
-                        has_location=compose_data['location'] is not None,
-                        has_text=bool(compose_data['text'])
-                    )]
-                )
-                return
-        
-        elif att_type == 'location':
-            lat = getattr(att, 'lat', None) or getattr(att, 'latitude', None)
-            lon = getattr(att, 'lon', None) or getattr(att, 'longitude', None)
-            if lat and lon:
-                compose_data['location'] = (lat, lon)
-                logger.info(f"📍 Добавлена геолокация: {lat}, {lon}")
-                await bot.send_message(
-                    chat_id=chat_id,
-                    text=f"✅ Геолокация добавлена!\n\n"
-                         "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
-                    attachments=[create_compose_keyboard(
-                        has_photo=len(compose_data['photos']) > 0,
-                        has_location=True,
-                        has_text=bool(compose_data['text'])
-                    )]
-                )
-                return
-
-@dp.message_created(F.message.body.text)
-async def handle_compose_text(event: MessageCreated):
-    """Обработка текста для составных сообщений"""
-    message = event.message
-    user = message.sender
-    user_id = user.user_id
-    chat_id = message.recipient.chat_id
-    text = event.message.body.text or ''
-    
-    # Пропускаем команды
-    if text.startswith('/'):
-        return
     
     compose_data = get_compose_data(user_id)
     state = compose_data.get('state', ComposeState.IDLE)
     
-    # Если ждем текст
-    if state == ComposeState.AWAITING_TEXT:
-        compose_data['text'] = text
+    # Обработка в режиме составления сообщения
+    if state != ComposeState.IDLE:
+        for att in attachments:
+            att_type = getattr(att, 'type', None)
+            
+            if att_type == 'image':
+                photo_url = await get_photo_url(att)
+                if photo_url:
+                    compose_data['photos'].append(photo_url)
+                    logger.info(f"📷 Добавлено фото, всего: {len(compose_data['photos'])}")
+                    await bot.send_message(
+                        chat_id=chat_id,
+                        text=f"✅ Фото добавлено! Всего фото: {len(compose_data['photos'])}\n\n"
+                             "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
+                        attachments=[create_compose_keyboard(
+                            has_photo=len(compose_data['photos']) > 0,
+                            has_location=compose_data['location'] is not None,
+                            has_text=bool(compose_data['text'])
+                        )]
+                    )
+            
+            elif att_type == 'location':
+                lat = getattr(att, 'lat', None) or getattr(att, 'latitude', None)
+                lon = getattr(att, 'lon', None) or getattr(att, 'longitude', None)
+                if lat and lon:
+                    compose_data['location'] = (lat, lon)
+                    logger.info(f"📍 Добавлена геолокация: {lat}, {lon}")
+                    await bot.send_message(
+                        chat_id=chat_id,
+                        text=f"✅ Геолокация добавлена!\n\n"
+                             "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
+                        attachments=[create_compose_keyboard(
+                            has_photo=len(compose_data['photos']) > 0,
+                            has_location=True,
+                            has_text=bool(compose_data['text'])
+                        )]
+                    )
+        
+        if text and state == ComposeState.AWAITING_TEXT:
+            compose_data['text'] = text
+            logger.info(f"📝 Добавлен текст: {text[:50]}...")
+            await bot.send_message(
+                chat_id=chat_id,
+                text=f"✅ Текст добавлен!\n\n"
+                     f"📝 \"{text[:100]}{'...' if len(text) > 100 else ''}\"\n\n"
+                     "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
+                attachments=[create_compose_keyboard(
+                    has_photo=len(compose_data['photos']) > 0,
+                    has_location=compose_data['location'] is not None,
+                    has_text=True
+                )]
+            )
+        
         compose_data['state'] = ComposeState.COMPOSING
-        logger.info(f"📝 Добавлен текст: {text[:50]}...")
-        await bot.send_message(
-            chat_id=chat_id,
-            text=f"✅ Текст добавлен!\n\n"
-                 f"📝 \"{text[:100]}{'...' if len(text) > 100 else ''}\"\n\n"
-                 "Можете добавить фото или геолокацию.\n"
-                 "Когда закончите - нажмите 'Отправить всё'",
-            attachments=[create_compose_keyboard(
-                has_photo=len(compose_data['photos']) > 0,
-                has_location=compose_data['location'] is not None,
-                has_text=True
-            )]
-        )
         return
     
-    # Если не в режиме compose и не команда - показываем меню
-    if state == ComposeState.IDLE and not text.startswith('/'):
+    # Обычный режим - показываем меню
+    if not attachments and not text:
         await bot.send_message(
             chat_id=chat_id,
             text="Используйте кнопки для взаимодействия.",
@@ -785,7 +572,10 @@ async def main():
         await bot.delete_webhook()
         logger.info("✅ Бот запущен")
         
+        # Запускаем polling
         polling_task = asyncio.create_task(dp.start_polling(bot))
+        
+        # Ждем завершения
         await polling_task
         
     except asyncio.CancelledError:
@@ -793,8 +583,10 @@ async def main():
     except KeyboardInterrupt:
         logger.info("👋 Остановка пользователем")
     finally:
+        # Корректное закрытие
         logger.info("🔄 Закрытие соединений...")
         
+        # Отменяем все задачи
         for task in asyncio.all_tasks():
             if task is not asyncio.current_task():
                 task.cancel()
@@ -803,6 +595,7 @@ async def main():
                 except:
                     pass
         
+        # Закрываем сессию бота
         try:
             await bot.session.close()
             logger.info("✅ Сессия закрыта")
