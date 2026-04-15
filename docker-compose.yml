@@ -25,6 +25,8 @@ services:
     restart: unless-stopped
     ports:
       - "6005:8000"
+    environment:
+    - NOTIFICATION_CHANNEL_ID=${NOTIFICATION_CHANNEL_ID} 
     env_file:
       - ./backend/.env
     depends_on:
