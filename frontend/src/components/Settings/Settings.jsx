@@ -48,6 +48,7 @@ import { useNotification } from '../../contexts/NotificationContext';
 import { auth } from '../../services/api';
 import api from '../../services/api';  // ← ДОБАВИТЬ ЭТОТ ИМПОРТ
 
+
 const Settings = () => {
     const { user } = useAuth();
     const { darkMode, toggleTheme } = useTheme();
@@ -92,10 +93,43 @@ const Settings = () => {
     const [showCodeInput, setShowCodeInput] = useState(false);
     const [maxNotifications, setMaxNotifications] = useState(true);
 
+    const [channelId, setChannelId] = useState('');
+    const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+    const [channelLoading, setChannelLoading] = useState(false);
     // Загрузка статуса MAX
     useEffect(() => {
         fetchMaxStatus();
     }, []);
+    
+    useEffect(() => {
+        fetchChannelSettings();
+    }, []);
+
+    const fetchChannelSettings = async () => {
+        try {
+            const response = await api.get('/notifications/channel');
+            setChannelId(response.data.channel_id || '');
+            setNotificationsEnabled(response.data.enabled !== false);
+        } catch (error) {
+            console.error('Ошибка загрузки настроек канала:', error);
+        }
+    };
+    
+    const saveChannelSettings = async () => {
+        setChannelLoading(true);
+        try {
+            await api.post('/notifications/channel', {
+                channel_id: channelId,
+                enabled: notificationsEnabled
+            });
+            showNotification('Настройки канала сохранены', 'success');
+        } catch (error) {
+            showNotification('Ошибка сохранения настроек', 'error');
+        } finally {
+            setChannelLoading(false);
+        }
+    };
+
 
     const fetchMaxStatus = async () => {
         try {
@@ -457,6 +491,7 @@ const Settings = () => {
                     </Card>
                 </Grid>
 
+                {/* Канал уведомлений в MAX */}
                 <Grid item xs={12} md={6}>
                     <Card>
                         <CardContent>
@@ -486,6 +521,7 @@ const Settings = () => {
                                 onChange={(e) => setChannelId(e.target.value)}
                                 margin="normal"
                                 helperText="Создайте канал в MAX и вставьте его ID"
+                                disabled={channelLoading}
                             />
                             
                             <FormControlLabel
@@ -493,6 +529,7 @@ const Settings = () => {
                                     <Switch
                                         checked={notificationsEnabled}
                                         onChange={(e) => setNotificationsEnabled(e.target.checked)}
+                                        disabled={channelLoading}
                                     />
                                 }
                                 label="Включить уведомления в канал"
@@ -501,12 +538,13 @@ const Settings = () => {
                             
                             <Button
                                 variant="contained"
-                                startIcon={<Save />}
+                                startIcon={channelLoading ? <CircularProgress size={20} /> : <Save />}
                                 onClick={saveChannelSettings}
+                                disabled={channelLoading}
                                 sx={{ mt: 2 }}
                                 fullWidth
                             >
-                                Сохранить настройки
+                                {channelLoading ? 'Сохранение...' : 'Сохранить настройки'}
                             </Button>
                             
                             <Alert severity="info" sx={{ mt: 2 }}>
