@@ -44,6 +44,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { auth } from '../../services/api';
+import api from '../../services/api';  // <-- ДОБАВИТЬ ЭТУ СТРОКУ
 
 const Settings = () => {
     const { user } = useAuth();
