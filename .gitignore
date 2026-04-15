@@ -39,3 +39,5 @@ downloaded_photos/
 .DS_Store
 Thumbs.db
 *.sh
+.env
+/.env
