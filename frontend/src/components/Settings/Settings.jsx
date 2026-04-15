@@ -48,7 +48,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { auth } from '../../services/api';
-import api from '../../services/api';  // <-- ДОБАВИТЬ ЭТУ СТРОКУ
+import api from '../../services/api';
 
 const Settings = () => {
     const { user } = useAuth();
@@ -65,17 +65,6 @@ const Settings = () => {
     const [loading, setLoading] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     
-    // Добавьте состояния
-    const [smtpDialogOpen, setSmtpDialogOpen] = useState(false);
-    const [smtpSettings, setSmtpSettings] = useState({
-        host: '',
-        port: '465',
-        user: '',
-        password: '',
-        from: '',
-    });
-    const [smtpLoading, setSmtpLoading] = useState(false);
-
     // Состояние для смены пароля
     const [passwordData, setPasswordData] = useState({
         old_password: '',
@@ -88,15 +77,91 @@ const Settings = () => {
         confirm: false,
     });
     
-    // Состояние для настроек уведомлений
+    // Состояние для настроек
     const [localSettings, setLocalSettings] = useState({
         system: notifSettings.system,
         email: notifSettings.email,
     });
     
+    // Состояние для Email уведомлений
     const [notificationEmail, setNotificationEmail] = useState(user?.email || '');
     const [testEmailLoading, setTestEmailLoading] = useState(false);
-
+    
+    // Состояние для SMTP диалога
+    const [smtpDialogOpen, setSmtpDialogOpen] = useState(false);
+    const [smtpSettings, setSmtpSettings] = useState({
+        host: '',
+        port: '465',
+        user: '',
+        password: '',
+        from: '',
+    });
+    const [smtpLoading, setSmtpLoading] = useState(false);
+    
+    // Загрузка SMTP настроек
+    const fetchSmtpSettings = async () => {
+        try {
+            const response = await api.get('/notifications/smtp-settings');
+            setSmtpSettings({
+                host: response.data.host || '',
+                port: response.data.port || '465',
+                user: response.data.user || '',
+                password: '',
+                from: response.data.from || '',
+            });
+        } catch (error) {
+            console.error('Ошибка загрузки SMTP настроек:', error);
+        }
+    };
+    
+    // Сохранение SMTP настроек
+    const saveSmtpSettings = async () => {
+        setSmtpLoading(true);
+        try {
+            await api.post('/notifications/smtp-settings', smtpSettings);
+            showNotification('SMTP настройки сохранены', 'success');
+            setSmtpDialogOpen(false);
+            setLocalSettings({ ...localSettings, email: true });
+            updateSettings({ ...localSettings, email: true });
+        } catch (error) {
+            showNotification('Ошибка сохранения SMTP настроек', 'error');
+        } finally {
+            setSmtpLoading(false);
+        }
+    };
+    
+    // Тестовая отправка email
+    const sendTestEmail = async () => {
+        const emailToSend = notificationEmail || user?.email;
+        if (!emailToSend) {
+            showNotification('Укажите email для отправки', 'error');
+            return;
+        }
+        
+        setTestEmailLoading(true);
+        try {
+            const response = await api.post('/notifications/test-email', { email: emailToSend });
+            showNotification(response.data.message, 'success');
+        } catch (error) {
+            showNotification(error.response?.data?.detail || 'Ошибка отправки тестового письма', 'error');
+        } finally {
+            setTestEmailLoading(false);
+        }
+    };
+    
+    // Обработчик переключения email уведомлений
+    const handleEmailToggle = (e) => {
+        const isChecked = e.target.checked;
+        
+        if (isChecked) {
+            fetchSmtpSettings();
+            setSmtpDialogOpen(true);
+        } else {
+            setLocalSettings({ ...localSettings, email: false });
+            updateSettings({ ...localSettings, email: false });
+        }
+    };
+    
     const handleNotification = (message, severity = 'success') => {
         setSnackbar({ open: true, message, severity });
         if (severity === 'success') {
@@ -149,65 +214,6 @@ const Settings = () => {
     const handleCloseSnackbar = () => {
         setSnackbar({ ...snackbar, open: false });
     };
-
-    // Загрузка текущих SMTP настроек
-    const fetchSmtpSettings = async () => {
-        try {
-            const response = await api.get('/notifications/smtp-settings');
-            setSmtpSettings(response.data);
-        } catch (error) {
-            console.error('Ошибка загрузки SMTP настроек:', error);
-        }
-    };
-    // Сохранение SMTP настроек
-    const saveSmtpSettings = async () => {
-        setSmtpLoading(true);
-        try {
-            await api.post('/notifications/smtp-settings', smtpSettings);
-            handleNotification('SMTP настройки сохранены', 'success');
-            setSmtpDialogOpen(false);
-            // Включаем email уведомления после сохранения настроек
-            setLocalSettings({ ...localSettings, email: true });
-            updateSettings({ ...localSettings, email: true });
-        } catch (error) {
-            handleNotification('Ошибка сохранения SMTP настроек', 'error');
-        } finally {
-            setSmtpLoading(false);
-        }
-    };
-
-    // Обработчик переключения email уведомлений
-    const handleEmailToggle = (e) => {
-        const isChecked = e.target.checked;
-        
-        if (isChecked) {
-            // Если включаем - открываем настройки SMTP
-            fetchSmtpSettings();
-            setSmtpDialogOpen(true);
-        } else {
-            // Если выключаем - просто выключаем
-            setLocalSettings({ ...localSettings, email: false });
-            updateSettings({ ...localSettings, email: false });
-        }
-    };
-    // Добавьте функцию отправки теста
-const sendTestEmail = async () => {
-    const emailToSend = notificationEmail || user?.email;
-    if (!emailToSend) {
-        handleNotification('Укажите email для отправки', 'error');
-        return;
-    }
-    
-    setTestEmailLoading(true);
-    try {
-        const response = await api.post('/notifications/test-email', { email: emailToSend });
-        handleNotification(response.data.message, 'success');
-    } catch (error) {
-        handleNotification(error.response?.data?.detail || 'Ошибка отправки тестового письма', 'error');
-    } finally {
-        setTestEmailLoading(false);
-    }
-};
 
     return (
         <Box>
@@ -298,22 +304,6 @@ const sendTestEmail = async () => {
                                 sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', width: '100%' }}
                             />
                             
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={localSettings.email}
-                                        onChange={(e) => setLocalSettings({ ...localSettings, email: e.target.checked })}
-                                    />
-                                }
-                                label={
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <Email fontSize="small" />
-                                        <span>Email уведомления</span>
-                                    </Box>
-                                }
-                                sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                            />
-                            
                             <Button
                                 variant="contained"
                                 startIcon={<Save />}
@@ -322,71 +312,6 @@ const sendTestEmail = async () => {
                             >
                                 Сохранить настройки
                             </Button>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
- <Grid item xs={12} md={6}>
-                    <Card>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                <Email sx={{ mr: 1, verticalAlign: 'middle' }} />
-                                Email уведомления
-                            </Typography>
-                            <Divider sx={{ mb: 2 }} />
-                            
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={localSettings.email}
-                                        onChange={handleEmailToggle}
-                                    />
-                                }
-                                label="Получать уведомления на email"
-                                sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                            />
-                            
-                            <TextField
-                                fullWidth
-                                label="Email для уведомлений"
-                                type="email"
-                                value={notificationEmail}
-                                onChange={(e) => setNotificationEmail(e.target.value)}
-                                margin="normal"
-                                helperText="Укажите email для получения уведомлений"
-                                disabled={!localSettings.email}
-                            />
-                            
-                            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<Save />}
-                                    onClick={handleSaveSettings}
-                                    sx={{ flex: 1 }}
-                                >
-                                    Сохранить
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    startIcon={testEmailLoading ? <CircularProgress size={20} /> : <SendIcon />}
-                                    onClick={sendTestEmail}
-                                    disabled={testEmailLoading || !notificationEmail || !localSettings.email}
-                                    sx={{ flex: 1 }}
-                                >
-                                    {testEmailLoading ? 'Отправка...' : 'Тест'}
-                                </Button>
-                            </Box>
-                            
-                            <Alert severity="info" sx={{ mt: 2 }}>
-                                <strong>Уведомления будут приходить на email о:</strong>
-                                <ul style={{ margin: '8px 0 0 20px', padding: 0 }}>
-                                    <li>Новых сообщениях</li>
-                                    <li>Назначенных задачах</li>
-                                    <li>Завершенных задачах</li>
-                                    <li>Изменении статусов</li>
-                                    <li>Новых отчетах</li>
-                                </ul>
-                            </Alert>
                         </CardContent>
                     </Card>
                 </Grid>
@@ -447,8 +372,6 @@ const sendTestEmail = async () => {
                     </Card>
                 </Grid>
 
-                
-               
                 {/* Смена пароля */}
                 <Grid item xs={12} md={6}>
                     <Card>
@@ -580,6 +503,97 @@ const sendTestEmail = async () => {
                 </Grid>
             </Grid>
 
+            {/* Диалог настройки SMTP */}
+            <Dialog open={smtpDialogOpen} onClose={() => setSmtpDialogOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Email color="primary" />
+                        <Typography variant="h6">Настройка Email уведомлений</Typography>
+                    </Box>
+                </DialogTitle>
+                <DialogContent>
+                    <Alert severity="info" sx={{ mb: 2, mt: 1 }}>
+                        Для получения email уведомлений необходимо настроить SMTP сервер.
+                        <br />
+                        <strong>Пример для Яндекс.Почты:</strong>
+                        <br />
+                        Хост: smtp.yandex.ru
+                        <br />
+                        Порт: 465
+                        <br />
+                        Пользователь: ваш_email@yandex.ru
+                        <br />
+                        Пароль: пароль_приложения
+                    </Alert>
+                    
+                    <TextField
+                        fullWidth
+                        label="SMTP Хост"
+                        value={smtpSettings.host}
+                        onChange={(e) => setSmtpSettings({ ...smtpSettings, host: e.target.value })}
+                        margin="normal"
+                        placeholder="smtp.yandex.ru"
+                    />
+                    
+                    <TextField
+                        fullWidth
+                        label="SMTP Порт"
+                        type="number"
+                        value={smtpSettings.port}
+                        onChange={(e) => setSmtpSettings({ ...smtpSettings, port: e.target.value })}
+                        margin="normal"
+                        placeholder="465"
+                    />
+                    
+                    <TextField
+                        fullWidth
+                        label="SMTP Пользователь"
+                        type="email"
+                        value={smtpSettings.user}
+                        onChange={(e) => setSmtpSettings({ ...smtpSettings, user: e.target.value })}
+                        margin="normal"
+                        placeholder="your-email@example.com"
+                    />
+                    
+                    <TextField
+                        fullWidth
+                        label="SMTP Пароль"
+                        type="password"
+                        value={smtpSettings.password}
+                        onChange={(e) => setSmtpSettings({ ...smtpSettings, password: e.target.value })}
+                        margin="normal"
+                        helperText="Для Яндекс и Gmail используйте пароль приложения"
+                    />
+                    
+                    <TextField
+                        fullWidth
+                        label="Email отправителя"
+                        type="email"
+                        value={smtpSettings.from}
+                        onChange={(e) => setSmtpSettings({ ...smtpSettings, from: e.target.value })}
+                        margin="normal"
+                        placeholder="noreply@crm.local"
+                    />
+                    
+                    <Button
+                        variant="outlined"
+                        startIcon={<SendIcon />}
+                        onClick={sendTestEmail}
+                        disabled={testEmailLoading}
+                        sx={{ mt: 2 }}
+                        fullWidth
+                    >
+                        {testEmailLoading ? <CircularProgress size={24} /> : 'Отправить тестовое письмо'}
+                    </Button>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setSmtpDialogOpen(false)}>Отмена</Button>
+                    <Button onClick={saveSmtpSettings} variant="contained" disabled={smtpLoading}>
+                        {smtpLoading ? <CircularProgress size={24} /> : 'Сохранить и включить'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             {/* Уведомления */}
             <Snackbar
                 open={snackbar.open}
@@ -597,108 +611,6 @@ const sendTestEmail = async () => {
             </Snackbar>
         </Box>
     );
-
-
-    {/* Диалог настройки SMTP */}
-        <Dialog open={smtpDialogOpen} onClose={() => setSmtpDialogOpen(false)} maxWidth="sm" fullWidth>
-            <DialogTitle>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Email color="primary" />
-                    <Typography variant="h6">Настройка Email уведомлений</Typography>
-                </Box>
-            </DialogTitle>
-            <DialogContent>
-                <Alert severity="info" sx={{ mb: 2, mt: 1 }}>
-                    Для получения email уведомлений необходимо настроить SMTP сервер.
-                    <br />
-                    <strong>Пример для Яндекс.Почты:</strong>
-                    <br />
-                    Хост: smtp.yandex.ru
-                    <br />
-                    Порт: 465
-                    <br />
-                    Пользователь: ваш_email@yandex.ru
-                    <br />
-                    Пароль: пароль_приложения
-                </Alert>
-                
-                <TextField
-                    fullWidth
-                    label="SMTP Хост"
-                    value={smtpSettings.host}
-                    onChange={(e) => setSmtpSettings({ ...smtpSettings, host: e.target.value })}
-                    margin="normal"
-                    placeholder="smtp.yandex.ru"
-                />
-                
-                <TextField
-                    fullWidth
-                    label="SMTP Порт"
-                    type="number"
-                    value={smtpSettings.port}
-                    onChange={(e) => setSmtpSettings({ ...smtpSettings, port: e.target.value })}
-                    margin="normal"
-                    placeholder="465"
-                />
-                
-                <TextField
-                    fullWidth
-                    label="SMTP Пользователь"
-                    type="email"
-                    value={smtpSettings.user}
-                    onChange={(e) => setSmtpSettings({ ...smtpSettings, user: e.target.value })}
-                    margin="normal"
-                    placeholder="your-email@example.com"
-                />
-                
-                <TextField
-                    fullWidth
-                    label="SMTP Пароль"
-                    type="password"
-                    value={smtpSettings.password}
-                    onChange={(e) => setSmtpSettings({ ...smtpSettings, password: e.target.value })}
-                    margin="normal"
-                    helperText="Для Яндекс и Gmail используйте пароль приложения"
-                />
-                
-                <TextField
-                    fullWidth
-                    label="Email отправителя"
-                    type="email"
-                    value={smtpSettings.from}
-                    onChange={(e) => setSmtpSettings({ ...smtpSettings, from: e.target.value })}
-                    margin="normal"
-                    placeholder="noreply@crm.local"
-                />
-                
-                <Button
-                    variant="outlined"
-                    startIcon={<SendIcon />}
-                    onClick={async () => {
-                        setSmtpLoading(true);
-                        try {
-                            await api.post('/notifications/test-smtp', smtpSettings);
-                            handleNotification('Тестовое письмо отправлено! Проверьте почту.', 'success');
-                        } catch (error) {
-                            handleNotification('Ошибка отправки тестового письма', 'error');
-                        } finally {
-                            setSmtpLoading(false);
-                        }
-                    }}
-                    disabled={smtpLoading}
-                    sx={{ mt: 2 }}
-                    fullWidth
-                >
-                    {smtpLoading ? <CircularProgress size={24} /> : 'Отправить тестовое письмо'}
-                </Button>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={() => setSmtpDialogOpen(false)}>Отмена</Button>
-                <Button onClick={saveSmtpSettings} variant="contained" disabled={smtpLoading}>
-                    Сохранить и включить
-                </Button>
-            </DialogActions>
-        </Dialog>
 };
 
 export default Settings;
