@@ -156,14 +156,6 @@ const Sidebar = ({ drawerWidth = 280 }) => {
             <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
                 <List>
                     <ListItem disablePadding>
-                        <ListItemButton onClick={() => window.open('https://t.me/your_bot', '_blank')}>
-                            <ListItemIcon sx={{ minWidth: 40 }}>
-                                <Help />
-                            </ListItemIcon>
-                            <ListItemText primary="Помощь" />
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem disablePadding>
                         <ListItemButton onClick={() => navigate('/settings')}>
                             <ListItemIcon sx={{ minWidth: 40 }}>
                                 <Settings />
