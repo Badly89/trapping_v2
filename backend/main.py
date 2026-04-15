@@ -12,11 +12,10 @@ import shutil
 import os
 import logging
 import smtplib
-import random
-import string
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
+from email_service import send_email
 
 # Загружаем переменные окружения
 load_dotenv()
@@ -82,60 +81,6 @@ app.add_middleware(
 # Директория для загрузки файлов
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-# ========== Pydantic Models ==========
-class VerifyCodeRequest(BaseModel):
-    code: str
-
-class MaxConnectRequest(BaseModel):
-    max_user_id: str
-    max_chat_id: str
-
-class EmailVerificationRequest(BaseModel):
-    email: str
-    chat_id: str
-    user_name: str
-
-# ========== Email функции ==========
-def send_verification_email(to_email: str, code: str, user_name: str) -> bool:
-    """Отправка кода подтверждения на email"""
-    if not SMTP_USER or not SMTP_PASSWORD:
-        logger.warning("SMTP не настроен")
-        return False
-    
-    try:
-        msg = MIMEMultipart()
-        msg['From'] = SMTP_FROM
-        msg['To'] = to_email
-        msg['Subject'] = 'Подтверждение привязки MAX аккаунта к CRM'
-        
-        body = f"""
-        <html>
-        <body style="font-family: Arial, sans-serif;">
-            <h2>Здравствуйте, {user_name}!</h2>
-            <p>Вы запросили привязку вашего MAX аккаунта к CRM системе.</p>
-            <p>Ваш код подтверждения: <b style="font-size: 28px; color: #1976d2;">{code}</b></p>
-            <p>Код действителен в течение 5 минут.</p>
-            <p>Введите этот код в настройках CRM для завершения привязки.</p>
-            <hr>
-            <p style="color: #666; font-size: 12px;">Если вы не запрашивали эту операцию, проигнорируйте данное письмо.</p>
-        </body>
-        </html>
-        """
-        
-        msg.attach(MIMEText(body, 'html'))
-        
-        server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
-        server.starttls()
-        server.login(SMTP_USER, SMTP_PASSWORD)
-        server.send_message(msg)
-        server.quit()
-        
-        logger.info(f"✅ Email с кодом отправлен на {to_email}")
-        return True
-    except Exception as e:
-        logger.error(f"❌ Ошибка отправки email: {e}")
-        return False
 
 # ========== Auth Endpoints ==========
 @app.post("/api/auth/login", response_model=TokenResponse)
@@ -709,6 +654,44 @@ def set_channel_settings(
     os.environ["NOTIFICATION_CHANNEL_ID"] = settings.channel_id
     return {"status": "success", "settings": channel_settings}
 
+
+
+class TestEmailRequest(BaseModel):
+    email: str
+
+@app.post("/api/notifications/test-email")
+def test_email_notification(
+    request: TestEmailRequest,
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    db: Session = Depends(get_db)
+):
+    """Отправка тестового email уведомления"""
+    
+    subject = "🧪 Тестовое уведомление CRM"
+    body = f"""
+    <h2>✅ Тестовое уведомление</h2>
+    <p>Здравствуйте, {current_user.full_name}!</p>
+    <p>Это тестовое уведомление из CRM системы.</p>
+    <p>Если вы видите это письмо, значит настройка email уведомлений работает корректно.</p>
+    <br>
+    <p><strong>Детали теста:</strong></p>
+    <ul>
+        <li>Время отправки: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
+        <li>Пользователь: {current_user.username}</li>
+        <li>Email получателя: {request.email}</li>
+    </ul>
+    <br>
+    <p>С уважением,<br>CRM Система</p>
+    """
+    
+    success = send_email(request.email, subject, body)
+    
+    if success:
+        return {"status": "success", "message": f"Тестовое письмо отправлено на {request.email}"}
+    else:
+        raise HTTPException(status_code=500, detail="Ошибка отправки email. Проверьте настройки SMTP.")
+    
+    
 # ========== Health Check ==========
 @app.get("/health")
 def health_check():
