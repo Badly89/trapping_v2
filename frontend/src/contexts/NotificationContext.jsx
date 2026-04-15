@@ -22,10 +22,16 @@ export const NotificationProvider = ({ children }) => {
 
     const fetchNotifications = async () => {
         try {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                setLoading(false);
+                return;
+            }
             const response = await api.get('/notifications/internal');
             setNotifications(response.data);
         } catch (error) {
             console.error('Ошибка загрузки уведомлений:', error);
+            // Не показываем ошибку пользователю
         } finally {
             setLoading(false);
         }
