@@ -737,12 +737,14 @@ async def handle_compose_text(event: MessageCreated):
     chat_id = message.recipient.chat_id
     text = event.message.body.text or ''
     
+    # Пропускаем команды
     if text.startswith('/'):
         return
     
     compose_data = get_compose_data(user_id)
     state = compose_data.get('state', ComposeState.IDLE)
     
+    # Если ждем текст
     if state == ComposeState.AWAITING_TEXT:
         compose_data['text'] = text
         compose_data['state'] = ComposeState.COMPOSING
@@ -751,12 +753,22 @@ async def handle_compose_text(event: MessageCreated):
             chat_id=chat_id,
             text=f"✅ Текст добавлен!\n\n"
                  f"📝 \"{text[:100]}{'...' if len(text) > 100 else ''}\"\n\n"
-                 "Продолжайте добавлять содержимое или нажмите 'Отправить всё'",
+                 "Можете добавить фото или геолокацию.\n"
+                 "Когда закончите - нажмите 'Отправить всё'",
             attachments=[create_compose_keyboard(
                 has_photo=len(compose_data['photos']) > 0,
                 has_location=compose_data['location'] is not None,
                 has_text=True
             )]
+        )
+        return
+    
+    # Если не в режиме compose и не команда - показываем меню
+    if state == ComposeState.IDLE and not text.startswith('/'):
+        await bot.send_message(
+            chat_id=chat_id,
+            text="Используйте кнопки для взаимодействия.",
+            attachments=[create_main_menu()]
         )
 
 # ==================== ЗАПУСК ====================
