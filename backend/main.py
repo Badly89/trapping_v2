@@ -15,7 +15,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
-from email_service import send_email
+from email_service import send_email, test_smtp_connection
 
 # Загружаем переменные окружения
 load_dotenv()
@@ -654,7 +654,97 @@ def set_channel_settings(
     os.environ["NOTIFICATION_CHANNEL_ID"] = settings.channel_id
     return {"status": "success", "settings": channel_settings}
 
+class SmtpSettings(BaseModel):
+    host: str
+    port: int
+    user: str
+    password: str
+    from_email: str
 
+# Временное хранилище SMTP настроек (в продакшене используйте БД)
+smtp_config = {
+    "host": "",
+    "port": 465,
+    "user": "",
+    "password": "",
+    "from_email": ""
+}
+
+@app.get("/api/notifications/smtp-settings")
+def get_smtp_settings(
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    db: Session = Depends(get_db)
+):
+    """Получить текущие SMTP настройки"""
+    # Возвращаем только маскированные данные
+    return {
+        "host": smtp_config["host"],
+        "port": smtp_config["port"],
+        "user": smtp_config["user"],
+        "from": smtp_config["from_email"],
+        "password": "********" if smtp_config["password"] else ""
+    }
+
+@app.post("/api/notifications/smtp-settings")
+def save_smtp_settings(
+    settings: SmtpSettings,
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    db: Session = Depends(get_db)
+):
+    """Сохранить SMTP настройки"""
+    global smtp_config
+    smtp_config = {
+        "host": settings.host,
+        "port": settings.port,
+        "user": settings.user,
+        "password": settings.password,
+        "from_email": settings.from_email
+    }
+    
+    # Обновляем переменные окружения
+    os.environ["SMTP_HOST"] = settings.host
+    os.environ["SMTP_PORT"] = str(settings.port)
+    os.environ["SMTP_USER"] = settings.user
+    os.environ["SMTP_PASSWORD"] = settings.password
+    os.environ["SMTP_FROM"] = settings.from_email
+    
+    return {"status": "success"}
+
+@app.post("/api/notifications/test-smtp")
+def test_smtp(
+    settings: SmtpSettings,
+    current_user: User = Depends(require_role(UserRole.ADMIN)),
+    db: Session = Depends(get_db)
+):
+    """Тестовая отправка письма"""
+    subject = "🧪 Тестовое письмо из CRM"
+    body = f"""
+    <h2>✅ SMTP настройки работают!</h2>
+    <p>Здравствуйте, {current_user.full_name}!</p>
+    <p>Это тестовое письмо подтверждает, что SMTP настройки настроены корректно.</p>
+    <br>
+    <p>С уважением,<br>CRM Система</p>
+    """
+    
+    # Временно устанавливаем настройки для теста
+    old_config = smtp_config.copy()
+    smtp_config = {
+        "host": settings.host,
+        "port": settings.port,
+        "user": settings.user,
+        "password": settings.password,
+        "from_email": settings.from_email
+    }
+    
+    success = send_email(settings.from_email, subject, body)
+    
+    # Восстанавливаем старые настройки
+    smtp_config = old_config
+    
+    if success:
+        return {"status": "success", "message": "Тестовое письмо отправлено"}
+    else:
+        raise HTTPException(status_code=500, detail="Ошибка отправки тестового письма")
 
 class TestEmailRequest(BaseModel):
     email: str
@@ -691,7 +781,7 @@ def test_email_notification(
     else:
         raise HTTPException(status_code=500, detail="Ошибка отправки email. Проверьте настройки SMTP.")
     
-    
+
 # ========== Health Check ==========
 @app.get("/health")
 def health_check():
