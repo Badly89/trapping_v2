@@ -34,35 +34,7 @@ async def send_notification_to_channel(message: str, parse_mode: str = "markdown
         print(f"❌ Ошибка: {e}")
         return False
 
-async def notify_new_message(message_data: dict, assignee_id: Optional[int] = None):
-    """Уведомление о новом сообщении"""
-    from models import SessionLocal, User
-    db = SessionLocal()
-    
-    try:
-        # Отправка в канал (если настроен)
-        text = f"📨 **Новое сообщение!**\n\n"
-        text += f"От: {message_data.get('user_name')}\n"
-        text += f"Текст: {message_data.get('text', '')[:200]}\n"
-        text += f"ID: {message_data.get('id')}\n\n"
-        text += f"[Открыть в CRM]({CRM_URL}/messages)"
-        await send_notification_to_channel(text)
-        
-        # Email уведомления для администраторов и операторов
-        users = db.query(User).filter(
-            User.role.in_(['admin', 'operator']),
-            User.is_active == True,
-            User.email.isnot(None),  # используем email из профиля
-            User.email != ''  # email не пустой
-        ).all()
-        
-        for user in users:
-            if user.email:
-                send_notification_email(user.email, "new_message", message_data)
-                
-    except Exception as e:
-        print(f"Ошибка в notify_new_message: {e}")
-    finally:
+
         db.close()
 
 async def notify_task_assigned(task_data: dict, assignee_id: int):
@@ -103,31 +75,27 @@ async def notify_report_created(report_data: dict):
 
 
 async def notify_new_message(message_data: dict, assignee_id: Optional[int] = None):
-    """Уведомление о новом сообщении (email + канал)"""
+    """Уведомление о новом сообщении"""
     from models import SessionLocal, User
     db = SessionLocal()
     
     try:
-        # Отправка в канал (если настроен)
-        text = f"📨 **Новое сообщение!**\n\n"
-        text += f"От: {message_data.get('user_name')}\n"
-        text += f"Текст: {message_data.get('text', '')[:200]}\n"
-        text += f"ID: {message_data.get('id')}\n\n"
-        text += f"[Открыть в CRM]({CRM_URL}/messages)"
+        # Отправка в канал (глобально)
         await send_notification_to_channel(text)
         
-        # Email уведомления для администраторов и операторов
+        # Email уведомления для пользователей, у которых включены уведомления
         users = db.query(User).filter(
             User.role.in_(['admin', 'operator']),
             User.is_active == True,
-            User.email.isnot(None)
+            User.notifications_enabled == True  # только у кого включены
         ).all()
         
         for user in users:
-            if user.email:
-                send_notification_email(user.email, "new_message", message_data)
+            email = user.notification_email or user.email
+            if email:
+                send_notification_email(email, "new_message", message_data)
                 
     except Exception as e:
-        print(f"Ошибка в notify_new_message: {e}")
+        print(f"Ошибка: {e}")
     finally:
-        db.close()    
+        db.close()  

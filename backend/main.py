@@ -92,6 +92,11 @@ class SmtpSettings(BaseModel):
 class NotificationEmailRequest(BaseModel):
     email: str    
 
+class UserNotificationSettings(BaseModel):
+    notifications_enabled: bool
+    notification_email: Optional[str] = None
+
+
 # ========== Auth Endpoints ==========
 @app.post("/api/auth/login", response_model=TokenResponse)
 def login(login_data: LoginRequest, db: Session = Depends(get_db)):
@@ -241,6 +246,38 @@ def toggle_user(
     user.is_active = not user.is_active
     db.commit()
     return {"status": "success", "is_active": user.is_active}
+
+@app.get("/api/user/notification-settings")
+def get_user_notification_settings(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Получить настройки уведомлений текущего пользователя"""
+    return {
+        "notifications_enabled": current_user.notifications_enabled,
+        "notification_email": current_user.notification_email or current_user.email
+    }
+
+@app.post("/api/user/notification-settings")
+def save_user_notification_settings(
+    settings: UserNotificationSettings,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Сохранить настройки уведомлений текущего пользователя"""
+    current_user.notifications_enabled = settings.notifications_enabled
+    current_user.notification_email = settings.notification_email
+    db.commit()
+    return {"status": "success"}
+
+@app.get("/api/user/notification-email")
+def get_notification_email(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Получить email для уведомлений"""
+    email = current_user.notification_email or current_user.email
+    return {"email": email}
 
 # backend/main.py
 @app.patch("/api/user/update-email")
@@ -777,14 +814,6 @@ def update_notification_email(
     db.commit()
     return {"status": "success", "email": request.email}
 
-@app.get("/api/user/notification-email")
-def get_notification_email(
-    current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
-):
-    """Получить email для уведомлений"""
-    email = getattr(current_user, 'notification_email', None) or current_user.email
-    return {"email": email}
 
 # ========== Health Check ==========
 @app.get("/health")
