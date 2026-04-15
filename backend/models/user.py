@@ -22,6 +22,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    notifications_enabled = Column(Boolean, default=True)  # включены ли уведомления
     notification_email = Column(String(100), nullable=True)  # email для уведомлений       
 
     # Отношения

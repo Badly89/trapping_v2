@@ -63,6 +63,10 @@ const Settings = () => {
         updateSettings 
     } = useNotification();
     
+    const [userSettings, setUserSettings] = useState({
+        notifications_enabled: true,
+        notification_email: '',
+    });
     const [loading, setLoading] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [emailLoading, setEmailLoading] = useState(false);
@@ -242,11 +246,41 @@ const Settings = () => {
         showNotification('Настройки уведомлений обновлены', 'info');
     };
 
+    // Загрузка настроек пользователя
+    const fetchUserSettings = async () => {
+        try {
+            const response = await api.get('/user/notification-settings');
+            setUserSettings(response.data);
+            setLocalSettings({ ...localSettings, email: response.data.notifications_enabled });
+            setNotificationEmail(response.data.notification_email || user?.email || '');
+        } catch (error) {
+            console.error('Ошибка загрузки настроек:', error);
+        }
+    };
+
+    // Сохранение настроек пользователя
+    const saveUserSettings = async () => {
+        try {
+            await api.post('/user/notification-settings', {
+                notifications_enabled: localSettings.email,
+                notification_email: notificationEmail
+            });
+            showNotification('Настройки сохранены', 'success');
+        } catch (error) {
+            showNotification('Ошибка сохранения настроек', 'error');
+        }
+    };
+
     const unreadCount = notifications.filter(n => !n.read).length;
 
     const handleCloseSnackbar = () => {
         setSnackbar({ ...snackbar, open: false });
     };
+
+    useEffect(() => {
+        fetchUserSettings();
+        fetchSmtpSettings();
+    }, []);
 
     return (
         <Box>
