@@ -2,6 +2,7 @@
 import aiohttp
 import os
 from typing import Optional
+from email_service import send_notification_email
 
 MAX_BOT_TOKEN = os.getenv("MAX_BOT_TOKEN")
 MAX_API_URL = "https://platform-api.max.ru"
@@ -78,3 +79,34 @@ async def notify_report_created(report_data: dict):
     text += f"[Открыть в CRM]({CRM_URL}/reports)"
     
     await send_notification_to_channel(text)
+
+
+async def notify_new_message(message_data: dict, assignee_id: Optional[int] = None):
+    """Уведомление о новом сообщении (email + канал)"""
+    from models import SessionLocal, User
+    db = SessionLocal()
+    
+    try:
+        # Отправка в канал (если настроен)
+        text = f"📨 **Новое сообщение!**\n\n"
+        text += f"От: {message_data.get('user_name')}\n"
+        text += f"Текст: {message_data.get('text', '')[:200]}\n"
+        text += f"ID: {message_data.get('id')}\n\n"
+        text += f"[Открыть в CRM]({CRM_URL}/messages)"
+        await send_notification_to_channel(text)
+        
+        # Email уведомления для администраторов и операторов
+        users = db.query(User).filter(
+            User.role.in_(['admin', 'operator']),
+            User.is_active == True,
+            User.email.isnot(None)
+        ).all()
+        
+        for user in users:
+            if user.email:
+                send_notification_email(user.email, "new_message", message_data)
+                
+    except Exception as e:
+        print(f"Ошибка в notify_new_message: {e}")
+    finally:
+        db.close()    
