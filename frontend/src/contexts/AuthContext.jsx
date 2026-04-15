@@ -17,13 +17,33 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('access_token');
-        const savedUser = localStorage.getItem('user');
+        const loadUser = async () => {
+            const token = localStorage.getItem('access_token');
+            const savedUser = localStorage.getItem('user');
+            
+            if (token && savedUser) {
+                try {
+                    // Загружаем актуальные данные пользователя из API
+                    const response = await auth.getMe();
+                    const userData = {
+                        id: response.data.id,
+                        username: response.data.username,
+                        role: response.data.role,
+                        email: response.data.email,
+                        full_name: response.data.full_name,
+                    };
+                    setUser(userData);
+                    localStorage.setItem('user', JSON.stringify(userData));
+                } catch (error) {
+                    console.error('Ошибка загрузки пользователя:', error);
+                    // Если ошибка, используем сохраненные данные
+                    setUser(JSON.parse(savedUser));
+                }
+            }
+            setLoading(false);
+        };
         
-        if (token && savedUser) {
-            setUser(JSON.parse(savedUser));
-        }
-        setLoading(false);
+        loadUser();
     }, []);
 
     const login = async (username, password) => {
@@ -32,7 +52,17 @@ export const AuthProvider = ({ children }) => {
             const { access_token, user_id, username: userName, role } = response.data;
             
             localStorage.setItem('access_token', access_token);
-            const userData = { id: user_id, username: userName, role };
+            
+            // Загружаем полные данные пользователя
+            const meResponse = await auth.getMe();
+            const userData = {
+                id: user_id,
+                username: userName,
+                role: role,
+                email: meResponse.data.email,
+                full_name: meResponse.data.full_name,
+            };
+            
             localStorage.setItem('user', JSON.stringify(userData));
             setUser(userData);
             
@@ -45,6 +75,12 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const updateUser = (updatedData) => {
+        const newUser = { ...user, ...updatedData };
+        setUser(newUser);
+        localStorage.setItem('user', JSON.stringify(newUser));
+    };
+
     const logout = () => {
         auth.logout();
         setUser(null);
@@ -54,6 +90,7 @@ export const AuthProvider = ({ children }) => {
         user,
         login,
         logout,
+        updateUser,
         isAuthenticated: !!user,
         isAdmin: user?.role === 'admin',
         isOperator: user?.role === 'operator',
