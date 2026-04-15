@@ -675,14 +675,13 @@ def get_smtp_settings(
     current_user: User = Depends(require_role(UserRole.ADMIN)),
     db: Session = Depends(get_db)
 ):
-    """Получить текущие SMTP настройки"""
-    # Возвращаем только маскированные данные
+    """Получить текущие SMTP настройки (только маскированные)"""
     return {
-        "host": smtp_config["host"],
-        "port": smtp_config["port"],
-        "user": smtp_config["user"],
-        "from": smtp_config["from_email"],
-        "password": "********" if smtp_config["password"] else ""
+        "host": os.getenv("SMTP_HOST", ""),
+        "port": int(os.getenv("SMTP_PORT", 465)),
+        "user": os.getenv("SMTP_USER", ""),
+        "from": os.getenv("SMTP_FROM", ""),
+        "password": "********" if os.getenv("SMTP_PASSWORD") else ""
     }
 
 @app.post("/api/notifications/smtp-settings")
@@ -691,61 +690,100 @@ def save_smtp_settings(
     current_user: User = Depends(require_role(UserRole.ADMIN)),
     db: Session = Depends(get_db)
 ):
-    """Сохранить SMTP настройки"""
-    global smtp_config
-    smtp_config = {
+    """Сохранить SMTP настройки в .env файл"""
+    import subprocess
+    
+    # Обновляем .env файл
+    env_path = "/app/.env"
+    updates = [
+        f"SMTP_HOST={settings.host}",
+        f"SMTP_PORT={settings.port}",
+        f"SMTP_USER={settings.user}",
+        f"SMTP_FROM={settings.from_email}"
+    ]
+    if settings.password and settings.password != "********":
+        updates.append(f"SMTP_PASSWORD={settings.password}")
+    
+    # Читаем существующий .env
+    env_content = ""
+    if os.path.exists(env_path):
+        with open(env_path, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                updated = False
+                for update in updates:
+                    key = update.split('=')[0]
+                    if line.startswith(f"{key}="):
+                        env_content += update + "\n"
+                        updated = True
+                        break
+                if not updated:
+                    env_content += line
+    else:
+        env_content = "\n".join(updates) + "\n"
+    
+    # Записываем обновленный .env
+    with open(env_path, 'w') as f:
+        f.write(env_content)
+    
+    # Обновляем переменные окружения в текущем процессе
+    for update in updates:
+        key, value = update.split('=', 1)
+        os.environ[key] = value
+    if settings.password and settings.password != "********":
+        os.environ["SMTP_PASSWORD"] = settings.password
+    
+    # Обновляем конфигурацию в email_service
+    from email_service import update_smtp_config
+    update_smtp_config({
         "host": settings.host,
         "port": settings.port,
         "user": settings.user,
-        "password": settings.password,
+        "password": settings.password if settings.password != "********" else os.getenv("SMTP_PASSWORD", ""),
         "from_email": settings.from_email
-    }
+    })
     
-    # Обновляем переменные окружения
-    os.environ["SMTP_HOST"] = settings.host
-    os.environ["SMTP_PORT"] = str(settings.port)
-    os.environ["SMTP_USER"] = settings.user
-    os.environ["SMTP_PASSWORD"] = settings.password
-    os.environ["SMTP_FROM"] = settings.from_email
-    
-    return {"status": "success"}
+    return {"status": "success", "message": "SMTP настройки сохранены"}
 
 @app.post("/api/notifications/test-smtp")
-def test_smtp(
-    settings: SmtpSettings,
+def test_email_notification(
+    request: TestEmailRequest,
     current_user: User = Depends(require_role(UserRole.ADMIN)),
     db: Session = Depends(get_db)
 ):
-    """Тестовая отправка письма"""
-    subject = "🧪 Тестовое письмо из CRM"
+    """Отправка тестового email уведомления"""
+    from email_service import send_email
+    
+    smtp_user = os.getenv("SMTP_USER", "")
+    smtp_password = os.getenv("SMTP_PASSWORD", "")
+    
+    if not smtp_user or not smtp_password:
+        raise HTTPException(status_code=400, detail="SMTP настройки не заполнены. Проверьте .env файл.")
+    
+    subject = "🧪 Тестовое уведомление CRM"
     body = f"""
-    <h2>✅ SMTP настройки работают!</h2>
+    <h2>✅ Тестовое уведомление</h2>
     <p>Здравствуйте, {current_user.full_name}!</p>
-    <p>Это тестовое письмо подтверждает, что SMTP настройки настроены корректно.</p>
+    <p>Это тестовое уведомление из CRM системы.</p>
+    <p>Если вы видите это письмо, значит настройка email уведомлений работает корректно.</p>
+    <br>
+    <p><strong>Детали теста:</strong></p>
+    <ul>
+        <li>Время отправки: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
+        <li>Пользователь: {current_user.username}</li>
+        <li>Email получателя: {request.email}</li>
+    </ul>
     <br>
     <p>С уважением,<br>CRM Система</p>
     """
     
-    # Временно устанавливаем настройки для теста
-    old_config = smtp_config.copy()
-    smtp_config = {
-        "host": settings.host,
-        "port": settings.port,
-        "user": settings.user,
-        "password": settings.password,
-        "from_email": settings.from_email
-    }
-    
-    success = send_email(settings.from_email, subject, body)
-    
-    # Восстанавливаем старые настройки
-    smtp_config = old_config
+    success = send_email(request.email, subject, body)
     
     if success:
-        return {"status": "success", "message": "Тестовое письмо отправлено"}
+        return {"status": "success", "message": f"Тестовое письмо отправлено на {request.email}"}
     else:
-        raise HTTPException(status_code=500, detail="Ошибка отправки тестового письма")
-
+        raise HTTPException(status_code=500, detail="Ошибка отправки email. Проверьте настройки SMTP в .env файле.")
+    
 class TestEmailRequest(BaseModel):
     email: str
 
