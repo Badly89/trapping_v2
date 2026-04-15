@@ -242,6 +242,18 @@ def toggle_user(
     db.commit()
     return {"status": "success", "is_active": user.is_active}
 
+# backend/main.py
+@app.patch("/api/user/update-email")
+def update_user_email(
+    email: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Обновить email пользователя"""
+    current_user.email = email
+    db.commit()
+    return {"status": "success", "email": email}
+
 # ========== Messages ==========
 @app.post("/api/messages", response_model=MessageResponse)
 def create_message(

@@ -83,10 +83,6 @@ const Settings = () => {
         email: notifSettings.email,
     });
     
-    // Состояние для Email уведомлений
-    const [notificationEmail, setNotificationEmail] = useState(user?.email || '');
-    const [testEmailLoading, setTestEmailLoading] = useState(false);
-    
     // Состояние для SMTP диалога
     const [smtpDialogOpen, setSmtpDialogOpen] = useState(false);
     const [smtpSettings, setSmtpSettings] = useState({
@@ -142,24 +138,23 @@ const Settings = () => {
     }
 };
     
-    // Тестовая отправка email
     const sendTestEmail = async () => {
-        const emailToSend = notificationEmail || user?.email;
-        if (!emailToSend) {
-            showNotification('Укажите email для отправки', 'error');
-            return;
-        }
-        
-        setTestEmailLoading(true);
-        try {
-            const response = await api.post('/notifications/test-email', { email: emailToSend });
-            showNotification(response.data.message, 'success');
-        } catch (error) {
-            showNotification(error.response?.data?.detail || 'Ошибка отправки тестового письма', 'error');
-        } finally {
-            setTestEmailLoading(false);
-        }
-    };
+    const emailToSend = user?.email;
+    if (!emailToSend) {
+        showNotification('Укажите email в настройках профиля', 'error');
+        return;
+    }
+    
+    setTestEmailLoading(true);
+    try {
+        const response = await api.post('/notifications/test-email', { email: emailToSend });
+        showNotification(response.data.message, 'success');
+    } catch (error) {
+        showNotification(error.response?.data?.detail || 'Ошибка отправки тестового письма', 'error');
+    } finally {
+        setTestEmailLoading(false);
+    }
+};
     
     // Обработчик переключения email уведомлений
     const handleEmailToggle = (e) => {
@@ -275,6 +270,20 @@ const Settings = () => {
                                 <Person fontSize="small" color="action" />
                                 <Typography variant="body2">ID: {user?.id}</Typography>
                             </Box>
+                            // В блок "Информация о профиле" добавьте редактирование email
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                <Email fontSize="small" color="action" />
+                                <TextField
+                                    size="small"
+                                    value={user?.email || ''}
+                                    onChange={(e) => {
+                                        // Обновление email
+                                        api.patch('/user/update-email', { email: e.target.value });
+                                    }}
+                                    placeholder="Email для уведомлений"
+                                    variant="standard"
+                                />
+                            </Box>
                         </CardContent>
                     </Card>
                 </Grid>
@@ -334,6 +343,7 @@ const Settings = () => {
                     </Card>
                 </Grid>
                 {/* Email уведомления */}
+               // Email уведомления - упрощенная версия
                 <Grid item xs={12} md={6}>
                     <Card>
                         <CardContent>
@@ -354,16 +364,18 @@ const Settings = () => {
                                 sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', width: '100%' }}
                             />
                             
-                            <TextField
-                                fullWidth
-                                label="Email для уведомлений"
-                                type="email"
-                                value={notificationEmail}
-                                onChange={(e) => setNotificationEmail(e.target.value)}
-                                margin="normal"
-                                helperText="Укажите email для получения уведомлений"
-                                disabled={!localSettings.email}
-                            />
+                            <Alert severity="info" sx={{ mt: 2 }}>
+                                <strong>Уведомления будут отправляться на ваш email:</strong>
+                                <Box sx={{ mt: 1, p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
+                                    <Email fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
+                                    <strong>{user?.email || 'Email не указан в профиле'}</strong>
+                                </Box>
+                                {!user?.email && (
+                                    <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
+                                        ⚠️ Для получения уведомлений укажите email в настройках профиля
+                                    </Typography>
+                                )}
+                            </Alert>
                             
                             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
                                 <Button
@@ -378,14 +390,14 @@ const Settings = () => {
                                     variant="outlined"
                                     startIcon={testEmailLoading ? <CircularProgress size={20} /> : <SendIcon />}
                                     onClick={sendTestEmail}
-                                    disabled={testEmailLoading || !notificationEmail || !localSettings.email}
+                                    disabled={testEmailLoading || !localSettings.email || !user?.email}
                                     sx={{ flex: 1 }}
                                 >
                                     {testEmailLoading ? 'Отправка...' : 'Тест'}
                                 </Button>
                             </Box>
                             
-                            <Alert severity="info" sx={{ mt: 2 }}>
+                            <Alert severity="success" sx={{ mt: 2 }}>
                                 <strong>Уведомления будут приходить на email о:</strong>
                                 <ul style={{ margin: '8px 0 0 20px', padding: 0 }}>
                                     <li>Новых сообщениях</li>
@@ -397,7 +409,7 @@ const Settings = () => {
                             </Alert>
                         </CardContent>
                     </Card>
-                </Grid>                
+                </Grid>          
                 {/* История уведомлений */}
                 <Grid item xs={12} md={6}>
                     <Card>
