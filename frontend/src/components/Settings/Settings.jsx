@@ -43,6 +43,7 @@ import {
     Delete,
     CheckCircle,
     Send as SendIcon,
+    Edit,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -51,7 +52,7 @@ import { auth } from '../../services/api';
 import api from '../../services/api';
 
 const Settings = () => {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth(); // добавим updateUser если есть
     const { darkMode, toggleTheme } = useTheme();
     const { 
         notifications, 
@@ -64,6 +65,7 @@ const Settings = () => {
     
     const [loading, setLoading] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+    const [emailLoading, setEmailLoading] = useState(false);
     
     // Состояние для смены пароля
     const [passwordData, setPasswordData] = useState({
@@ -83,6 +85,10 @@ const Settings = () => {
         email: notifSettings.email,
     });
     
+    // Состояние для редактирования email профиля
+    const [editEmail, setEditEmail] = useState(false);
+    const [newEmail, setNewEmail] = useState(user?.email || '');
+    
     // Состояние для SMTP диалога
     const [smtpDialogOpen, setSmtpDialogOpen] = useState(false);
     const [smtpSettings, setSmtpSettings] = useState({
@@ -93,6 +99,7 @@ const Settings = () => {
         from: '',
     });
     const [smtpLoading, setSmtpLoading] = useState(false);
+    const [testLoading, setTestLoading] = useState(false);
     
     // Загрузка SMTP настроек
     const fetchSmtpSettings = async () => {
@@ -112,49 +119,67 @@ const Settings = () => {
     
     // Сохранение SMTP настроек
     const saveSmtpSettings = async () => {
-    setSmtpLoading(true);
-    try {
-        // Убедитесь, что отправляются все поля
-        const payload = {
-            host: smtpSettings.host,
-            port: parseInt(smtpSettings.port),  // порт должен быть числом
-            user: smtpSettings.user,
-            password: smtpSettings.password,
-            from_email: smtpSettings.from
-        };
-        
-        console.log('Отправка SMTP настроек:', payload);
-        
-        const response = await api.post('/notifications/smtp-settings', payload);
-        showNotification('SMTP настройки сохранены', 'success');
-        setSmtpDialogOpen(false);
-        setLocalSettings({ ...localSettings, email: true });
-        updateSettings({ ...localSettings, email: true });
-    } catch (error) {
-        console.error('Ошибка сохранения:', error.response?.data);
-        showNotification(error.response?.data?.detail || 'Ошибка сохранения SMTP настроек', 'error');
-    } finally {
-        setSmtpLoading(false);
-    }
-};
+        setSmtpLoading(true);
+        try {
+            const payload = {
+                host: smtpSettings.host,
+                port: parseInt(smtpSettings.port),
+                user: smtpSettings.user,
+                password: smtpSettings.password,
+                from_email: smtpSettings.from
+            };
+            await api.post('/notifications/smtp-settings', payload);
+            showNotification('SMTP настройки сохранены', 'success');
+            setSmtpDialogOpen(false);
+            setLocalSettings({ ...localSettings, email: true });
+            updateSettings({ ...localSettings, email: true });
+        } catch (error) {
+            showNotification(error.response?.data?.detail || 'Ошибка сохранения SMTP настроек', 'error');
+        } finally {
+            setSmtpLoading(false);
+        }
+    };
     
+    // Тестовая отправка email (использует email из профиля)
     const sendTestEmail = async () => {
-    const emailToSend = user?.email;
-    if (!emailToSend) {
-        showNotification('Укажите email в настройках профиля', 'error');
-        return;
-    }
+        const emailToSend = user?.email;
+        if (!emailToSend) {
+            showNotification('Сначала укажите email в профиле', 'error');
+            return;
+        }
+        
+        setTestLoading(true);
+        try {
+            const response = await api.post('/notifications/test-email', { email: emailToSend });
+            showNotification(response.data.message, 'success');
+        } catch (error) {
+            showNotification(error.response?.data?.detail || 'Ошибка отправки тестового письма', 'error');
+        } finally {
+            setTestLoading(false);
+        }
+    };
     
-    setTestEmailLoading(true);
-    try {
-        const response = await api.post('/notifications/test-email', { email: emailToSend });
-        showNotification(response.data.message, 'success');
-    } catch (error) {
-        showNotification(error.response?.data?.detail || 'Ошибка отправки тестового письма', 'error');
-    } finally {
-        setTestEmailLoading(false);
-    }
-};
+    // Обновление email пользователя
+    const updateUserEmail = async () => {
+        if (!newEmail || newEmail === user?.email) {
+            setEditEmail(false);
+            return;
+        }
+        
+        setEmailLoading(true);
+        try {
+            await api.patch('/user/update-email', { email: newEmail });
+            if (updateUser) {
+                updateUser({ ...user, email: newEmail });
+            }
+            showNotification('Email успешно обновлен', 'success');
+            setEditEmail(false);
+        } catch (error) {
+            showNotification(error.response?.data?.detail || 'Ошибка обновления email', 'error');
+        } finally {
+            setEmailLoading(false);
+        }
+    };
     
     // Обработчик переключения email уведомлений
     const handleEmailToggle = (e) => {
@@ -212,12 +237,6 @@ const Settings = () => {
 
     const handleSaveSettings = () => {
         updateSettings(localSettings);
-        // Сохраняем email для уведомлений
-        if (notificationEmail) {
-            localStorage.setItem('notificationEmail', notificationEmail);
-        // Также можно сохранить в API
-            api.post('/user/update-notification-email', { email: notificationEmail }).catch(console.error);
-    }
         handleNotification('Настройки сохранены', 'success');
         showNotification('Настройки уведомлений обновлены', 'info');
     };
@@ -264,25 +283,33 @@ const Settings = () => {
                             <Divider sx={{ my: 2 }} />
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                 <Email fontSize="small" color="action" />
-                                <Typography variant="body2">{user?.email}</Typography>
+                                {editEmail ? (
+                                    <Box sx={{ display: 'flex', gap: 1, flex: 1 }}>
+                                        <TextField
+                                            size="small"
+                                            value={newEmail}
+                                            onChange={(e) => setNewEmail(e.target.value)}
+                                            placeholder="Email"
+                                            fullWidth
+                                            autoFocus
+                                        />
+                                        <Button size="small" onClick={updateUserEmail} disabled={emailLoading}>
+                                            {emailLoading ? <CircularProgress size={20} /> : 'Сохранить'}
+                                        </Button>
+                                        <Button size="small" onClick={() => setEditEmail(false)}>Отмена</Button>
+                                    </Box>
+                                ) : (
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+                                        <Typography variant="body2">{user?.email || 'Email не указан'}</Typography>
+                                        <IconButton size="small" onClick={() => setEditEmail(true)}>
+                                            <Edit fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                )}
                             </Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Person fontSize="small" color="action" />
                                 <Typography variant="body2">ID: {user?.id}</Typography>
-                            </Box>
-                            // В блок "Информация о профиле" добавьте редактирование email
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                                <Email fontSize="small" color="action" />
-                                <TextField
-                                    size="small"
-                                    value={user?.email || ''}
-                                    onChange={(e) => {
-                                        // Обновление email
-                                        api.patch('/user/update-email', { email: e.target.value });
-                                    }}
-                                    placeholder="Email для уведомлений"
-                                    variant="standard"
-                                />
                             </Box>
                         </CardContent>
                     </Card>
@@ -342,8 +369,8 @@ const Settings = () => {
                         </CardContent>
                     </Card>
                 </Grid>
+
                 {/* Email уведомления */}
-               // Email уведомления - упрощенная версия
                 <Grid item xs={12} md={6}>
                     <Card>
                         <CardContent>
@@ -372,7 +399,7 @@ const Settings = () => {
                                 </Box>
                                 {!user?.email && (
                                     <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-                                        ⚠️ Для получения уведомлений укажите email в настройках профиля
+                                        ⚠️ Для получения уведомлений укажите email в профиле
                                     </Typography>
                                 )}
                             </Alert>
@@ -388,12 +415,12 @@ const Settings = () => {
                                 </Button>
                                 <Button
                                     variant="outlined"
-                                    startIcon={testEmailLoading ? <CircularProgress size={20} /> : <SendIcon />}
+                                    startIcon={testLoading ? <CircularProgress size={20} /> : <SendIcon />}
                                     onClick={sendTestEmail}
-                                    disabled={testEmailLoading || !localSettings.email || !user?.email}
+                                    disabled={testLoading || !localSettings.email || !user?.email}
                                     sx={{ flex: 1 }}
                                 >
-                                    {testEmailLoading ? 'Отправка...' : 'Тест'}
+                                    {testLoading ? 'Отправка...' : 'Тест'}
                                 </Button>
                             </Box>
                             
@@ -409,7 +436,8 @@ const Settings = () => {
                             </Alert>
                         </CardContent>
                     </Card>
-                </Grid>          
+                </Grid>
+
                 {/* История уведомлений */}
                 <Grid item xs={12} md={6}>
                     <Card>
@@ -673,11 +701,11 @@ const Settings = () => {
                         variant="outlined"
                         startIcon={<SendIcon />}
                         onClick={sendTestEmail}
-                        disabled={testEmailLoading}
+                        disabled={testLoading}
                         sx={{ mt: 2 }}
                         fullWidth
                     >
-                        {testEmailLoading ? <CircularProgress size={24} /> : 'Отправить тестовое письмо'}
+                        {testLoading ? <CircularProgress size={24} /> : 'Отправить тестовое письмо'}
                     </Button>
                 </DialogContent>
                 <DialogActions>
