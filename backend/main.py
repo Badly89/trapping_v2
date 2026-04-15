@@ -1,4 +1,4 @@
-# main.py - Полный листинг
+# main.py - Полный исправленный листинг
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Query, Response, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -11,13 +11,9 @@ import mimetypes
 import shutil
 import os
 import logging
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-from dotenv import load_dotenv
-from email_service import send_email, test_smtp_connection
 
 # Загружаем переменные окружения
+from dotenv import load_dotenv
 load_dotenv()
 
 # Настройка логирования
@@ -47,12 +43,8 @@ from schemas import (
     ReportCreate, ReportResponse
 )
 
-# Настройки email
-SMTP_HOST = os.getenv("SMTP_HOST", "smtp.yandex.ru")
-SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
-SMTP_USER = os.getenv("SMTP_USER", "")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
+# Импорт email сервиса
+from email_service import send_email, update_smtp_config
 
 app = FastAPI(
     title="CRM System", 
@@ -81,6 +73,21 @@ app.add_middleware(
 # Директория для загрузки файлов
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# ========== Pydantic Models ==========
+class TestEmailRequest(BaseModel):
+    email: str
+
+class ChannelSettings(BaseModel):
+    channel_id: str
+    enabled: bool = True
+
+class SmtpSettings(BaseModel):
+    host: str
+    port: int
+    user: str
+    password: str
+    from_email: str
 
 # ========== Auth Endpoints ==========
 @app.post("/api/auth/login", response_model=TokenResponse)
@@ -506,7 +513,7 @@ async def create_report(
 def get_reports(
     message_id: int,
     current_user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db):
 ):
     reports = db.query(Report).filter(Report.message_id == message_id).order_by(Report.created_at.desc()).all()
     return reports
@@ -620,12 +627,7 @@ def get_upload(filename: str):
         }
     )
 
-
-class ChannelSettings(BaseModel):
-    channel_id: str
-    enabled: bool = True
-
-# Хранение настроек канала (можно перенести в БД)
+# ========== Notifications ==========
 channel_settings = {
     "enabled": True,
     "channel_id": os.getenv("NOTIFICATION_CHANNEL_ID", "")
@@ -654,28 +656,13 @@ def set_channel_settings(
     os.environ["NOTIFICATION_CHANNEL_ID"] = settings.channel_id
     return {"status": "success", "settings": channel_settings}
 
-class SmtpSettings(BaseModel):
-    host: str
-    port: int
-    user: str
-    password: str
-    from_email: str
-
-# Временное хранилище SMTP настроек (в продакшене используйте БД)
-smtp_config = {
-    "host": "",
-    "port": 465,
-    "user": "",
-    "password": "",
-    "from_email": ""
-}
-
+# ========== SMTP Settings ==========
 @app.get("/api/notifications/smtp-settings")
 def get_smtp_settings(
     current_user: User = Depends(require_role(UserRole.ADMIN)),
     db: Session = Depends(get_db)
 ):
-    """Получить текущие SMTP настройки (только маскированные)"""
+    """Получить текущие SMTP настройки"""
     return {
         "host": os.getenv("SMTP_HOST", ""),
         "port": int(os.getenv("SMTP_PORT", 465)),
@@ -690,51 +677,16 @@ def save_smtp_settings(
     current_user: User = Depends(require_role(UserRole.ADMIN)),
     db: Session = Depends(get_db)
 ):
-    """Сохранить SMTP настройки в .env файл"""
-    import subprocess
-    
-    # Обновляем .env файл
-    env_path = "/app/.env"
-    updates = [
-        f"SMTP_HOST={settings.host}",
-        f"SMTP_PORT={settings.port}",
-        f"SMTP_USER={settings.user}",
-        f"SMTP_FROM={settings.from_email}"
-    ]
-    if settings.password and settings.password != "********":
-        updates.append(f"SMTP_PASSWORD={settings.password}")
-    
-    # Читаем существующий .env
-    env_content = ""
-    if os.path.exists(env_path):
-        with open(env_path, 'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                updated = False
-                for update in updates:
-                    key = update.split('=')[0]
-                    if line.startswith(f"{key}="):
-                        env_content += update + "\n"
-                        updated = True
-                        break
-                if not updated:
-                    env_content += line
-    else:
-        env_content = "\n".join(updates) + "\n"
-    
-    # Записываем обновленный .env
-    with open(env_path, 'w') as f:
-        f.write(env_content)
-    
-    # Обновляем переменные окружения в текущем процессе
-    for update in updates:
-        key, value = update.split('=', 1)
-        os.environ[key] = value
+    """Сохранить SMTP настройки"""
+    # Обновляем переменные окружения
+    os.environ["SMTP_HOST"] = settings.host
+    os.environ["SMTP_PORT"] = str(settings.port)
+    os.environ["SMTP_USER"] = settings.user
+    os.environ["SMTP_FROM"] = settings.from_email
     if settings.password and settings.password != "********":
         os.environ["SMTP_PASSWORD"] = settings.password
     
     # Обновляем конфигурацию в email_service
-    from email_service import update_smtp_config
     update_smtp_config({
         "host": settings.host,
         "port": settings.port,
@@ -745,15 +697,13 @@ def save_smtp_settings(
     
     return {"status": "success", "message": "SMTP настройки сохранены"}
 
-@app.post("/api/notifications/test-smtp")
+@app.post("/api/notifications/test-email")
 def test_email_notification(
     request: TestEmailRequest,
     current_user: User = Depends(require_role(UserRole.ADMIN)),
     db: Session = Depends(get_db)
 ):
     """Отправка тестового email уведомления"""
-    from email_service import send_email
-    
     smtp_user = os.getenv("SMTP_USER", "")
     smtp_password = os.getenv("SMTP_PASSWORD", "")
     
@@ -783,42 +733,6 @@ def test_email_notification(
         return {"status": "success", "message": f"Тестовое письмо отправлено на {request.email}"}
     else:
         raise HTTPException(status_code=500, detail="Ошибка отправки email. Проверьте настройки SMTP в .env файле.")
-    
-class TestEmailRequest(BaseModel):
-    email: str
-
-@app.post("/api/notifications/test-email")
-def test_email_notification(
-    request: TestEmailRequest,
-    current_user: User = Depends(require_role(UserRole.ADMIN)),
-    db: Session = Depends(get_db)
-):
-    """Отправка тестового email уведомления"""
-    
-    subject = "🧪 Тестовое уведомление CRM"
-    body = f"""
-    <h2>✅ Тестовое уведомление</h2>
-    <p>Здравствуйте, {current_user.full_name}!</p>
-    <p>Это тестовое уведомление из CRM системы.</p>
-    <p>Если вы видите это письмо, значит настройка email уведомлений работает корректно.</p>
-    <br>
-    <p><strong>Детали теста:</strong></p>
-    <ul>
-        <li>Время отправки: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
-        <li>Пользователь: {current_user.username}</li>
-        <li>Email получателя: {request.email}</li>
-    </ul>
-    <br>
-    <p>С уважением,<br>CRM Система</p>
-    """
-    
-    success = send_email(request.email, subject, body)
-    
-    if success:
-        return {"status": "success", "message": f"Тестовое письмо отправлено на {request.email}"}
-    else:
-        raise HTTPException(status_code=500, detail="Ошибка отправки email. Проверьте настройки SMTP.")
-    
 
 # ========== Health Check ==========
 @app.get("/health")
