@@ -7,6 +7,7 @@ from sqlalchemy import func, and_
 from typing import List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel
+from models import InternalNotification
 import mimetypes
 import shutil
 import os
@@ -62,7 +63,6 @@ app.add_middleware(
         "http://localhost:85",
         "http://10.87.0.59:85",
         "http://10.87.0.59:6005",
-        "http://10.87.0.59:81",
         "*"
     ],
     allow_credentials=True,
@@ -707,6 +707,8 @@ def set_channel_settings(
     }
     os.environ["NOTIFICATION_CHANNEL_ID"] = settings.channel_id
     return {"status": "success", "settings": channel_settings}
+
+# ========== Internal Notifications ==========
 
 @app.get("/api/notifications/internal")
 def get_internal_notifications(
