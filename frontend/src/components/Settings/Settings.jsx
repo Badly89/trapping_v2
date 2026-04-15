@@ -378,18 +378,7 @@ const Settings = () => {
                 </Grid>
 
                 {/* Email уведомления */}
-                <Alert severity="info" sx={{ mt: 2 }}>
-                    <strong>Уведомления будут отправляться на ваш email:</strong>
-                    <Box sx={{ mt: 1, p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
-                        <Email fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
-                        <strong>{user?.email || 'Email не указан в профиле'}</strong>
-                    </Box>
-                    {!user?.email && (
-                        <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-                            ⚠️ Для получения уведомлений укажите email в профиле
-                        </Typography>
-                    )}
-                </Alert>
+                
                 <Grid item xs={12} md={6}>
                     <Card>
                         <CardContent>
@@ -408,20 +397,8 @@ const Settings = () => {
                                 }
                                 label="Получать уведомления на email"
                                 sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', width: '100%' }}
-                            />
+                            />                           
                             
-                            <Alert severity="info" sx={{ mt: 2 }}>
-                                <strong>Уведомления будут отправляться на ваш email:</strong>
-                                <Box sx={{ mt: 1, p: 1, bgcolor: 'grey.100', borderRadius: 1 }}>
-                                    <Email fontSize="small" sx={{ mr: 1, verticalAlign: 'middle' }} />
-                                    <strong>{user?.email || 'Email не указан в профиле'}</strong>
-                                </Box>
-                                {!user?.email && (
-                                    <Typography variant="caption" color="error" sx={{ mt: 1, display: 'block' }}>
-                                        ⚠️ Для получения уведомлений укажите email в профиле
-                                    </Typography>
-                                )}
-                            </Alert>
                             
                             <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
                                 <Button
@@ -443,16 +420,6 @@ const Settings = () => {
                                 </Button>
                             </Box>
                             
-                            <Alert severity="success" sx={{ mt: 2 }}>
-                                <strong>Уведомления будут приходить на email о:</strong>
-                                <ul style={{ margin: '8px 0 0 20px', padding: 0 }}>
-                                    <li>Новых сообщениях</li>
-                                    <li>Назначенных задачах</li>
-                                    <li>Завершенных задачах</li>
-                                    <li>Изменении статусов</li>
-                                    <li>Новых отчетах</li>
-                                </ul>
-                            </Alert>
                         </CardContent>
                     </Card>
                 </Grid>
