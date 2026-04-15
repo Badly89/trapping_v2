@@ -708,6 +708,54 @@ def set_channel_settings(
     os.environ["NOTIFICATION_CHANNEL_ID"] = settings.channel_id
     return {"status": "success", "settings": channel_settings}
 
+@app.get("/api/notifications/internal")
+def get_internal_notifications(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+    limit: int = 50,
+    offset: int = 0
+):
+    """Получить внутренние уведомления пользователя"""
+    notifications = db.query(InternalNotification).filter(
+        InternalNotification.user_id == current_user.id
+    ).order_by(InternalNotification.created_at.desc()).offset(offset).limit(limit).all()
+    
+    return notifications
+
+@app.patch("/api/notifications/internal/{notification_id}/read")
+def mark_notification_read(
+    notification_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Отметить уведомление как прочитанное"""
+    notification = db.query(InternalNotification).filter(
+        InternalNotification.id == notification_id,
+        InternalNotification.user_id == current_user.id
+    ).first()
+    
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    notification.is_read = True
+    db.commit()
+    return {"status": "success"}
+
+@app.patch("/api/notifications/internal/read-all")
+def mark_all_notifications_read(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Отметить все уведомления как прочитанные"""
+    db.query(InternalNotification).filter(
+        InternalNotification.user_id == current_user.id,
+        InternalNotification.is_read == False
+    ).update({"is_read": True})
+    db.commit()
+    return {"status": "success"}
+
+
+
 # ========== SMTP Settings ==========
 @app.get("/api/notifications/smtp-settings")
 def get_smtp_settings(
