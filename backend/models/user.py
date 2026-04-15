@@ -22,7 +22,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-           
+    notification_email = Column(String(100), nullable=True)  # email для уведомлений       
 
     # Отношения
     assigned_messages = relationship("Message", foreign_keys="Message.assigned_to_id", back_populates="assignee")

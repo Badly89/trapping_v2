@@ -89,6 +89,9 @@ class SmtpSettings(BaseModel):
     password: str
     from_email: str
 
+class NotificationEmailRequest(BaseModel):
+    email: str    
+
 # ========== Auth Endpoints ==========
 @app.post("/api/auth/login", response_model=TokenResponse)
 def login(login_data: LoginRequest, db: Session = Depends(get_db)):
@@ -750,6 +753,26 @@ def test_email_notification(
         return {"status": "success", "message": f"Тестовое письмо отправлено на {request.email}"}
     else:
         raise HTTPException(status_code=500, detail="Ошибка отправки email. Проверьте настройки SMTP в .env файле.")
+
+@app.post("/api/user/update-notification-email")
+def update_notification_email(
+    request: NotificationEmailRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Сохранить email для уведомлений"""
+    current_user.notification_email = request.email
+    db.commit()
+    return {"status": "success", "email": request.email}
+
+@app.get("/api/user/notification-email")
+def get_notification_email(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Получить email для уведомлений"""
+    email = getattr(current_user, 'notification_email', None) or current_user.email
+    return {"email": email}
 
 # ========== Health Check ==========
 @app.get("/health")

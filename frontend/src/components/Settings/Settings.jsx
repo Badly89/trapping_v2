@@ -217,6 +217,12 @@ const Settings = () => {
 
     const handleSaveSettings = () => {
         updateSettings(localSettings);
+        // Сохраняем email для уведомлений
+        if (notificationEmail) {
+            localStorage.setItem('notificationEmail', notificationEmail);
+        // Также можно сохранить в API
+            api.post('/user/update-notification-email', { email: notificationEmail }).catch(console.error);
+    }
         handleNotification('Настройки сохранены', 'success');
         showNotification('Настройки уведомлений обновлены', 'info');
     };
