@@ -116,19 +116,31 @@ const Settings = () => {
     
     // Сохранение SMTP настроек
     const saveSmtpSettings = async () => {
-        setSmtpLoading(true);
-        try {
-            await api.post('/notifications/smtp-settings', smtpSettings);
-            showNotification('SMTP настройки сохранены', 'success');
-            setSmtpDialogOpen(false);
-            setLocalSettings({ ...localSettings, email: true });
-            updateSettings({ ...localSettings, email: true });
-        } catch (error) {
-            showNotification('Ошибка сохранения SMTP настроек', 'error');
-        } finally {
-            setSmtpLoading(false);
-        }
-    };
+    setSmtpLoading(true);
+    try {
+        // Убедитесь, что отправляются все поля
+        const payload = {
+            host: smtpSettings.host,
+            port: parseInt(smtpSettings.port),  // порт должен быть числом
+            user: smtpSettings.user,
+            password: smtpSettings.password,
+            from_email: smtpSettings.from
+        };
+        
+        console.log('Отправка SMTP настроек:', payload);
+        
+        const response = await api.post('/notifications/smtp-settings', payload);
+        showNotification('SMTP настройки сохранены', 'success');
+        setSmtpDialogOpen(false);
+        setLocalSettings({ ...localSettings, email: true });
+        updateSettings({ ...localSettings, email: true });
+    } catch (error) {
+        console.error('Ошибка сохранения:', error.response?.data);
+        showNotification(error.response?.data?.detail || 'Ошибка сохранения SMTP настроек', 'error');
+    } finally {
+        setSmtpLoading(false);
+    }
+};
     
     // Тестовая отправка email
     const sendTestEmail = async () => {
