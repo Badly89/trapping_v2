@@ -126,21 +126,19 @@ async def notify_new_message(message_data: dict, assignee_id: int = None):
     try:
         # 1. ВНУТРЕННЕЕ УВЕДОМЛЕНИЕ В CRM
         if assignee_id:
-            # Только назначенному пользователю
-            add_notification(
+            create_internal_notification(
                 assignee_id,
                 f"📨 Новое сообщение #{message_data.get('id')} от {message_data.get('user_name')}",
                 "new_message",
                 {"message_id": message_data.get('id')}
             )
         else:
-            # Всем администраторам и операторам
             users = db.query(User).filter(
                 User.role.in_(['admin', 'operator']),
                 User.is_active == True
             ).all()
             for user in users:
-                add_notification(
+                create_internal_notification(
                     user.id,
                     f"📨 Новое сообщение #{message_data.get('id')} от {message_data.get('user_name')}",
                     "new_message",
