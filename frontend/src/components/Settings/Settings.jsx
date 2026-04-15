@@ -315,7 +315,71 @@ const Settings = () => {
                         </CardContent>
                     </Card>
                 </Grid>
-
+                {/* Email уведомления */}
+                <Grid item xs={12} md={6}>
+                    <Card>
+                        <CardContent>
+                            <Typography variant="h6" gutterBottom>
+                                <Email sx={{ mr: 1, verticalAlign: 'middle' }} />
+                                Email уведомления
+                            </Typography>
+                            <Divider sx={{ mb: 2 }} />
+                            
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={localSettings.email}
+                                        onChange={handleEmailToggle}
+                                    />
+                                }
+                                label="Получать уведомления на email"
+                                sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', width: '100%' }}
+                            />
+                            
+                            <TextField
+                                fullWidth
+                                label="Email для уведомлений"
+                                type="email"
+                                value={notificationEmail}
+                                onChange={(e) => setNotificationEmail(e.target.value)}
+                                margin="normal"
+                                helperText="Укажите email для получения уведомлений"
+                                disabled={!localSettings.email}
+                            />
+                            
+                            <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<Save />}
+                                    onClick={handleSaveSettings}
+                                    sx={{ flex: 1 }}
+                                >
+                                    Сохранить
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={testEmailLoading ? <CircularProgress size={20} /> : <SendIcon />}
+                                    onClick={sendTestEmail}
+                                    disabled={testEmailLoading || !notificationEmail || !localSettings.email}
+                                    sx={{ flex: 1 }}
+                                >
+                                    {testEmailLoading ? 'Отправка...' : 'Тест'}
+                                </Button>
+                            </Box>
+                            
+                            <Alert severity="info" sx={{ mt: 2 }}>
+                                <strong>Уведомления будут приходить на email о:</strong>
+                                <ul style={{ margin: '8px 0 0 20px', padding: 0 }}>
+                                    <li>Новых сообщениях</li>
+                                    <li>Назначенных задачах</li>
+                                    <li>Завершенных задачах</li>
+                                    <li>Изменении статусов</li>
+                                    <li>Новых отчетах</li>
+                                </ul>
+                            </Alert>
+                        </CardContent>
+                    </Card>
+                </Grid>                
                 {/* История уведомлений */}
                 <Grid item xs={12} md={6}>
                     <Card>
