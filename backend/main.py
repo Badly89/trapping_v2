@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel
 from models import InternalNotification
 import mimetypes
@@ -816,6 +816,12 @@ def save_smtp_settings(
         print(f"Ошибка сохранения SMTP настроек: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# Часовой пояс Екатеринбурга (UTC+5)
+YEKATERINBURG_TZ = timezone(timedelta(hours=5))
+
+def get_yekaterinburg_time():
+    return datetime.now(YEKATERINBURG_TZ)
+
 @app.post("/api/notifications/test-email")
 def test_email_notification(
     request: TestEmailRequest,
@@ -823,11 +829,18 @@ def test_email_notification(
     db: Session = Depends(get_db)
 ):
     """Отправка тестового email уведомления"""
+    from email_service import send_email
+    
     smtp_user = os.getenv("SMTP_USER", "")
     smtp_password = os.getenv("SMTP_PASSWORD", "")
     
     if not smtp_user or not smtp_password:
         raise HTTPException(status_code=400, detail="SMTP настройки не заполнены. Проверьте .env файл.")
+    
+    # Используем местное время Екатеринбурга
+    now = get_yekaterinburg_time()
+    time_str = now.strftime('%Y-%m-%d %H:%M:%S')
+    timezone_str = "Екатеринбург (UTC+5)"
     
     subject = "🧪 Тестовое уведомление CRM"
     body = f"""
@@ -838,7 +851,7 @@ def test_email_notification(
     <br>
     <p><strong>Детали теста:</strong></p>
     <ul>
-        <li>Время отправки: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</li>
+        <li>Время отправки: {time_str} ({timezone_str})</li>
         <li>Пользователь: {current_user.username}</li>
         <li>Email получателя: {request.email}</li>
     </ul>
