@@ -3,6 +3,7 @@ import aiohttp
 import os
 from typing import Optional
 from email_service import send_notification_email
+from datetime import datetime, timezone, timedelta
 
 MAX_BOT_TOKEN = os.getenv("MAX_BOT_TOKEN")
 MAX_API_URL = "https://platform-api.max.ru"
